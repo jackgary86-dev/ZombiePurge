@@ -394,10 +394,12 @@ export class FlameView {
   readonly mesh: Mesh;
 
   constructor(range: number, cone: number) {
-    const radius = Math.tan(cone) * range;
-    const geometry = new CylinderGeometry(radius, 0.15, range, 12, 1, true);
+    // Visual is narrower and shorter than the gameplay cone so it reads as a jet, not a wall.
+    const length = range * 0.85;
+    const radius = Math.min(Math.tan(cone) * length * 0.35, 2.5);
+    const geometry = new CylinderGeometry(radius, 0.12, length, 12, 1, true);
     geometry.rotateX(Math.PI / 2);
-    geometry.translate(0, 0, range / 2);
+    geometry.translate(0, 0, length / 2);
     this.mesh = new Mesh(
       geometry,
       new MeshStandardMaterial({

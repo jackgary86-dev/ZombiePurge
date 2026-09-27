@@ -40,6 +40,11 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy Engine tier 1: balance drops by 150, the pips fill, the next tier's price appears
 - [ ] Buy the Machine Gun: it shows "Equipped" and a turret appears on the roof
 - [ ] DRIVE, then hold F (or click): tracers, zombies drop, the gun bar fills and reads OVERHEATED if you hold it; let go and it cools
+- [ ] Equip the Shotgun instead: each shot sprays tracers, `ammo 5/6` counts down, then `reloading`
+- [ ] Equip the Rocket Launcher: rockets fly and explode with a blast sphere; a horde in the blast dies together
+- [ ] Buy the Flamethrower (front): holding F shows a flame jet, zombies glow orange and keep burning after you let go, and fuel drops faster
+- [ ] Buy Nitro, hold Shift: BOOST on the HUD, the car surges, the bar drains and slowly refills
+- [ ] Buy Armor / Ram / Fuel Tank / Radar / Headlights: the matching parts appear on the car in the garage
 - [ ] Fuel gauge drops while driving; stop with an empty tank and you get OUT OF GAS
 - [ ] Get wrecked: WRECKED screen, Enter returns to the garage with a Repair (price) button; repairing charges per missing HP
 - [ ] With `#debug`, `then`unlockall`: every card is maxed and the top-tier gun is mounted
