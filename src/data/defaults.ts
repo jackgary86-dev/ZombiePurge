@@ -1,0 +1,102 @@
+import type { GameConfig } from './types';
+
+export const DEFAULT_CONFIG: GameConfig = {
+  physics: {
+    gravity: -9.81,
+    fixedTimeStep: 1 / 60,
+  },
+  vehicle: {
+    mass: 1500,
+    topSpeed: 50,
+    acceleration: 15,
+    brakingDeceleration: 25,
+    reverseSpeed: 20,
+    steering: {
+      maxAngle: Math.PI / 4,
+      sensitivity: 3,
+      returnSpeed: 5,
+    },
+    friction: {
+      rollingResistance: 0.015,
+      airResistance: 0.47,
+    },
+    handbrake: {
+      brakingMultiplier: 1.5,
+    },
+    hp: 100,
+    armor: 0,
+  },
+  camera: {
+    distance: 8,
+    height: 3.5,
+    baseFov: 70,
+    speedFovBoost: 15,
+    followLerp: 5,
+    orbitSensitivity: 0.003,
+    recenterSpeed: 2,
+  },
+  zombies: {
+    walker: {
+      rank: 'walker',
+      hp: 20,
+      speed: 1.5,
+      detectionRadius: 40,
+      attackDamage: 2,
+      coinValue: 1,
+    },
+    runner: {
+      rank: 'runner',
+      hp: 15,
+      speed: 6,
+      detectionRadius: 60,
+      attackDamage: 3,
+      coinValue: 2,
+    },
+    spitter: {
+      rank: 'spitter',
+      hp: 25,
+      speed: 2,
+      detectionRadius: 80,
+      attackDamage: 5,
+      coinValue: 4,
+    },
+    brute: {
+      rank: 'brute',
+      hp: 120,
+      speed: 2.5,
+      detectionRadius: 50,
+      attackDamage: 12,
+      coinValue: 6,
+    },
+    tank: {
+      rank: 'tank',
+      hp: 400,
+      speed: 1.8,
+      detectionRadius: 60,
+      attackDamage: 25,
+      coinValue: 15,
+    },
+    boss: {
+      rank: 'boss',
+      hp: 2000,
+      speed: 3,
+      detectionRadius: 80,
+      attackDamage: 40,
+      coinValue: 100,
+    },
+  },
+  rewards: {
+    coinsPerRank: { walker: 1, runner: 2, spitter: 4, brute: 6, tank: 15, boss: 100 },
+    metersPerDistanceCoin: 250,
+    coinsKeptOnDeathPercent: 50,
+  },
+  maps: [
+    {
+      id: 'greybox',
+      name: 'Greybox Test Map',
+      size: 500,
+      fogDistance: 300,
+      zombieRanks: ['walker', 'runner'],
+    },
+  ],
+};
