@@ -104,12 +104,51 @@ export interface CameraConfig {
   recenterSpeed: number;
 }
 
+export interface SpawnZone {
+  x: number;
+  z: number;
+  radius: number;
+  /** Relative chance of picking this zone; 0 disables it. */
+  weight: number;
+}
+
+export type PickupKind = 'gas' | 'repair' | 'coins' | 'ammo';
+
+export interface PickupSpot {
+  kind: PickupKind;
+  x: number;
+  z: number;
+}
+
+export interface MapObjective {
+  kind: 'kills' | 'killRank' | 'reachExit';
+  /** Kill count for 'kills', rank for 'killRank'. */
+  count?: number;
+  rank?: ZombieRank;
+  /** Exit position for 'reachExit'. */
+  x?: number;
+  z?: number;
+  label: string;
+}
+
 export interface MapConfig {
   id: string;
   name: string;
+  /** Side length in metres. */
   size: number;
   fogDistance: number;
   zombieRanks: ZombieRank[];
+  /** Which layout generator builds the map and how it is streamed. */
+  generator: 'greybox' | 'openfield';
+  seed: number;
+  chunkSize: number;
+  /** Optional spawn zones; without them the horde spawner uses the whole map. */
+  spawnZones?: SpawnZone[];
+  pickups?: PickupSpot[];
+  objectives?: MapObjective[];
+  /** Story order (1-5); sandbox-only maps omit it. */
+  storyIndex?: number;
+  night?: boolean;
 }
 
 export interface GunTierStats {
