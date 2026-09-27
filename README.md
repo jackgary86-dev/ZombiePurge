@@ -2,6 +2,8 @@
 
 A 3D zombie-smashing vehicular combat sandbox game built with Three.js, TypeScript, and Vite.
 
+**▶ Play the live demo:** https://jackgary86-dev.github.io/ZombiePurge/ — rebuilt automatically on every merge to `main` (the build number and commit hash are shown in the bottom-right corner). Add `#autoplay` to the URL to watch the car hunt zombies by itself.
+
 ![Smashing through a horde on the greybox test map](docs/images/m1-horde-kill.png)
 
 ## Quick Start
@@ -108,7 +110,7 @@ assets/            # 3D models, textures, sounds
 - **Renderer:** Three.js
 - **Testing:** Vitest
 - **Linting:** ESLint + Prettier
-- **CI/CD:** GitHub Actions (lint + test on PR, build + deploy on merge)
+- **CI/CD:** GitHub Actions — `ci.yml` runs lint, type-check, tests and build on every PR; `deploy.yml` publishes the live demo to GitHub Pages on every push to `main` (repo Settings → Pages → Source must be **GitHub Actions**)
 
 ## Tickets & Issues
 

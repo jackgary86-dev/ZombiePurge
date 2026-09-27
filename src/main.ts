@@ -28,6 +28,7 @@ import {
   greyboxSpawn,
 } from './game/world';
 import { HordeSpawner, updateZombieAI, ZombiePool, type Zombie } from './game/zombies';
+import { showBuildTag } from './ui/BuildTag';
 import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
 
 const ZOMBIE_CAPACITY = 150;
@@ -112,6 +113,7 @@ async function boot(): Promise<void> {
 
   const hud = new DebugHud();
   const popups = new CoinPopups();
+  showBuildTag();
   const loop = new GameLoop({ fixedTimeStep: cfg.physics.fixedTimeStep });
   const target = { position: new Vector3(), quaternion: new Quaternion(), forwardSpeed: 0 };
   const senses = { carPosition: new Vector3(), carSpeed: 0, noise: 0 };
