@@ -1,0 +1,331 @@
+import type { StatModifiers, UpgradeCategory, UpgradeDef, VehicleConfig } from '../data/types';
+import { Garage, type EffectiveStats, type PurchaseResult } from '../game/shop/Garage';
+
+export interface StatDelta {
+  key: keyof EffectiveStats;
+  label: string;
+  before: number;
+  after: number;
+  /** Upper bound used for the bar width. */
+  max: number;
+  unit?: string;
+}
+
+export interface TierCard {
+  upgradeId: string;
+  name: string;
+  description: string;
+  category: UpgradeCategory;
+  ownedTier: number;
+  maxTier: number;
+  /** Next tier to buy, or null when maxed. */
+  nextTier: number | null;
+  nextLabel: string | null;
+  price: number | null;
+  status: 'buy' | 'coins' | 'locked' | 'maxed';
+  statusText: string;
+  deltas: StatDelta[];
+  mountable: boolean;
+  equipped: boolean;
+  canEquip: boolean;
+}
+
+export const CATEGORY_TABS: { id: UpgradeCategory | 'all'; label: string }[] = [
+  { id: 'weapon', label: 'Weapons' },
+  { id: 'health', label: 'Health' },
+  { id: 'armor', label: 'Armor' },
+  { id: 'engine', label: 'Engine' },
+  { id: 'tires', label: 'Tires' },
+  { id: 'fuel', label: 'Gas' },
+  { id: 'ram', label: 'Ram' },
+  { id: 'nitro', label: 'Utility' },
+];
+
+const UTILITY: UpgradeCategory[] = ['nitro', 'radar', 'headlights'];
+
+const STAT_LABELS: Partial<
+  Record<keyof EffectiveStats, { label: string; max: number; unit?: string }>
+> = {
+  topSpeed: { label: 'Top speed', max: 90, unit: 'm/s' },
+  acceleration: { label: 'Acceleration', max: 20, unit: 'm/s²' },
+  grip: { label: 'Grip', max: 2 },
+  maxHp: { label: 'Max HP', max: 400 },
+  armor: { label: 'Armor', max: 90, unit: '%' },
+  fuelCapacity: { label: 'Fuel tank', max: 200, unit: 'L' },
+  ramDamageMultiplier: { label: 'Ram damage', max: 2.5, unit: 'x' },
+  selfDamageMultiplier: { label: 'Impact self-damage', max: 1, unit: 'x' },
+  nitroSeconds: { label: 'Nitro', max: 8, unit: 's' },
+  radarRange: { label: 'Radar range', max: 300, unit: 'm' },
+  headlightRange: { label: 'Headlights', max: 100, unit: 'm' },
+};
+
+const MODIFIER_TO_STAT: Record<keyof StatModifiers, keyof EffectiveStats | null> = {
+  topSpeed: 'topSpeed',
+  acceleration: 'acceleration',
+  grip: 'grip',
+  offRoadGrip: null,
+  maxHp: 'maxHp',
+  armor: 'armor',
+  fuelCapacity: 'fuelCapacity',
+  ramDamageMultiplier: 'ramDamageMultiplier',
+  selfDamageMultiplier: 'selfDamageMultiplier',
+  nitroSeconds: 'nitroSeconds',
+  radarRange: 'radarRange',
+  headlightRange: 'headlightRange',
+};
+
+function statusOf(
+  check: PurchaseResult,
+  def: UpgradeDef
+): { status: TierCard['status']; text: string } {
+  if (check.ok) return { status: 'buy', text: `Buy for ${check.tier!.price}` };
+  switch (check.reason) {
+    case 'maxed':
+      return { status: 'maxed', text: 'Fully upgraded' };
+    case 'locked':
+      return { status: 'locked', text: `Unlocks on map ${check.unlockMap}` };
+    case 'coins':
+      return { status: 'coins', text: `Need ${check.shortBy} more coins` };
+    default:
+      return { status: 'locked', text: `Unavailable (${def.id})` };
+  }
+}
+
+/** Pure view-model for the shop: what each card shows, given the garage state. Unit-tested without DOM. */
+export function buildShopCards(
+  garage: Garage,
+  base: VehicleConfig,
+  category: UpgradeCategory | 'all' = 'all'
+): TierCard[] {
+  const current = garage.effectiveStats(base);
+  return garage.upgrades
+    .filter(
+      (u) =>
+        category === 'all' ||
+        u.category === category ||
+        (category === 'nitro' && UTILITY.includes(u.category))
+    )
+    .map((def) => {
+      const owned = garage.ownedTier(def.id);
+      const next = garage.nextTier(def.id);
+      const check = garage.canBuy(def.id);
+      const { status, text } = statusOf(check, def);
+
+      // Preview: stats if the next tier were owned (tiers supersede, so diff next vs current tier).
+      const deltas: StatDelta[] = [];
+      if (next) {
+        const prev = owned > 0 ? def.tiers[owned - 1].modifiers : {};
+        for (const [mk, statKey] of Object.entries(MODIFIER_TO_STAT) as [
+          keyof StatModifiers,
+          keyof EffectiveStats | null,
+        ][]) {
+          if (!statKey) continue;
+          const nextVal = next.modifiers[mk] ?? 0;
+          const prevVal = prev[mk] ?? 0;
+          if (nextVal === prevVal) continue;
+          const meta = STAT_LABELS[statKey]!;
+          const before = current[statKey];
+          let after = before + (nextVal - prevVal);
+          if (statKey === 'armor') after = Math.min(90, after);
+          if (statKey === 'selfDamageMultiplier') after = Math.max(0, after);
+          deltas.push({
+            key: statKey,
+            label: meta.label,
+            before,
+            after,
+            max: meta.max,
+            unit: meta.unit,
+          });
+        }
+      }
+
+      return {
+        upgradeId: def.id,
+        name: def.name,
+        description: def.description,
+        category: def.category,
+        ownedTier: owned,
+        maxTier: def.tiers.length,
+        nextTier: next?.tier ?? null,
+        nextLabel: next?.label ?? null,
+        price: next?.price ?? null,
+        status,
+        statusText: text,
+        deltas,
+        mountable: Boolean(def.slot),
+        equipped: garage.isEquipped(def.id),
+        canEquip: Boolean(def.slot) && owned > 0 && !garage.isEquipped(def.id),
+      };
+    });
+}
+
+export interface GarageMenuOptions {
+  parent?: HTMLElement;
+  onChange?: () => void;
+  onClose?: () => void;
+  /** Repair hook: returns the price, and performs the repair when `doIt` is true. */
+  repair?: (doIt: boolean) => { price: number; ok: boolean };
+}
+
+/** J4: the Garage / Shop screen. Rebuilds its cards from the view-model after every action. */
+export class GarageMenu {
+  readonly el: HTMLDivElement;
+  private category: UpgradeCategory | 'all' = 'weapon';
+  private readonly cards: HTMLDivElement;
+  private readonly balance: HTMLSpanElement;
+  private readonly tabs: HTMLDivElement;
+  private readonly repairButton: HTMLButtonElement;
+
+  constructor(
+    private readonly garage: Garage,
+    private readonly base: VehicleConfig,
+    private readonly coins: { readonly balance: number },
+    private readonly options: GarageMenuOptions = {}
+  ) {
+    this.el = document.createElement('div');
+    this.el.id = 'garage-menu';
+    this.el.hidden = true;
+
+    const header = document.createElement('div');
+    header.className = 'garage-header';
+    const title = document.createElement('h1');
+    title.textContent = 'GARAGE';
+    this.balance = document.createElement('span');
+    this.balance.className = 'garage-balance';
+    this.repairButton = document.createElement('button');
+    this.repairButton.type = 'button';
+    this.repairButton.className = 'garage-repair';
+    this.repairButton.addEventListener('click', () => {
+      this.options.repair?.(true);
+      this.render();
+      this.options.onChange?.();
+    });
+    const play = document.createElement('button');
+    play.type = 'button';
+    play.className = 'garage-play';
+    play.textContent = 'DRIVE ▶';
+    play.addEventListener('click', () => this.options.onClose?.());
+    header.append(title, this.balance, this.repairButton, play);
+
+    this.tabs = document.createElement('div');
+    this.tabs.className = 'garage-tabs';
+    for (const tab of CATEGORY_TABS) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = tab.label;
+      b.dataset.category = tab.id;
+      b.addEventListener('click', () => {
+        this.category = tab.id;
+        this.render();
+      });
+      this.tabs.appendChild(b);
+    }
+
+    this.cards = document.createElement('div');
+    this.cards.className = 'garage-cards';
+    this.el.append(header, this.tabs, this.cards);
+    (options.parent ?? document.body).appendChild(this.el);
+    this.render();
+  }
+
+  get visible(): boolean {
+    return !this.el.hidden;
+  }
+
+  open(): void {
+    this.el.hidden = false;
+    this.render();
+  }
+
+  close(): void {
+    this.el.hidden = true;
+  }
+
+  render(): void {
+    this.balance.textContent = `${this.coins.balance} coins`;
+    const repair = this.options.repair?.(false);
+    this.repairButton.hidden = !repair;
+    if (repair) {
+      this.repairButton.textContent = repair.price > 0 ? `Repair (${repair.price})` : 'Repaired';
+      this.repairButton.disabled = repair.price === 0 || !repair.ok;
+    }
+    for (const b of this.tabs.querySelectorAll('button')) {
+      b.classList.toggle('active', b.dataset.category === this.category);
+    }
+    this.cards.replaceChildren();
+    for (const card of buildShopCards(this.garage, this.base, this.category)) {
+      this.cards.appendChild(this.renderCard(card));
+    }
+  }
+
+  private renderCard(card: TierCard): HTMLDivElement {
+    const el = document.createElement('div');
+    el.className = `tier-card status-${card.status}${card.equipped ? ' equipped' : ''}`;
+    el.dataset.upgrade = card.upgradeId;
+
+    const name = document.createElement('h2');
+    name.textContent = card.name;
+    const tier = document.createElement('div');
+    tier.className = 'tier-pips';
+    tier.textContent = `${'●'.repeat(card.ownedTier)}${'○'.repeat(card.maxTier - card.ownedTier)}${card.nextLabel ? `  ${card.nextLabel}` : ''}`;
+    const desc = document.createElement('p');
+    desc.textContent = card.description;
+    el.append(name, tier, desc);
+
+    for (const d of card.deltas) {
+      const row = document.createElement('div');
+      row.className = 'stat-row';
+      const label = document.createElement('span');
+      label.textContent = d.label;
+      const bar = document.createElement('div');
+      bar.className = 'stat-bar';
+      const before = document.createElement('div');
+      before.className = 'stat-before';
+      before.style.width = `${Math.min(100, (100 * d.before) / d.max)}%`;
+      const after = document.createElement('div');
+      after.className = d.after >= d.before ? 'stat-after up' : 'stat-after down';
+      after.style.width = `${Math.min(100, (100 * d.after) / d.max)}%`;
+      bar.append(after, before);
+      const values = document.createElement('span');
+      values.className = 'stat-values';
+      values.textContent = `${fmt(d.before)} → ${fmt(d.after)}${d.unit ? ` ${d.unit}` : ''}`;
+      row.append(label, bar, values);
+      el.appendChild(row);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+    const buy = document.createElement('button');
+    buy.type = 'button';
+    buy.className = 'buy';
+    buy.textContent = card.statusText;
+    buy.disabled = card.status !== 'buy';
+    buy.addEventListener('click', () => {
+      if (this.garage.buy(card.upgradeId).ok) {
+        this.render();
+        this.options.onChange?.();
+      }
+    });
+    actions.appendChild(buy);
+    if (card.mountable && card.ownedTier > 0) {
+      const equip = document.createElement('button');
+      equip.type = 'button';
+      equip.className = 'equip';
+      equip.textContent = card.equipped ? 'Equipped' : 'Equip';
+      equip.disabled = !card.canEquip;
+      equip.addEventListener('click', () => {
+        if (this.garage.equip(card.upgradeId)) {
+          this.render();
+          this.options.onChange?.();
+        }
+      });
+      actions.appendChild(equip);
+    }
+    el.appendChild(actions);
+    return el;
+  }
+}
+
+function fmt(v: number): string {
+  return Number.isInteger(v) ? String(v) : v.toFixed(2);
+}

@@ -198,3 +198,165 @@ canvas {
   font: inherit;
   outline: none;
 }
+
+#garage-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(12, 12, 16, 0.92), rgba(12, 12, 16, 0.98));
+  color: #f4e9d8;
+  font:
+    14px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  overflow: hidden;
+}
+
+#garage-menu .garage-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#garage-menu h1 {
+  font-size: 28px;
+  letter-spacing: 0.12em;
+  color: #c8402e;
+  margin-right: auto;
+}
+
+#garage-menu .garage-balance {
+  color: #ffd84a;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+#garage-menu button {
+  font: inherit;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4e9d8;
+}
+
+#garage-menu button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+#garage-menu .garage-play {
+  background: #c8402e;
+  color: #fff;
+  font-weight: bold;
+}
+
+#garage-menu .garage-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 24px;
+  flex-wrap: wrap;
+}
+
+#garage-menu .garage-tabs .active {
+  background: #f4e9d8;
+  color: #1a1a1e;
+}
+
+#garage-menu .garage-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  padding: 8px 24px 24px;
+  overflow: auto;
+}
+
+#garage-menu .tier-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#garage-menu .tier-card.equipped {
+  border-color: #ffd84a;
+}
+
+#garage-menu .tier-card h2 {
+  font-size: 17px;
+}
+
+#garage-menu .tier-pips {
+  color: #ffd84a;
+  letter-spacing: 0.15em;
+}
+
+#garage-menu .tier-card p {
+  opacity: 0.8;
+  font-size: 13px;
+}
+
+#garage-menu .stat-row {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+#garage-menu .stat-bar {
+  position: relative;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#garage-menu .stat-bar div {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 4px;
+}
+
+#garage-menu .stat-before {
+  background: #8fa3b8;
+}
+
+#garage-menu .stat-after.up {
+  background: #7fd77f;
+}
+
+#garage-menu .stat-after.down {
+  background: #ff8a80;
+}
+
+#garage-menu .card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+#garage-menu .buy {
+  flex: 1;
+  background: #2f8f5b;
+  color: #fff;
+}
+
+#garage-menu .status-locked .buy {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#garage-menu .status-coins .buy {
+  background: rgba(200, 64, 46, 0.35);
+}
