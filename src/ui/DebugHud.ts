@@ -27,6 +27,10 @@ export class DebugHud {
     parent.appendChild(this.el);
   }
 
+  setVisible(visible: boolean): void {
+    this.el.hidden = !visible;
+  }
+
   update(s: HudState): void {
     const hpBar = '█'.repeat(Math.round((10 * s.hp) / s.maxHp)).padEnd(10, '░');
     const fuelBar = '█'.repeat(Math.round(10 * s.fuelFraction)).padEnd(10, '░');

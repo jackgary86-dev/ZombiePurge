@@ -212,11 +212,13 @@ async function boot(): Promise<void> {
     tank.fill();
     applyGarage();
     loop.setState(GameState.Garage);
+    hud.setVisible(false);
     menu.open();
   }
 
   function startRun(): void {
     menu.close();
+    hud.setVisible(true);
     applyGarage();
     stats = new RunStats(cfg.rewards);
     if (gun) gun.heat = 0;

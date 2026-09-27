@@ -19,6 +19,11 @@ canvas {
   touch-action: none;
 }
 
+/* Overlays toggle the hidden attribute; keep it winning over their display rules. */
+[hidden] {
+  display: none !important;
+}
+
 #debug-hud {
   position: fixed;
   top: 12px;
@@ -204,7 +209,12 @@ canvas {
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, rgba(12, 12, 16, 0.92), rgba(12, 12, 16, 0.98));
+  background: linear-gradient(
+    90deg,
+    rgba(12, 12, 16, 0.96) 0%,
+    rgba(12, 12, 16, 0.9) 52%,
+    rgba(12, 12, 16, 0.25) 100%
+  );
   color: #f4e9d8;
   font:
     14px/1.5 ui-monospace,
@@ -220,6 +230,7 @@ canvas {
   gap: 16px;
   padding: 14px 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 12, 16, 0.96);
 }
 
 #garage-menu h1 {
@@ -270,6 +281,7 @@ canvas {
 
 #garage-menu .garage-cards {
   display: grid;
+  max-width: 700px;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 14px;
   padding: 8px 24px 24px;
