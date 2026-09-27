@@ -35,4 +35,12 @@ Tick items in the PR that closes the milestone.
 
 ## M2 – Shop & Upgrades
 
-_(to be written when M2 starts)_
+- [ ] The page opens on the GARAGE with the car on a slow turntable and your coin balance in the header
+- [ ] Cards explain themselves: "Need N more coins", "Unlocks on map N", "Fully upgraded"; stat bars show before → after
+- [ ] Buy Engine tier 1: balance drops by 150, the pips fill, the next tier's price appears
+- [ ] Buy the Machine Gun: it shows "Equipped" and a turret appears on the roof
+- [ ] DRIVE, then hold F (or click): tracers, zombies drop, the gun bar fills and reads OVERHEATED if you hold it; let go and it cools
+- [ ] Fuel gauge drops while driving; stop with an empty tank and you get OUT OF GAS
+- [ ] Get wrecked: WRECKED screen, Enter returns to the garage with a Repair (price) button; repairing charges per missing HP
+- [ ] With `#debug`, `then`unlockall`: every card is maxed and the top-tier gun is mounted
+- [ ] Reload the page: purchases, loadout and coins are still there

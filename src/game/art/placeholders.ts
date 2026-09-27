@@ -1,4 +1,7 @@
 import {
+  BufferGeometry,
+  Line,
+  LineBasicMaterial,
   BoxGeometry,
   CapsuleGeometry,
   Color,
@@ -214,5 +217,83 @@ export class ProjectileViews {
       m.visible = p.active;
       if (p.active) m.position.copy(p.position);
     });
+  }
+}
+
+/** Roof turret stand-in: a base block and a barrel that yaw toward the mount's aim. */
+export class TurretView {
+  readonly group = new Group();
+
+  constructor(localOffset: Vector3) {
+    const base = new Mesh(
+      new BoxGeometry(0.5, 0.25, 0.5),
+      new MeshStandardMaterial({ color: 0x3a3a40, roughness: 0.6 })
+    );
+    const barrel = new Mesh(
+      new BoxGeometry(0.12, 0.12, 1.1),
+      new MeshStandardMaterial({ color: 0x202024, metalness: 0.5 })
+    );
+    barrel.position.set(0, 0.2, 0.45);
+    base.castShadow = true;
+    this.group.add(base, barrel);
+    this.group.position.copy(localOffset).add(new Vector3(0, -0.15, 0));
+    this.group.visible = false;
+  }
+
+  set visible(v: boolean) {
+    this.group.visible = v;
+  }
+
+  /** `yaw` is relative to the car (0 = straight ahead). */
+  aim(yaw: number): void {
+    this.group.rotation.y = yaw;
+  }
+}
+
+/** Pooled tracer lines for hitscan shots; each fades out over a few frames. */
+export class ShotTracers {
+  readonly lines: Line[];
+  private readonly ages: number[];
+
+  constructor(capacity = 24) {
+    this.lines = Array.from({ length: capacity }, () => {
+      const geometry = new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]);
+      const line = new Line(
+        geometry,
+        new LineBasicMaterial({ color: 0xffe28a, transparent: true, opacity: 0 })
+      );
+      line.visible = false;
+      line.frustumCulled = false;
+      return line;
+    });
+    this.ages = new Array(capacity).fill(Infinity);
+  }
+
+  add(origin: Vector3, end: Vector3): void {
+    let i = this.ages.indexOf(Infinity);
+    if (i < 0) i = this.ages.indexOf(Math.max(...this.ages));
+    const line = this.lines[i];
+    const pos = line.geometry.getAttribute('position');
+    pos.setXYZ(0, origin.x, origin.y, origin.z);
+    pos.setXYZ(1, end.x, end.y, end.z);
+    pos.needsUpdate = true;
+    line.visible = true;
+    this.ages[i] = 0;
+  }
+
+  update(dt: number): void {
+    for (let i = 0; i < this.lines.length; i++) {
+      if (this.ages[i] === Infinity) continue;
+      this.ages[i] += dt;
+      const t = this.ages[i] / 0.12;
+      const material = this.lines[i].material as LineBasicMaterial;
+      if (t >= 1) {
+        this.lines[i].visible = false;
+        this.ages[i] = Infinity;
+        material.opacity = 0;
+      } else {
+        material.opacity = 1 - t;
+      }
+    }
   }
 }

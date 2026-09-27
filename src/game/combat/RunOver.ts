@@ -23,6 +23,11 @@ const relative = new Vector3();
  * car back, scaled by speed and reduced by armor inside Vehicle.applyDamage.
  */
 export class RunOverSystem {
+  /** From the Front Ram upgrade (D12): multiplies damage dealt to zombies on impact. */
+  damageMultiplier = 1;
+  /** From the Front Ram upgrade: scales impact damage the car takes. */
+  selfDamageMultiplier = 1;
+
   constructor(
     private readonly physics: PhysicsWorld,
     private readonly car: Vehicle,
@@ -68,13 +73,15 @@ export class RunOverSystem {
 
     let damageToZombie = 0;
     if (relativeSpeed >= this.cfg.runOverMinSpeed) {
-      damageToZombie = relativeSpeed * this.carMass * this.cfg.runOverDamageFactor;
+      damageToZombie =
+        relativeSpeed * this.carMass * this.cfg.runOverDamageFactor * this.damageMultiplier;
     }
     const killed = damageToZombie > 0 ? zombie.takeDamage(damageToZombie) : false;
 
     const rawCarDamage =
       this.cfg.impactDamageToCar[zombie.rank] *
-      Math.min(1, relativeSpeed / this.cfg.impactFullSpeed);
+      Math.min(1, relativeSpeed / this.cfg.impactFullSpeed) *
+      this.selfDamageMultiplier;
     const damageToCar = this.car.applyDamage(rawCarDamage);
 
     const p = zombie.getPosition();
