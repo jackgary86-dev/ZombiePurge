@@ -20,6 +20,7 @@ import {
   buildPlaceholderCar,
   ProjectileViews,
   ShotTracers,
+  syncUpgradeParts,
   TurretView,
   ZombieInstances,
 } from './game/art';
@@ -194,6 +195,7 @@ async function boot(): Promise<void> {
       gun = null;
     }
     turret.visible = gun !== null;
+    syncUpgradeParts(carView.group, garage, cfg.vehicle);
   }
 
   function resetCar(): void {
