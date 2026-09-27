@@ -51,6 +51,8 @@ export class Vehicle {
   readonly collider: RAPIER.Collider;
   readonly wheels: WheelState[];
   hp: number;
+  /** Debug god mode: damage is ignored while set. */
+  invulnerable = false;
   private steerAngle = 0;
   private readonly physics: PhysicsWorld;
   private readonly cfg: VehicleConfig;
@@ -273,7 +275,7 @@ export class Vehicle {
 
   /** Applies damage reduced by armor percent; returns the damage actually taken. */
   applyDamage(raw: number): number {
-    if (raw <= 0 || this.hp <= 0) return 0;
+    if (raw <= 0 || this.hp <= 0 || this.invulnerable) return 0;
     const taken = Math.min(this.hp, raw * (1 - Math.min(100, this.cfg.armor) / 100));
     this.hp -= taken;
     return taken;

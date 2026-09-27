@@ -36,11 +36,14 @@ import {
 } from './game/zombies';
 import { showBuildTag } from './ui/BuildTag';
 import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
+import { CheatConsole } from './ui/CheatConsole';
 import { bind, TuningPanel } from './ui/TuningPanel';
 
 const ZOMBIE_CAPACITY = 150;
 /** `#autoplay` drives toward the nearest zombie by itself: handy for smoke tests and profiling. */
 const AUTOPLAY = location.hash.includes('autoplay');
+/** K4: the cheat console only exists in dev builds or when the page is opened with #debug. */
+const DEBUG_CONSOLE = import.meta.env.DEV || location.hash.includes('debug');
 
 async function boot(): Promise<void> {
   const cfg = getConfig();
@@ -124,6 +127,46 @@ async function boot(): Promise<void> {
   const hud = new DebugHud();
   const popups = new CoinPopups();
   showBuildTag();
+  if (DEBUG_CONSOLE) {
+    const ahead = new Vector3();
+    new CheatConsole({
+      spawnZombie(rank, count) {
+        car.getForward(ahead).multiplyScalar(25).add(car.getPosition());
+        let n = 0;
+        for (let i = 0; i < count; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const r = Math.sqrt(Math.random()) * 8;
+          if (
+            pool.spawn(rank, { x: ahead.x + Math.sin(a) * r, y: 0, z: ahead.z + Math.cos(a) * r })
+          )
+            n++;
+        }
+        return n;
+      },
+      addCoins(amount) {
+        stats.addBonus(amount);
+        return stats.coinsTotal;
+      },
+      setGodMode(on) {
+        car.invulnerable = on;
+      },
+      teleport(x, z) {
+        car.body.setTranslation({ x, y: 2, z }, true);
+        car.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        car.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        stats.resetPosition();
+      },
+      heal() {
+        car.hp = cfg.vehicle.hp;
+      },
+      killAll() {
+        let n = 0;
+        for (const z of pool.active()) if (z.isAlive() && z.takeDamage(Infinity)) n++;
+        return n;
+      },
+      unlockAllUpgrades: () => 'no upgrades to unlock yet (comes with D2)',
+    });
+  }
   // K3: every binding targets a value the systems re-read each step, so edits apply instantly.
   new TuningPanel([
     bind('vehicle.topSpeed', cfg.vehicle, 'topSpeed', 10, 90, 1),

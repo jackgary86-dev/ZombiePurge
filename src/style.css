@@ -160,3 +160,41 @@ canvas {
   font-size: 11px;
   color: #bfe3a5;
 }
+
+#cheat-console {
+  position: fixed;
+  left: 12px;
+  bottom: 36px;
+  width: 460px;
+  background: rgba(10, 10, 14, 0.92);
+  color: #f4e9d8;
+  border-radius: 8px;
+  font:
+    12px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  overflow: hidden;
+}
+
+#cheat-console .console-log {
+  max-height: 180px;
+  overflow: auto;
+  padding: 8px 10px;
+}
+
+#cheat-console .console-log .err {
+  color: #ff8a80;
+}
+
+#cheat-console input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font: inherit;
+  outline: none;
+}

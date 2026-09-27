@@ -34,6 +34,8 @@ export class RunStats {
   distanceMeters = 0;
   coinsFromKills = 0;
   coinsFromDistance = 0;
+  /** Coins granted outside kills/distance (debug console, future pickups). */
+  coinsBonus = 0;
   durationSeconds = 0;
   private distanceCredited = 0;
   private readonly lastPosition = new Vector3();
@@ -46,7 +48,11 @@ export class RunStats {
   }
 
   get coinsTotal(): number {
-    return this.coinsFromKills + this.coinsFromDistance;
+    return this.coinsFromKills + this.coinsFromDistance + this.coinsBonus;
+  }
+
+  addBonus(coins: number): void {
+    this.coinsBonus += Math.floor(coins);
   }
 
   coinsForRank(rank: ZombieRank): number {
