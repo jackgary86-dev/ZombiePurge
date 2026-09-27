@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { DEFAULT_CONFIG } from '../../src/data/defaults';
 import {
   ConfigError,
   getConfig,
@@ -38,7 +39,7 @@ describe('config layer', () => {
     const cfg = loadConfig({ vehicle: { topSpeed: 80, steering: { sensitivity: 4 } } });
     expect(cfg.vehicle.topSpeed).toBe(80);
     expect(cfg.vehicle.steering.sensitivity).toBe(4);
-    expect(cfg.vehicle.steering.maxAngle).toBe(Math.PI / 4);
+    expect(cfg.vehicle.steering.maxAngle).toBe(DEFAULT_CONFIG.vehicle.steering.maxAngle);
     expect(cfg.vehicle.mass).toBe(1500);
   });
 

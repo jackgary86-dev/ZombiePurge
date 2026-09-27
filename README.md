@@ -2,6 +2,8 @@
 
 A 3D zombie-smashing vehicular combat sandbox game built with Three.js, TypeScript, and Vite.
 
+![Driving the greybox test map](docs/images/m0-greybox-driving.png)
+
 ## Quick Start
 
 ```bash
@@ -23,6 +25,19 @@ npm run lint
 # Check types
 npm run type-check
 ```
+
+## Controls
+
+| Action | Keyboard | Gamepad |
+|---|---|---|
+| Drive / reverse | W / S or arrow keys | Right / left trigger |
+| Steer | A / D or arrow keys | Left stick |
+| Handbrake | Space | A |
+| Flip reset (when upside down) | R | Y |
+| Pause | Esc / P | Start |
+| Orbit camera | Click the game, then move the mouse | Right stick (coming with the HUD work) |
+
+Controls are rebindable; bindings persist in `localStorage`.
 
 ## Project Structure
 
@@ -63,13 +78,23 @@ assets/            # 3D models, textures, sounds
 
 | # | Goal | Status |
 |---|------|--------|
-| **M0** | Foundation (scaffold, car, camera) | 🔨 In Progress |
-| **M1** | Zombie Smash Prototype (zombies, coins, demo) | ⬜ TODO |
+| **M0** | Foundation (scaffold, car, camera) | ✅ Done (A1–A7) |
+| **M1** | Zombie Smash Prototype (zombies, coins, demo) | 🔨 Next |
 | **M2** | Shop & Upgrades | ⬜ TODO |
 | **M3** | Sandbox Mode (first playable) | ⬜ TODO |
 | **M4** | Story Mode: Map 1 (Suburbs) | ⬜ TODO |
 | **M5** | Story Mode: Maps 2-5 | ⬜ TODO |
 | **M6** | Polish & Release | ⬜ TODO |
+
+## What's Built So Far
+
+- **A1** Vite + TypeScript + Three.js + Rapier scaffold with ESLint, Prettier, Vitest
+- **A2** Fixed-step game loop (60 Hz physics, variable-rate render) and state machine
+- **A3** Raycast-suspension car on a Rapier rigid body: drive, brake, reverse, handbrake, air control, flip reset
+- **A4** Third-person chase camera: speed-based pull-back and FOV, orbit with auto-recenter, wall collision
+- **A5** Keyboard + gamepad input with rebindable, persisted bindings
+- **A6** 500 m greybox arena: walls, ramps, slalom boxes, pillar grid
+- **A7** Typed, validated config for physics, vehicle, camera, zombies, rewards and maps
 
 ## Development
 
