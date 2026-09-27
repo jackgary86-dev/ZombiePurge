@@ -126,9 +126,47 @@ export interface GunTierStats {
   autoAimCone: number;
 }
 
+export interface FlamethrowerTierStats {
+  /** Direct damage per second to everything in the cone. */
+  damagePerSecond: number;
+  range: number;
+  /** Half-angle (radians) of the flame cone. */
+  cone: number;
+  /** Seconds a zombie keeps burning after leaving the flame. */
+  burnSeconds: number;
+  burnDamagePerSecond: number;
+  /** Car fuel (litres) consumed per second of flame. */
+  fuelPerSecond: number;
+}
+
+export interface ShotgunTierStats {
+  pellets: number;
+  damagePerPellet: number;
+  /** Half-angle (radians) of the pellet spread. */
+  spread: number;
+  range: number;
+  /** Minimum seconds between shots (pump). */
+  pumpSeconds: number;
+  magazine: number;
+  reloadSeconds: number;
+}
+
+export interface RocketTierStats {
+  damage: number;
+  splashRadius: number;
+  speed: number;
+  magazine: number;
+  reloadSeconds: number;
+  /** Minimum seconds between rockets. */
+  fireInterval: number;
+}
+
 export interface CombatConfig {
   /** Per-tier stats for the machine gun (index 0 = tier 1). */
   machineGun: GunTierStats[];
+  flamethrower: FlamethrowerTierStats[];
+  shotgun: ShotgunTierStats[];
+  rockets: RocketTierStats[];
   /** Below this relative speed (m/s) a collision only pushes the zombie. */
   runOverMinSpeed: number;
   /** Zombie damage = relativeSpeed * carMass * this factor. */

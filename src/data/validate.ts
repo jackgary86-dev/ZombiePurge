@@ -118,6 +118,31 @@ export function collectConfigProblems(config: GameConfig): string[] {
       problems.push(`combat.machineGun[${i}].unlockHeat must be between 0 and 1`);
     positive(g.autoAimCone, `combat.machineGun[${i}].autoAimCone`, problems);
   });
+  config.combat.flamethrower.forEach((f, i) => {
+    positive(f.damagePerSecond, `combat.flamethrower[${i}].damagePerSecond`, problems);
+    positive(f.range, `combat.flamethrower[${i}].range`, problems);
+    positive(f.cone, `combat.flamethrower[${i}].cone`, problems);
+    nonNegative(f.burnSeconds, `combat.flamethrower[${i}].burnSeconds`, problems);
+    nonNegative(f.burnDamagePerSecond, `combat.flamethrower[${i}].burnDamagePerSecond`, problems);
+    nonNegative(f.fuelPerSecond, `combat.flamethrower[${i}].fuelPerSecond`, problems);
+  });
+  config.combat.shotgun.forEach((g, i) => {
+    positive(g.pellets, `combat.shotgun[${i}].pellets`, problems);
+    positive(g.damagePerPellet, `combat.shotgun[${i}].damagePerPellet`, problems);
+    positive(g.spread, `combat.shotgun[${i}].spread`, problems);
+    positive(g.range, `combat.shotgun[${i}].range`, problems);
+    positive(g.pumpSeconds, `combat.shotgun[${i}].pumpSeconds`, problems);
+    positive(g.magazine, `combat.shotgun[${i}].magazine`, problems);
+    positive(g.reloadSeconds, `combat.shotgun[${i}].reloadSeconds`, problems);
+  });
+  config.combat.rockets.forEach((r, i) => {
+    positive(r.damage, `combat.rockets[${i}].damage`, problems);
+    positive(r.splashRadius, `combat.rockets[${i}].splashRadius`, problems);
+    positive(r.speed, `combat.rockets[${i}].speed`, problems);
+    positive(r.magazine, `combat.rockets[${i}].magazine`, problems);
+    positive(r.reloadSeconds, `combat.rockets[${i}].reloadSeconds`, problems);
+    positive(r.fireInterval, `combat.rockets[${i}].fireInterval`, problems);
+  });
   nonNegative(config.combat.runOverMinSpeed, 'combat.runOverMinSpeed', problems);
   positive(config.combat.runOverDamageFactor, 'combat.runOverDamageFactor', problems);
   positive(config.combat.impactFullSpeed, 'combat.impactFullSpeed', problems);
