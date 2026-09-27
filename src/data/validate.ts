@@ -33,7 +33,28 @@ export function collectConfigProblems(config: GameConfig): string[] {
   positive(v.acceleration, 'vehicle.acceleration', problems);
   positive(v.brakingDeceleration, 'vehicle.brakingDeceleration', problems);
   positive(v.reverseSpeed, 'vehicle.reverseSpeed', problems);
+  positive(v.chassisHalfExtents.x, 'vehicle.chassisHalfExtents.x', problems);
+  positive(v.chassisHalfExtents.y, 'vehicle.chassisHalfExtents.y', problems);
+  positive(v.chassisHalfExtents.z, 'vehicle.chassisHalfExtents.z', problems);
+  positive(v.wheels.radius, 'vehicle.wheels.radius', problems);
+  positive(v.wheels.halfTrack, 'vehicle.wheels.halfTrack', problems);
+  positive(v.wheels.halfWheelbase, 'vehicle.wheels.halfWheelbase', problems);
+  if (!Number.isFinite(v.wheels.attachHeight))
+    problems.push('vehicle.wheels.attachHeight must be a number');
+  positive(v.suspension.restLength, 'vehicle.suspension.restLength', problems);
+  positive(v.suspension.stiffness, 'vehicle.suspension.stiffness', problems);
+  nonNegative(v.suspension.damping, 'vehicle.suspension.damping', problems);
+  positive(v.tires.grip, 'vehicle.tires.grip', problems);
+  positive(v.tires.maxFriction, 'vehicle.tires.maxFriction', problems);
+  positive(v.tires.handbrakeGripMultiplier, 'vehicle.tires.handbrakeGripMultiplier', problems);
   positive(v.steering.maxAngle, 'vehicle.steering.maxAngle', problems);
+  if (v.steering.highSpeedFactor <= 0 || v.steering.highSpeedFactor > 1) {
+    problems.push(
+      `vehicle.steering.highSpeedFactor must be in (0, 1] (got ${String(v.steering.highSpeedFactor)})`
+    );
+  }
+  nonNegative(v.airControl.pitchTorque, 'vehicle.airControl.pitchTorque', problems);
+  nonNegative(v.airControl.yawTorque, 'vehicle.airControl.yawTorque', problems);
   positive(v.steering.sensitivity, 'vehicle.steering.sensitivity', problems);
   positive(v.steering.returnSpeed, 'vehicle.steering.returnSpeed', problems);
   nonNegative(v.friction.rollingResistance, 'vehicle.friction.rollingResistance', problems);

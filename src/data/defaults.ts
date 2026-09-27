@@ -8,13 +8,31 @@ export const DEFAULT_CONFIG: GameConfig = {
   vehicle: {
     mass: 1500,
     topSpeed: 50,
-    acceleration: 15,
-    brakingDeceleration: 25,
-    reverseSpeed: 20,
+    acceleration: 8,
+    brakingDeceleration: 12,
+    reverseSpeed: 15,
+    chassisHalfExtents: { x: 0.9, y: 0.4, z: 2.0 },
+    wheels: {
+      radius: 0.35,
+      halfTrack: 0.8,
+      halfWheelbase: 1.4,
+      attachHeight: -0.2,
+    },
+    suspension: {
+      restLength: 0.4,
+      stiffness: 25000,
+      damping: 3000,
+    },
+    tires: {
+      grip: 0.9,
+      maxFriction: 1.2,
+      handbrakeGripMultiplier: 0.25,
+    },
     steering: {
-      maxAngle: Math.PI / 4,
-      sensitivity: 3,
-      returnSpeed: 5,
+      maxAngle: Math.PI / 5,
+      sensitivity: 4,
+      returnSpeed: 6,
+      highSpeedFactor: 0.35,
     },
     friction: {
       rollingResistance: 0.015,
@@ -22,6 +40,10 @@ export const DEFAULT_CONFIG: GameConfig = {
     },
     handbrake: {
       brakingMultiplier: 1.5,
+    },
+    airControl: {
+      pitchTorque: 4000,
+      yawTorque: 3000,
     },
     hp: 100,
     armor: 0,
