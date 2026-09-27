@@ -15,7 +15,7 @@ import { GameLoop } from './core/GameLoop';
 import { GameState } from './core/GameState';
 import { InputManager } from './core/input';
 import { getConfig, getMapConfig } from './data/config';
-import { buildPlaceholderCar, ProjectileViews, ZombieView } from './game/art';
+import { buildPlaceholderCar, ProjectileViews, ZombieInstances } from './game/art';
 import { ChaseCamera } from './game/camera';
 import { RunOverSystem } from './game/combat';
 import { RunStats, Wallet } from './game/economy';
@@ -39,7 +39,7 @@ import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
 import { CheatConsole } from './ui/CheatConsole';
 import { bind, TuningPanel } from './ui/TuningPanel';
 
-const ZOMBIE_CAPACITY = 150;
+const ZOMBIE_CAPACITY = 250;
 /** `#autoplay` drives toward the nearest zombie by itself: handy for smoke tests and profiling. */
 const AUTOPLAY = location.hash.includes('autoplay');
 /** K4: the cheat console only exists in dev builds or when the page is opened with #debug. */
@@ -81,11 +81,8 @@ async function boot(): Promise<void> {
   sun.target = carView.group;
 
   const pool = new ZombiePool(physics, ZOMBIE_CAPACITY, cfg.zombies);
-  const zombieViews = pool.zombies.map(() => {
-    const view = new ZombieView();
-    scene.add(view.group);
-    return view;
-  });
+  const zombieInstances = new ZombieInstances(ZOMBIE_CAPACITY);
+  scene.add(zombieInstances.bodies, zombieInstances.heads);
   const spawner = new HordeSpawner(pool, map);
   const projectiles = new ProjectileSystem(64);
   const projectileViews = new ProjectileViews(64);
@@ -228,7 +225,7 @@ async function boot(): Promise<void> {
     for (const impact of combat.collectImpacts()) {
       if (impact.killed) {
         const kill = stats.recordKill(impact.rank, impact.position);
-        popups.add(kill.coins, kill.position);
+        popups.add(kill.coins, kill.position, kill.multiplier);
       }
     }
     stats.trackPosition(senses.carPosition, deltaTime);
@@ -273,7 +270,7 @@ async function boot(): Promise<void> {
     car.getQuaternion(target.quaternion);
     target.forwardSpeed = car.getForwardSpeed();
     carView.sync(car);
-    pool.zombies.forEach((z, i) => zombieViews[i].sync(z));
+    zombieInstances.sync(pool.zombies, camera.position);
     projectileViews.sync(projectiles.projectiles);
 
     const mouse = input.consumeMouseDelta();
@@ -299,6 +296,8 @@ async function boot(): Promise<void> {
       distanceMeters: stats.distanceMeters,
       alive: pool.aliveCount,
       paused: loop.getState() === GameState.Paused,
+      comboMultiplier: stats.comboMultiplier,
+      comboChain: stats.comboChain,
     });
   });
 

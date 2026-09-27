@@ -3,7 +3,10 @@ import {
   CapsuleGeometry,
   Color,
   CylinderGeometry,
+  DynamicDrawUsage,
   Group,
+  InstancedMesh,
+  Matrix4,
   Mesh,
   MeshStandardMaterial,
   Quaternion,
@@ -89,61 +92,99 @@ const bodyGeometry = new CapsuleGeometry(
   8
 );
 const headGeometry = new SphereGeometry(0.2, 8, 6);
-const materials = new Map<ZombieRank, MeshStandardMaterial>();
-
-function rankMaterial(rank: ZombieRank): MeshStandardMaterial {
-  let m = materials.get(rank);
-  if (!m) {
-    m = new MeshStandardMaterial({ color: RANK_STYLE[rank].color, roughness: 0.95 });
-    materials.set(rank, m);
-  }
-  return m;
-}
-
-/** One reusable visual per pool slot; restyled on each spawn. */
-export class ZombieView {
-  readonly group = new Group();
-  private readonly body: Mesh;
-  private readonly head: Mesh;
-  private readonly material = new MeshStandardMaterial({ roughness: 0.95 });
-  private rank: ZombieRank | null = null;
+/**
+ * B7: every zombie is one instance in two InstancedMeshes (body, head), so a horde of
+ * hundreds costs two draw calls. Colour per instance comes from the rank; corpses tip
+ * over and fade to grey. A simple LOD drops heads beyond `headLodDistance`.
+ */
+export class ZombieInstances {
+  readonly bodies: InstancedMesh;
+  readonly heads: InstancedMesh;
+  headLodDistance = 120;
+  private readonly matrix = new Matrix4();
+  private readonly position = new Vector3();
+  private readonly quaternion = new Quaternion();
+  private readonly scale = new Vector3();
   private readonly facingQ = new Quaternion();
   private readonly lieDownQ = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
   private readonly up = new Vector3(0, 1, 0);
+  private readonly color = new Color();
+  private readonly hidden = new Matrix4().makeScale(0, 0, 0);
+  private readonly lastRank: (ZombieRank | null)[];
+  private readonly deadFade: number[];
 
-  constructor() {
-    this.body = new Mesh(bodyGeometry, this.material);
-    this.body.castShadow = true;
-    this.head = new Mesh(headGeometry, this.material);
-    this.head.position.y = ZOMBIE_CAPSULE.halfHeight + ZOMBIE_CAPSULE.radius + 0.05;
-    this.group.add(this.body, this.head);
-    this.group.visible = false;
+  constructor(readonly capacity: number) {
+    const material = new MeshStandardMaterial({ roughness: 0.95 });
+    this.bodies = new InstancedMesh(bodyGeometry, material, capacity);
+    this.heads = new InstancedMesh(headGeometry, material, capacity);
+    for (const mesh of [this.bodies, this.heads]) {
+      mesh.castShadow = true;
+      mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(DynamicDrawUsage);
+      for (let i = 0; i < capacity; i++) {
+        mesh.setMatrixAt(i, this.hidden);
+        mesh.setColorAt(i, this.color.set(0xffffff));
+      }
+    }
+    this.lastRank = new Array(capacity).fill(null);
+    this.deadFade = new Array(capacity).fill(0);
   }
 
-  sync(z: Zombie): void {
-    if (!z.active) {
-      this.group.visible = false;
-      this.rank = null;
-      return;
-    }
-    if (this.rank !== z.rank) {
-      this.rank = z.rank;
-      this.material.color.copy(rankMaterial(z.rank).color);
+  /** Writes one instance per pool slot. `viewer` is the camera position for LOD. */
+  sync(zombies: readonly Zombie[], viewer: Vector3): void {
+    for (let i = 0; i < this.capacity; i++) {
+      const z = zombies[i];
+      if (!z || !z.active) {
+        if (this.lastRank[i] !== null) {
+          this.bodies.setMatrixAt(i, this.hidden);
+          this.heads.setMatrixAt(i, this.hidden);
+          this.lastRank[i] = null;
+        }
+        continue;
+      }
+      if (this.lastRank[i] !== z.rank) {
+        this.lastRank[i] = z.rank;
+        this.deadFade[i] = 0;
+        this.color.set(RANK_STYLE[z.rank].color);
+        this.bodies.setColorAt(i, this.color);
+        this.heads.setColorAt(i, this.color);
+      }
       const s = RANK_STYLE[z.rank].scale;
-      this.group.scale.set(s, s, s);
+      z.getPosition(this.position);
+      const yaw = Math.atan2(z.facing.x, z.facing.z);
+      this.facingQ.setFromAxisAngle(this.up, yaw);
+      if (z.state === 'dead') {
+        this.quaternion.copy(this.facingQ).multiply(this.lieDownQ);
+        this.position.y -= ZOMBIE_CAPSULE.halfHeight * s * 0.8;
+        if (this.deadFade[i] < 1) {
+          this.deadFade[i] = Math.min(1, this.deadFade[i] + 0.05);
+          this.color.set(RANK_STYLE[z.rank].color).lerp(DEAD_TINT, this.deadFade[i]);
+          this.bodies.setColorAt(i, this.color);
+          this.heads.setColorAt(i, this.color);
+        }
+      } else {
+        this.quaternion.copy(this.facingQ);
+      }
+      this.scale.set(s, s, s);
+      this.matrix.compose(this.position, this.quaternion, this.scale);
+      this.bodies.setMatrixAt(i, this.matrix);
+
+      if (this.position.distanceToSquared(viewer) > this.headLodDistance * this.headLodDistance) {
+        this.heads.setMatrixAt(i, this.hidden);
+      } else {
+        // Head sits on top of the capsule in local space; rotate with the body.
+        this.position.addScaledVector(
+          this.up.clone().applyQuaternion(this.quaternion),
+          (ZOMBIE_CAPSULE.halfHeight + ZOMBIE_CAPSULE.radius + 0.05) * s
+        );
+        this.matrix.compose(this.position, this.quaternion, this.scale);
+        this.heads.setMatrixAt(i, this.matrix);
+      }
     }
-    this.group.visible = true;
-    z.getPosition(this.group.position);
-    const yaw = Math.atan2(z.facing.x, z.facing.z);
-    this.facingQ.setFromAxisAngle(this.up, yaw);
-    if (z.state === 'dead') {
-      // Corpse: tip over and fade toward grey while it lingers.
-      this.group.quaternion.copy(this.facingQ).multiply(this.lieDownQ);
-      this.group.position.y -= ZOMBIE_CAPSULE.halfHeight * this.group.scale.y * 0.8;
-      this.material.color.lerp(DEAD_TINT, 0.05);
-    } else {
-      this.group.quaternion.copy(this.facingQ);
-    }
+    this.bodies.instanceMatrix.needsUpdate = true;
+    this.heads.instanceMatrix.needsUpdate = true;
+    if (this.bodies.instanceColor) this.bodies.instanceColor.needsUpdate = true;
+    if (this.heads.instanceColor) this.heads.instanceColor.needsUpdate = true;
   }
 }
 
