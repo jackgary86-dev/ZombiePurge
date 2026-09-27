@@ -11,6 +11,11 @@ export type {
   CameraConfig,
   MapConfig,
   PhysicsConfig,
+  UpgradeDef,
+  UpgradeTier,
+  UpgradeCategory,
+  StatModifiers,
+  WeaponSlot,
 } from './types';
 export { ConfigError, collectConfigProblems, ZOMBIE_RANKS } from './validate';
 

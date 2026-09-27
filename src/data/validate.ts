@@ -1,4 +1,4 @@
-import type { GameConfig, ZombieRank } from './types';
+import type { GameConfig, UpgradeCategory, ZombieRank } from './types';
 
 export const ZOMBIE_RANKS: ZombieRank[] = ['walker', 'runner', 'spitter', 'brute', 'tank', 'boss'];
 
@@ -128,6 +128,48 @@ export function collectConfigProblems(config: GameConfig): string[] {
       `rewards.coinsKeptOnDeathPercent must be between 0 and 100 (got ${String(kept)})`
     );
   }
+
+  const upgradeIds = new Set<string>();
+  const categories: UpgradeCategory[] = [
+    'engine',
+    'tires',
+    'health',
+    'armor',
+    'fuel',
+    'weapon',
+    'ram',
+    'nitro',
+    'radar',
+    'headlights',
+  ];
+  config.upgrades.forEach((u, i) => {
+    const at = `upgrades[${i}] (${u.id || '?'})`;
+    if (!u.id) problems.push(`${at}.id is required`);
+    if (upgradeIds.has(u.id)) problems.push(`${at}.id "${u.id}" is duplicated`);
+    upgradeIds.add(u.id);
+    if (!categories.includes(u.category))
+      problems.push(`${at}.category "${u.category}" is unknown`);
+    if (u.category === 'weapon' && !u.slot) problems.push(`${at} is a weapon and needs a slot`);
+    if (u.tiers.length === 0) problems.push(`${at} needs at least one tier`);
+    let lastPrice = 0;
+    u.tiers.forEach((t, ti) => {
+      if (t.tier !== ti + 1)
+        problems.push(`${at}.tiers[${ti}].tier must be ${ti + 1} (got ${t.tier})`);
+      nonNegative(t.price, `${at}.tiers[${ti}].price`, problems);
+      if (t.price < lastPrice)
+        problems.push(`${at}.tiers[${ti}].price must not be lower than the previous tier`);
+      lastPrice = t.price;
+      if (!Number.isInteger(t.unlockMap) || t.unlockMap < 1 || t.unlockMap > 5) {
+        problems.push(
+          `${at}.tiers[${ti}].unlockMap must be a map number 1-5 (got ${String(t.unlockMap)})`
+        );
+      }
+      for (const [k, v] of Object.entries(t.modifiers)) {
+        if (typeof v !== 'number' || !Number.isFinite(v))
+          problems.push(`${at}.tiers[${ti}].modifiers.${k} must be a number`);
+      }
+    });
+  });
 
   if (config.maps.length === 0) problems.push('maps must contain at least one map');
   const ids = new Set<string>();

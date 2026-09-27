@@ -128,6 +128,56 @@ export interface PhysicsConfig {
   fixedTimeStep: number;
 }
 
+export type UpgradeCategory =
+  | 'engine'
+  | 'tires'
+  | 'health'
+  | 'armor'
+  | 'fuel'
+  | 'weapon'
+  | 'ram'
+  | 'nitro'
+  | 'radar'
+  | 'headlights';
+
+export type WeaponSlot = 'roof' | 'front';
+
+/** Additive changes to base stats. Multipliers are expressed as fractions (0.1 = +10%). */
+export interface StatModifiers {
+  topSpeed?: number;
+  acceleration?: number;
+  grip?: number;
+  offRoadGrip?: number;
+  maxHp?: number;
+  armor?: number;
+  fuelCapacity?: number;
+  ramDamageMultiplier?: number;
+  selfDamageMultiplier?: number;
+  nitroSeconds?: number;
+  radarRange?: number;
+  headlightRange?: number;
+}
+
+export interface UpgradeTier {
+  /** 1-based tier number. */
+  tier: number;
+  price: number;
+  /** Story map (1-5) that must be reached before this tier can be bought. */
+  unlockMap: number;
+  modifiers: StatModifiers;
+  label?: string;
+}
+
+export interface UpgradeDef {
+  id: string;
+  category: UpgradeCategory;
+  name: string;
+  description: string;
+  /** Weapons occupy a mount slot; only one weapon per slot can be equipped. */
+  slot?: WeaponSlot;
+  tiers: UpgradeTier[];
+}
+
 export interface GameConfig {
   physics: PhysicsConfig;
   vehicle: VehicleConfig;
@@ -135,6 +185,7 @@ export interface GameConfig {
   zombies: Record<ZombieRank, ZombieConfig>;
   rewards: RewardsConfig;
   combat: CombatConfig;
+  upgrades: UpgradeDef[];
   maps: MapConfig[];
 }
 
