@@ -21,7 +21,7 @@ describe('D13 nitro', () => {
     }
     expect(boostedSteps).toBeGreaterThanOrEqual(60 * 3 - 2);
     expect(boostedSteps).toBeLessThanOrEqual(60 * 3 + 2);
-    expect(n.charge).toBeCloseTo(0, 5);
+    expect(n.charge).toBeLessThan(0.01); // at most a step of trickle after the boost died
     expect(n.boosting).toBe(false);
     expect(n.accelerationMultiplier).toBe(1);
     // Still holding the button: it trickles back but can't restart until the threshold.
