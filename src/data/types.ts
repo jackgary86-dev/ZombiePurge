@@ -54,6 +54,19 @@ export interface VehicleConfig {
   armor: number;
 }
 
+export interface RangedAttackConfig {
+  /** Fires when the car is within this distance (m). */
+  range: number;
+  /** Projectile launch speed (m/s). */
+  projectileSpeed: number;
+  /** Seconds between shots. */
+  cooldown: number;
+  /** Damage on a direct hit. */
+  damage: number;
+  /** Hit radius around the projectile (m). */
+  hitRadius: number;
+}
+
 export interface ZombieConfig {
   rank: ZombieRank;
   hp: number;
@@ -61,6 +74,8 @@ export interface ZombieConfig {
   detectionRadius: number;
   attackDamage: number;
   coinValue: number;
+  /** Spitter-style ranged attack; melee only when absent. */
+  rangedAttack?: RangedAttackConfig;
 }
 
 export interface RewardsConfig {
@@ -114,5 +129,5 @@ export interface GameConfig {
 }
 
 export type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+  [K in keyof T]?: NonNullable<T[K]> extends object ? DeepPartial<NonNullable<T[K]>> : T[K];
 };

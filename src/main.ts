@@ -15,7 +15,7 @@ import { GameLoop } from './core/GameLoop';
 import { GameState } from './core/GameState';
 import { InputManager } from './core/input';
 import { getConfig, getMapConfig } from './data/config';
-import { buildPlaceholderCar, ZombieView } from './game/art';
+import { buildPlaceholderCar, ProjectileViews, ZombieView } from './game/art';
 import { ChaseCamera } from './game/camera';
 import { RunOverSystem } from './game/combat';
 import { RunStats, Wallet } from './game/economy';
@@ -27,7 +27,13 @@ import {
   createGreyboxLayout,
   greyboxSpawn,
 } from './game/world';
-import { HordeSpawner, updateZombieAI, ZombiePool, type Zombie } from './game/zombies';
+import {
+  HordeSpawner,
+  ProjectileSystem,
+  updateZombieAI,
+  ZombiePool,
+  type Zombie,
+} from './game/zombies';
 import { showBuildTag } from './ui/BuildTag';
 import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
 
@@ -77,6 +83,9 @@ async function boot(): Promise<void> {
     return view;
   });
   const spawner = new HordeSpawner(pool, map);
+  const projectiles = new ProjectileSystem(64);
+  const projectileViews = new ProjectileViews(64);
+  scene.add(...projectileViews.meshes);
   const combat = new RunOverSystem(physics, car, pool, cfg.combat, cfg.vehicle.mass);
   const stats = new RunStats(cfg.rewards);
   const wallet = new Wallet(cfg.rewards);
@@ -136,7 +145,18 @@ async function boot(): Promise<void> {
     spawner.update(deltaTime, view);
 
     let attackDamage = 0;
-    for (const z of pool.active()) attackDamage += updateZombieAI(z, deltaTime, senses).damage;
+    for (const z of pool.active()) {
+      const result = updateZombieAI(z, deltaTime, senses);
+      attackDamage += result.damage;
+      if (result.shot) projectiles.fire(result.shot);
+    }
+    for (const hit of projectiles.update(
+      deltaTime,
+      senses.carPosition,
+      cfg.vehicle.chassisHalfExtents.z
+    )) {
+      attackDamage += hit.damage;
+    }
     if (attackDamage > 0) car.applyDamage(attackDamage);
 
     car.update(AUTOPLAY ? autoplayInput(car, pool) : readVehicleInput(input), deltaTime);
@@ -191,6 +211,7 @@ async function boot(): Promise<void> {
     target.forwardSpeed = car.getForwardSpeed();
     carView.sync(car);
     pool.zombies.forEach((z, i) => zombieViews[i].sync(z));
+    projectileViews.sync(projectiles.projectiles);
 
     const mouse = input.consumeMouseDelta();
     if (document.pointerLockElement === canvas) chase.orbit(mouse.x, mouse.y);

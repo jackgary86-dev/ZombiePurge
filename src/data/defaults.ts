@@ -81,6 +81,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       detectionRadius: 80,
       attackDamage: 5,
       coinValue: 4,
+      rangedAttack: { range: 30, projectileSpeed: 22, cooldown: 2.5, damage: 5, hitRadius: 1.6 },
     },
     brute: {
       rank: 'brute',

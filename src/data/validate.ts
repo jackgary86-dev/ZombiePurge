@@ -83,6 +83,20 @@ export function collectConfigProblems(config: GameConfig): string[] {
     positive(z.speed, `zombies.${rank}.speed`, problems);
     positive(z.detectionRadius, `zombies.${rank}.detectionRadius`, problems);
     nonNegative(z.attackDamage, `zombies.${rank}.attackDamage`, problems);
+    if (z.rangedAttack) {
+      positive(z.rangedAttack.range, `zombies.${rank}.rangedAttack.range`, problems);
+      positive(
+        z.rangedAttack.projectileSpeed,
+        `zombies.${rank}.rangedAttack.projectileSpeed`,
+        problems
+      );
+      positive(z.rangedAttack.cooldown, `zombies.${rank}.rangedAttack.cooldown`, problems);
+      nonNegative(z.rangedAttack.damage, `zombies.${rank}.rangedAttack.damage`, problems);
+      positive(z.rangedAttack.hitRadius, `zombies.${rank}.rangedAttack.hitRadius`, problems);
+      if (z.rangedAttack.range >= z.detectionRadius) {
+        problems.push(`zombies.${rank}.rangedAttack.range must be less than detectionRadius`);
+      }
+    }
     nonNegative(z.coinValue, `zombies.${rank}.coinValue`, problems);
     if (config.rewards.coinsPerRank[rank] === undefined) {
       problems.push(`rewards.coinsPerRank.${rank} is missing`);

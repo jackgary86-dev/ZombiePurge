@@ -146,3 +146,32 @@ export class ZombieView {
     }
   }
 }
+
+const globGeometry = new SphereGeometry(0.28, 8, 6);
+const globMaterial = new MeshStandardMaterial({
+  color: 0x9cff3a,
+  emissive: 0x3a7a10,
+  roughness: 0.4,
+});
+
+/** Pooled acid glob visuals for the Spitter's projectiles. */
+export class ProjectileViews {
+  readonly meshes: Mesh[];
+
+  constructor(capacity: number) {
+    this.meshes = Array.from({ length: capacity }, () => {
+      const m = new Mesh(globGeometry, globMaterial);
+      m.visible = false;
+      return m;
+    });
+  }
+
+  sync(projectiles: { active: boolean; position: Vector3 }[]): void {
+    projectiles.forEach((p, i) => {
+      const m = this.meshes[i];
+      if (!m) return;
+      m.visible = p.active;
+      if (p.active) m.position.copy(p.position);
+    });
+  }
+}

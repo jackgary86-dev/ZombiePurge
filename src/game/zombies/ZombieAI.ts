@@ -44,9 +44,20 @@ export const DEFAULT_ZOMBIE_AI: ZombieAIConfig = {
   deathLinger: 4,
 };
 
-export interface ZombieAIResult {
-  /** Damage dealt to the car this update (0 when none). */
+export interface ShotRequest {
+  origin: Vector3;
+  /** Aim point (the car's position when fired). */
+  target: Vector3;
+  speed: number;
   damage: number;
+  hitRadius: number;
+}
+
+export interface ZombieAIResult {
+  /** Melee damage dealt to the car this update (0 when none). */
+  damage: number;
+  /** A ranged shot to spawn this update, if any. */
+  shot?: ShotRequest;
 }
 
 const toCar = new Vector3();
@@ -111,7 +122,8 @@ export function updateZombieAI(
         z.setState('idle');
         break;
       }
-      if (distance <= cfg.attackRange) {
+      const ranged = z.cfg.rangedAttack;
+      if (ranged ? distance <= ranged.range : distance <= cfg.attackRange) {
         z.setState('attack');
         break;
       }
@@ -122,6 +134,30 @@ export function updateZombieAI(
     case 'attack': {
       z.setHorizontalVelocity(0, 0);
       if (distance > 1e-3) z.facing.copy(toCar).normalize();
+      const ranged = z.cfg.rangedAttack;
+      if (ranged) {
+        // Spitter: stand off and lob acid; it only bites if the car is right on top of it.
+        if (distance > ranged.range * 1.3) {
+          z.setState('chase');
+          break;
+        }
+        if (z.attackCooldown === 0) {
+          z.attackCooldown = ranged.cooldown;
+          const origin = pos.clone();
+          origin.y += 1.2;
+          return {
+            damage: distance <= cfg.attackRange ? z.cfg.attackDamage : 0,
+            shot: {
+              origin,
+              target: senses.carPosition.clone(),
+              speed: ranged.projectileSpeed,
+              damage: ranged.damage,
+              hitRadius: ranged.hitRadius,
+            },
+          };
+        }
+        break;
+      }
       if (distance > cfg.attackRange * 1.5) {
         z.setState('chase');
         break;
