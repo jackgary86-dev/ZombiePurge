@@ -9,6 +9,6 @@ export enum GameState {
 }
 
 export interface StateContext {
-  deltaTime: number
-  elapsedTime: number
+  deltaTime: number;
+  elapsedTime: number;
 }

@@ -1,99 +1,91 @@
-import { GameState, StateContext } from './GameState'
+import { GameState, type StateContext } from './GameState';
 
-export type StateHandler = (context: StateContext) => void
+export type StateHandler = (context: StateContext) => void;
+export type RenderHandler = (context: StateContext) => void;
 
 export interface GameLoopConfig {
-  fixedTimeStep?: number
+  fixedTimeStep?: number;
+  maxFrameTime?: number;
 }
 
 export class GameLoop {
-  private currentState: GameState = GameState.Boot
-  private stateHandlers: Map<GameState, StateHandler> = new Map()
-  private isRunning = false
-  private lastFrameTime = 0
-  private accumulator = 0
-  private fixedTimeStep: number
-
-  private elapsedTime = 0
-  private frameCount = 0
+  private currentState: GameState = GameState.Boot;
+  private stateHandlers = new Map<GameState, StateHandler>();
+  private renderHandler: RenderHandler | null = null;
+  private running = false;
+  private lastFrameTime = 0;
+  private accumulator = 0;
+  private elapsedTime = 0;
+  private frameCount = 0;
+  private readonly fixedTimeStep: number;
+  private readonly maxFrameTime: number;
 
   constructor(config: GameLoopConfig = {}) {
-    this.fixedTimeStep = config.fixedTimeStep || 1 / 60 // 60 Hz fixed update
+    this.fixedTimeStep = config.fixedTimeStep ?? 1 / 60;
+    // Cap frame time so a stalled tab doesn't trigger a spiral of catch-up updates.
+    this.maxFrameTime = config.maxFrameTime ?? 0.05;
   }
 
   registerStateHandler(state: GameState, handler: StateHandler): void {
-    this.stateHandlers.set(state, handler)
+    this.stateHandlers.set(state, handler);
   }
 
-  setState(newState: GameState): void {
-    if (newState !== this.currentState) {
-      this.currentState = newState
-    }
+  onRender(handler: RenderHandler): void {
+    this.renderHandler = handler;
+  }
+
+  setState(state: GameState): void {
+    this.currentState = state;
   }
 
   getState(): GameState {
-    return this.currentState
+    return this.currentState;
   }
 
   start(): void {
-    if (this.isRunning) return
-    this.isRunning = true
-    this.lastFrameTime = performance.now()
-    this.loop()
+    if (this.running) return;
+    this.running = true;
+    this.lastFrameTime = performance.now();
+    requestAnimationFrame(this.frame);
   }
 
   stop(): void {
-    this.isRunning = false
+    this.running = false;
   }
 
-  private loop = (): void => {
-    if (!this.isRunning) return
+  isRunning(): boolean {
+    return this.running;
+  }
 
-    const now = performance.now()
-    const deltaTimeMs = Math.min(now - this.lastFrameTime, 50) // Cap at 50ms to prevent spiral
-    const deltaTime = deltaTimeMs / 1000
-    this.lastFrameTime = now
-    this.elapsedTime += deltaTime
+  tick(nowMs: number): void {
+    const frameTime = Math.min((nowMs - this.lastFrameTime) / 1000, this.maxFrameTime);
+    this.lastFrameTime = nowMs;
+    this.accumulator += frameTime;
 
-    this.accumulator += deltaTime
-
-    // Fixed-step physics updates
     while (this.accumulator >= this.fixedTimeStep) {
-      this.updateFixed()
-      this.accumulator -= this.fixedTimeStep
-    }
-
-    // Variable-rate rendering
-    this.updateVariable()
-
-    this.frameCount++
-    requestAnimationFrame(this.loop)
-  }
-
-  private updateFixed(): void {
-    const handler = this.stateHandlers.get(this.currentState)
-    if (handler) {
-      handler({
+      this.elapsedTime += this.fixedTimeStep;
+      this.stateHandlers.get(this.currentState)?.({
         deltaTime: this.fixedTimeStep,
         elapsedTime: this.elapsedTime,
-      })
+      });
+      this.accumulator -= this.fixedTimeStep;
     }
-  }
 
-  private updateVariable(): void {
-    // Render frame (called every frame, not fixed-step)
-    // Physics state is already up-to-date from updateFixed()
+    this.renderHandler?.({ deltaTime: frameTime, elapsedTime: this.elapsedTime });
+    this.frameCount++;
   }
 
   getElapsedTime(): number {
-    return this.elapsedTime
+    return this.elapsedTime;
   }
 
   getFrameCount(): number {
-    return this.frameCount
+    return this.frameCount;
   }
 
-  getFPS(): number {
-    return this.frameCount > 0 ? 1 / (this.elapsedTime / this.frameCount) : 0
-  }
+  private frame = (nowMs: number): void => {
+    if (!this.running) return;
+    this.tick(nowMs);
+    requestAnimationFrame(this.frame);
+  };
 }

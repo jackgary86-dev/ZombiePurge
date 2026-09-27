@@ -1,17 +1,11 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  server: {
-    port: 5173,
-    strictPort: false,
-  },
+  server: { port: 5173 },
+  preview: { port: 4173 },
   build: {
-    target: 'ES2020',
-    minify: 'terser',
+    target: 'es2020',
     sourcemap: true,
     outDir: 'dist',
   },
-  preview: {
-    port: 4173,
-  },
-})
+});

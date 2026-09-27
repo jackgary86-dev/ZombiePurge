@@ -1,66 +1,56 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { GameLoop } from '../../src/core/GameLoop'
-import { GameState } from '../../src/core/GameState'
+import { describe, it, expect, vi } from 'vitest';
+import { GameLoop } from '../../src/core/GameLoop';
+import { GameState } from '../../src/core/GameState';
+
+// Power-of-two step sizes are exact in floating point, so step counts are deterministic.
+const STEP = 1 / 16; // 62.5 ms
+const STEP_MS = STEP * 1000;
 
 describe('GameLoop', () => {
-  let gameLoop: GameLoop
+  it('starts in Boot state and transitions', () => {
+    const loop = new GameLoop();
+    expect(loop.getState()).toBe(GameState.Boot);
+    loop.setState(GameState.Playing);
+    expect(loop.getState()).toBe(GameState.Playing);
+  });
 
-  beforeEach(() => {
-    gameLoop = new GameLoop({ fixedTimeStep: 1 / 60 })
-  })
+  it('runs fixed-step updates for the active state only', () => {
+    const loop = new GameLoop({ fixedTimeStep: STEP, maxFrameTime: 1 });
+    const playing = vi.fn();
+    const paused = vi.fn();
+    loop.registerStateHandler(GameState.Playing, playing);
+    loop.registerStateHandler(GameState.Paused, paused);
+    loop.setState(GameState.Playing);
 
-  it('should initialize with Boot state', () => {
-    expect(gameLoop.getState()).toBe(GameState.Boot)
-  })
+    loop.tick(0);
+    loop.tick(STEP_MS * 3.5); // 3 full steps, half a step carried over
+    expect(playing).toHaveBeenCalledTimes(3);
+    expect(paused).not.toHaveBeenCalled();
+    expect(playing.mock.calls[0][0].deltaTime).toBeCloseTo(STEP);
 
-  it('should transition between states', () => {
-    gameLoop.setState(GameState.MainMenu)
-    expect(gameLoop.getState()).toBe(GameState.MainMenu)
+    loop.tick(STEP_MS * 4); // carried half + new half => one more step
+    expect(playing).toHaveBeenCalledTimes(4);
+  });
 
-    gameLoop.setState(GameState.Playing)
-    expect(gameLoop.getState()).toBe(GameState.Playing)
+  it('caps frame time to avoid a spiral of death', () => {
+    const loop = new GameLoop({ fixedTimeStep: STEP, maxFrameTime: STEP * 5 });
+    const handler = vi.fn();
+    loop.registerStateHandler(GameState.Playing, handler);
+    loop.setState(GameState.Playing);
+    loop.tick(0);
+    loop.tick(5000);
+    expect(handler).toHaveBeenCalledTimes(5);
+  });
 
-    gameLoop.setState(GameState.Paused)
-    expect(gameLoop.getState()).toBe(GameState.Paused)
-  })
-
-  it('should call state handler on update', (done) => {
-    let handlerCalled = false
-    const handler = () => {
-      handlerCalled = true
-    }
-
-    gameLoop.registerStateHandler(GameState.MainMenu, handler)
-    gameLoop.setState(GameState.MainMenu)
-    gameLoop.start()
-
-    setTimeout(() => {
-      gameLoop.stop()
-      expect(handlerCalled).toBe(true)
-      done()
-    }, 50)
-  })
-
-  it('should track elapsed time and frame count', (done) => {
-    gameLoop.start()
-
-    setTimeout(() => {
-      gameLoop.stop()
-      expect(gameLoop.getElapsedTime()).toBeGreaterThan(0)
-      expect(gameLoop.getFrameCount()).toBeGreaterThan(0)
-      done()
-    }, 50)
-  })
-
-  it('should calculate FPS', (done) => {
-    gameLoop.start()
-
-    setTimeout(() => {
-      gameLoop.stop()
-      const fps = gameLoop.getFPS()
-      expect(fps).toBeGreaterThan(0)
-      expect(fps).toBeLessThanOrEqual(240) // Reasonable upper bound
-      done()
-    }, 50)
-  })
-})
+  it('calls the render handler once per frame and tracks time', () => {
+    const loop = new GameLoop({ fixedTimeStep: STEP, maxFrameTime: 1 });
+    const render = vi.fn();
+    loop.onRender(render);
+    loop.tick(0);
+    loop.tick(STEP_MS);
+    loop.tick(STEP_MS * 2);
+    expect(render).toHaveBeenCalledTimes(3);
+    expect(loop.getFrameCount()).toBe(3);
+    expect(loop.getElapsedTime()).toBeCloseTo(STEP * 2);
+  });
+});
