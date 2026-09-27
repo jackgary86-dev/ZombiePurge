@@ -112,7 +112,23 @@ export interface MapConfig {
   zombieRanks: ZombieRank[];
 }
 
+export interface GunTierStats {
+  damage: number;
+  /** Shots per second. */
+  fireRate: number;
+  range: number;
+  /** Heat added per shot; the gun locks out at 1.0 until it cools below unlockHeat. */
+  heatPerShot: number;
+  /** Heat removed per second while not firing. */
+  coolPerSecond: number;
+  unlockHeat: number;
+  /** Half-angle (radians) of the auto-aim cone. */
+  autoAimCone: number;
+}
+
 export interface CombatConfig {
+  /** Per-tier stats for the machine gun (index 0 = tier 1). */
+  machineGun: GunTierStats[];
   /** Below this relative speed (m/s) a collision only pushes the zombie. */
   runOverMinSpeed: number;
   /** Zombie damage = relativeSpeed * carMass * this factor. */

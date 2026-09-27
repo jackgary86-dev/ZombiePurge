@@ -106,6 +106,18 @@ export function collectConfigProblems(config: GameConfig): string[] {
   }
 
   positive(config.rewards.metersPerDistanceCoin, 'rewards.metersPerDistanceCoin', problems);
+  if (config.combat.machineGun.length === 0)
+    problems.push('combat.machineGun needs at least one tier');
+  config.combat.machineGun.forEach((g, i) => {
+    positive(g.damage, `combat.machineGun[${i}].damage`, problems);
+    positive(g.fireRate, `combat.machineGun[${i}].fireRate`, problems);
+    positive(g.range, `combat.machineGun[${i}].range`, problems);
+    positive(g.heatPerShot, `combat.machineGun[${i}].heatPerShot`, problems);
+    positive(g.coolPerSecond, `combat.machineGun[${i}].coolPerSecond`, problems);
+    if (g.unlockHeat <= 0 || g.unlockHeat >= 1)
+      problems.push(`combat.machineGun[${i}].unlockHeat must be between 0 and 1`);
+    positive(g.autoAimCone, `combat.machineGun[${i}].autoAimCone`, problems);
+  });
   nonNegative(config.combat.runOverMinSpeed, 'combat.runOverMinSpeed', problems);
   positive(config.combat.runOverDamageFactor, 'combat.runOverDamageFactor', problems);
   positive(config.combat.impactFullSpeed, 'combat.impactFullSpeed', problems);
