@@ -8,6 +8,8 @@ export interface HudState {
   distanceMeters: number;
   alive: number;
   paused: boolean;
+  comboMultiplier: number;
+  comboChain: number;
 }
 
 /** Text-only HUD until G1 lands; enough to see the loop working. */
@@ -24,7 +26,7 @@ export class DebugHud {
     const hpBar = '█'.repeat(Math.round((10 * s.hp) / s.maxHp)).padEnd(10, '░');
     this.el.textContent =
       `${s.paused ? 'PAUSED — ' : ''}${s.kmh} km/h  |  HP ${hpBar} ${Math.ceil(s.hp)}  |  ` +
-      `coins ${s.coins}  |  kills ${s.kills}  |  ${(s.distanceMeters / 1000).toFixed(2)} km  |  ` +
+      `coins ${s.coins}  |  kills ${s.kills}${s.comboMultiplier > 1 ? `  x${s.comboMultiplier} combo (${s.comboChain})` : ''}  |  ${(s.distanceMeters / 1000).toFixed(2)} km  |  ` +
       `zombies ${s.alive}  |  ${s.fps} fps` +
       `\nWASD / arrows drive · Space handbrake · R flip · Esc pause · click to orbit · F1 tuning`;
   }
@@ -45,10 +47,10 @@ export class CoinPopups {
     parent.appendChild(this.layer);
   }
 
-  add(coins: number, pos: { x: number; y: number; z: number }): void {
+  add(coins: number, pos: { x: number; y: number; z: number }, multiplier = 1): void {
     const el = document.createElement('div');
     el.className = 'coin-popup';
-    el.textContent = `+${coins}`;
+    el.textContent = multiplier > 1 ? `+${coins} x${multiplier}` : `+${coins}`;
     this.layer.appendChild(el);
     this.live.push({ el, pos: { ...pos }, age: 0 });
   }
