@@ -112,6 +112,12 @@ export const DEFAULT_CONFIG: GameConfig = {
     metersPerDistanceCoin: 250,
     coinsKeptOnDeathPercent: 50,
   },
+  combat: {
+    runOverMinSpeed: 3,
+    runOverDamageFactor: 0.01,
+    impactDamageToCar: { walker: 0, runner: 0, spitter: 0, brute: 8, tank: 20, boss: 35 },
+    impactFullSpeed: 12,
+  },
   maps: [
     {
       id: 'greybox',

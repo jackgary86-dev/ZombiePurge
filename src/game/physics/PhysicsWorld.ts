@@ -8,17 +8,26 @@ export function initPhysics(): Promise<void> {
   return initialized;
 }
 
+export type CollisionHandler = (handle1: number, handle2: number, started: boolean) => void;
+
 export class PhysicsWorld {
   readonly world: RAPIER.World;
+  private readonly events: RAPIER.EventQueue;
 
   constructor(gravity: number, fixedTimeStep: number) {
     this.world = new RAPIER.World({ x: 0, y: gravity, z: 0 });
     this.world.timestep = fixedTimeStep;
+    this.events = new RAPIER.EventQueue(true);
   }
 
   /** Advances the simulation. Note: ray casts and other scene queries only see colliders after at least one step. */
   step(): void {
-    this.world.step();
+    this.world.step(this.events);
+  }
+
+  /** Collision start/stop events from the last step, for colliders that enabled COLLISION_EVENTS. */
+  drainCollisions(handler: CollisionHandler): void {
+    this.events.drainCollisionEvents(handler);
   }
 
   /** A large static box whose top face sits at y = 0. */
@@ -47,6 +56,7 @@ export class PhysicsWorld {
   }
 
   dispose(): void {
+    this.events.free();
     this.world.free();
   }
 }

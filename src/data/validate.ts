@@ -92,6 +92,14 @@ export function collectConfigProblems(config: GameConfig): string[] {
   }
 
   positive(config.rewards.metersPerDistanceCoin, 'rewards.metersPerDistanceCoin', problems);
+  nonNegative(config.combat.runOverMinSpeed, 'combat.runOverMinSpeed', problems);
+  positive(config.combat.runOverDamageFactor, 'combat.runOverDamageFactor', problems);
+  positive(config.combat.impactFullSpeed, 'combat.impactFullSpeed', problems);
+  for (const rank of ZOMBIE_RANKS) {
+    const dmg = config.combat.impactDamageToCar[rank];
+    if (dmg === undefined) problems.push(`combat.impactDamageToCar.${rank} is missing`);
+    else nonNegative(dmg, `combat.impactDamageToCar.${rank}`, problems);
+  }
   const kept = config.rewards.coinsKeptOnDeathPercent;
   if (typeof kept !== 'number' || kept < 0 || kept > 100) {
     problems.push(

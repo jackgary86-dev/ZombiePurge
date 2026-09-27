@@ -87,6 +87,17 @@ export interface MapConfig {
   zombieRanks: ZombieRank[];
 }
 
+export interface CombatConfig {
+  /** Below this relative speed (m/s) a collision only pushes the zombie. */
+  runOverMinSpeed: number;
+  /** Zombie damage = relativeSpeed * carMass * this factor. */
+  runOverDamageFactor: number;
+  /** Raw damage the car takes when it hits each rank at full impact speed. */
+  impactDamageToCar: Record<ZombieRank, number>;
+  /** Relative speed at which impact damage to the car reaches its full value. */
+  impactFullSpeed: number;
+}
+
 export interface PhysicsConfig {
   gravity: number;
   fixedTimeStep: number;
@@ -98,6 +109,7 @@ export interface GameConfig {
   camera: CameraConfig;
   zombies: Record<ZombieRank, ZombieConfig>;
   rewards: RewardsConfig;
+  combat: CombatConfig;
   maps: MapConfig[];
 }
 

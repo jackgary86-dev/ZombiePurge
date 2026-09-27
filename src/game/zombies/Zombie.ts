@@ -28,6 +28,8 @@ export class Zombie {
   attackCooldown = 0;
   /** Set by the AI each update; read by the renderer for facing. */
   readonly facing = new Vector3(0, 0, 1);
+  /** Velocity captured just before the last physics step (see RunOverSystem.beforeStep). */
+  readonly velocityBeforeStep = new Vector3();
   private readonly position = new Vector3();
 
   constructor(
