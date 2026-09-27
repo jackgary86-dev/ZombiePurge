@@ -112,6 +112,7 @@ export const DEFAULT_CONFIG: GameConfig = {
     coinsPerRank: { walker: 1, runner: 2, spitter: 4, brute: 6, tank: 15, boss: 100 },
     metersPerDistanceCoin: 250,
     coinsKeptOnDeathPercent: 50,
+    combo: { enabled: true, windowSeconds: 2.5, killsPerStep: 3, maxMultiplier: 4 },
   },
   combat: {
     runOverMinSpeed: 3,

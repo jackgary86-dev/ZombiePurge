@@ -5,8 +5,12 @@ import { ZOMBIE_RANKS } from '../../data/validate';
 export interface KillEvent {
   rank: ZombieRank;
   position: { x: number; y: number; z: number };
-  /** Coins awarded for this kill (after any multiplier). */
+  /** Coins awarded for this kill (after the combo multiplier). */
   coins: number;
+  /** Combo multiplier applied to this kill (1 when combos are off or the chain is short). */
+  multiplier: number;
+  /** Kills in the current chain, including this one. */
+  chain: number;
 }
 
 export interface RunSummary {
@@ -37,6 +41,9 @@ export class RunStats {
   /** Coins granted outside kills/distance (debug console, future pickups). */
   coinsBonus = 0;
   durationSeconds = 0;
+  /** Kills in the current combo chain; resets when the window lapses. */
+  comboChain = 0;
+  private timeSinceKill = Infinity;
   private distanceCredited = 0;
   private readonly lastPosition = new Vector3();
   private hasLastPosition = false;
@@ -59,12 +66,30 @@ export class RunStats {
     return this.rewards.coinsPerRank[rank];
   }
 
+  /** Current combo multiplier (C3): grows every `killsPerStep` chained kills, capped. */
+  get comboMultiplier(): number {
+    const c = this.rewards.combo;
+    if (!c.enabled || this.comboChain === 0) return 1;
+    return Math.min(c.maxMultiplier, 1 + Math.floor((this.comboChain - 1) / c.killsPerStep));
+  }
+
+  /** Seconds left before the combo chain lapses (0 when no chain). */
+  get comboTimeLeft(): number {
+    if (this.comboChain === 0) return 0;
+    return Math.max(0, this.rewards.combo.windowSeconds - this.timeSinceKill);
+  }
+
   /** Records a kill and returns the event (with the coins awarded) for popups/audio. */
   recordKill(rank: ZombieRank, position: { x: number; y: number; z: number }): KillEvent {
-    const coins = this.coinsForRank(rank);
+    const c = this.rewards.combo;
+    if (c.enabled && this.timeSinceKill <= c.windowSeconds) this.comboChain++;
+    else this.comboChain = 1;
+    this.timeSinceKill = 0;
+    const multiplier = this.comboMultiplier;
+    const coins = this.coinsForRank(rank) * multiplier;
     this.killsByRank[rank]++;
     this.coinsFromKills += coins;
-    return { rank, position, coins };
+    return { rank, position, coins, multiplier, chain: this.comboChain };
   }
 
   /**
@@ -73,6 +98,9 @@ export class RunStats {
    */
   trackPosition(position: Vector3, dt: number): number {
     this.durationSeconds += dt;
+    this.timeSinceKill += dt;
+    if (this.comboChain > 0 && this.timeSinceKill > this.rewards.combo.windowSeconds)
+      this.comboChain = 0;
     if (!this.hasLastPosition) {
       this.lastPosition.copy(position);
       this.hasLastPosition = true;

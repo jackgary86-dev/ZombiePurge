@@ -114,6 +114,14 @@ export function collectConfigProblems(config: GameConfig): string[] {
     if (dmg === undefined) problems.push(`combat.impactDamageToCar.${rank} is missing`);
     else nonNegative(dmg, `combat.impactDamageToCar.${rank}`, problems);
   }
+  const combo = config.rewards.combo;
+  positive(combo.windowSeconds, 'rewards.combo.windowSeconds', problems);
+  positive(combo.killsPerStep, 'rewards.combo.killsPerStep', problems);
+  if (!Number.isInteger(combo.maxMultiplier) || combo.maxMultiplier < 1) {
+    problems.push(
+      `rewards.combo.maxMultiplier must be an integer >= 1 (got ${String(combo.maxMultiplier)})`
+    );
+  }
   const kept = config.rewards.coinsKeptOnDeathPercent;
   if (typeof kept !== 'number' || kept < 0 || kept > 100) {
     problems.push(

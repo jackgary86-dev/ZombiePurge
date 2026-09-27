@@ -78,10 +78,20 @@ export interface ZombieConfig {
   rangedAttack?: RangedAttackConfig;
 }
 
+export interface ComboConfig {
+  enabled: boolean;
+  /** Kills within this many seconds of the previous kill extend the chain. */
+  windowSeconds: number;
+  /** Kills needed per extra multiplier step (e.g. 3 => x2 at 3 kills, x3 at 6). */
+  killsPerStep: number;
+  maxMultiplier: number;
+}
+
 export interface RewardsConfig {
   coinsPerRank: Record<ZombieRank, number>;
   metersPerDistanceCoin: number;
   coinsKeptOnDeathPercent: number;
+  combo: ComboConfig;
 }
 
 export interface CameraConfig {

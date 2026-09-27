@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Vector3 } from 'three';
-import { getConfig, resetConfig, ZOMBIE_RANKS } from '../../src/data/config';
+import { getConfig, loadConfig, resetConfig, ZOMBIE_RANKS } from '../../src/data/config';
 import { RunStats, Wallet, WALLET_STORAGE_KEY, type WalletStorage } from '../../src/game/economy';
 
 class MemoryStorage implements WalletStorage {
@@ -23,9 +23,12 @@ describe('RunStats (C1 coins per kill, C2 distance bonus, C4 summary)', () => {
 
   it('pays the configured coins for every rank', () => {
     const expected = { walker: 1, runner: 2, spitter: 4, brute: 6, tank: 15, boss: 100 };
+    const pos = new Vector3();
     for (const rank of ZOMBIE_RANKS) {
+      stats.trackPosition(pos, 10); // let any combo chain lapse so each kill pays base value
       const event = stats.recordKill(rank, { x: 0, y: 0, z: 0 });
       expect(event.coins).toBe(expected[rank]);
+      expect(event.multiplier).toBe(1);
       expect(stats.killsByRank[rank]).toBe(1);
     }
     expect(stats.totalKills).toBe(6);
@@ -62,6 +65,36 @@ describe('RunStats (C1 coins per kill, C2 distance bonus, C4 summary)', () => {
     pos.set(510, 0, 500);
     stats.trackPosition(pos, dt);
     expect(stats.distanceMeters).toBe(0); // first sample after a reset only anchors
+  });
+
+  it('C3: chained kills raise the multiplier, the chain lapses after the window', () => {
+    const pos = new Vector3();
+    const at = { x: 0, y: 0, z: 0 };
+    const events = [];
+    for (let i = 0; i < 7; i++) {
+      events.push(stats.recordKill('walker', at));
+      for (let f = 0; f < 6; f++) stats.trackPosition(pos, 0.1); // 0.6 s between kills
+    }
+    // killsPerStep 3: kills 1-3 => x1, 4-6 => x2, 7 => x3
+    expect(events.map((e) => e.multiplier)).toEqual([1, 1, 1, 2, 2, 2, 3]);
+    expect(events[6].chain).toBe(7);
+    expect(stats.coinsFromKills).toBe(1 + 1 + 1 + 2 + 2 + 2 + 3);
+
+    for (let f = 0; f < 30; f++) stats.trackPosition(pos, 0.1); // 3 s > 2.5 s window
+    expect(stats.comboChain).toBe(0);
+    expect(stats.comboMultiplier).toBe(1);
+    expect(stats.recordKill('tank', at)).toMatchObject({ coins: 15, multiplier: 1, chain: 1 });
+  });
+
+  it('C3: multiplier is capped and can be disabled in config', () => {
+    const at = { x: 0, y: 0, z: 0 };
+    for (let i = 0; i < 40; i++) stats.recordKill('walker', at);
+    expect(stats.comboMultiplier).toBe(getConfig().rewards.combo.maxMultiplier);
+
+    loadConfig({ rewards: { combo: { enabled: false } } });
+    const off = new RunStats(getConfig().rewards);
+    for (let i = 0; i < 10; i++) expect(off.recordKill('walker', at).multiplier).toBe(1);
+    expect(off.coinsFromKills).toBe(10);
   });
 
   it('summarises kills, distance and coin sources', () => {
