@@ -29,6 +29,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Let the car die: WRECKED screen shows kills, distance, coins earned and coins kept; Enter restarts
 - [ ] Reload the page: the kept coins are still in the wallet (check browser localStorage `zombiepurge.wallet`)
 - [ ] Add `#autoplay` to the URL: the car hunts zombies on its own
+- [ ] Press F1: the tuning panel opens; drag `vehicle.topSpeed` down and the car caps lower immediately; Copy JSON shows the values
 - [ ] Fps stays above 30 with 150 zombies on a mid-range laptop
 
 ## M2 – Shop & Upgrades

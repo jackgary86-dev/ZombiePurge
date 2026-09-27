@@ -103,3 +103,60 @@ canvas {
   pointer-events: none;
   user-select: none;
 }
+
+#tuning-panel {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 360px;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  padding: 10px 12px;
+  background: rgba(10, 10, 14, 0.9);
+  color: #f4e9d8;
+  border-radius: 8px;
+  font:
+    12px/1.6 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+
+#tuning-panel .tuning-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #ffd84a;
+}
+
+#tuning-panel .tuning-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 52px;
+  gap: 8px;
+  align-items: center;
+}
+
+#tuning-panel .tuning-value {
+  text-align: right;
+}
+
+#tuning-panel .tuning-actions {
+  margin-top: 8px;
+}
+
+#tuning-panel button {
+  font: inherit;
+  padding: 4px 10px;
+  background: #c8402e;
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#tuning-panel .tuning-json {
+  margin-top: 6px;
+  max-height: 160px;
+  overflow: auto;
+  font-size: 11px;
+  color: #bfe3a5;
+}

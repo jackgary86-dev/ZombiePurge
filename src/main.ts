@@ -36,6 +36,7 @@ import {
 } from './game/zombies';
 import { showBuildTag } from './ui/BuildTag';
 import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
+import { bind, TuningPanel } from './ui/TuningPanel';
 
 const ZOMBIE_CAPACITY = 150;
 /** `#autoplay` drives toward the nearest zombie by itself: handy for smoke tests and profiling. */
@@ -123,6 +124,25 @@ async function boot(): Promise<void> {
   const hud = new DebugHud();
   const popups = new CoinPopups();
   showBuildTag();
+  // K3: every binding targets a value the systems re-read each step, so edits apply instantly.
+  new TuningPanel([
+    bind('vehicle.topSpeed', cfg.vehicle, 'topSpeed', 10, 90, 1),
+    bind('vehicle.acceleration', cfg.vehicle, 'acceleration', 2, 25, 0.5),
+    bind('vehicle.brakingDeceleration', cfg.vehicle, 'brakingDeceleration', 4, 30, 0.5),
+    bind('vehicle.tires.grip', cfg.vehicle.tires, 'grip', 0.2, 2.5, 0.05),
+    bind('vehicle.steering.maxAngle', cfg.vehicle.steering, 'maxAngle', 0.2, 0.9, 0.01),
+    bind('vehicle.suspension.stiffness', cfg.vehicle.suspension, 'stiffness', 8000, 60000, 500),
+    bind('vehicle.suspension.damping', cfg.vehicle.suspension, 'damping', 500, 8000, 100),
+    bind('vehicle.friction.airResistance', cfg.vehicle.friction, 'airResistance', 0, 1.5, 0.01),
+    bind('zombies.walker.speed', cfg.zombies.walker, 'speed', 0.5, 8, 0.1),
+    bind('zombies.runner.speed', cfg.zombies.runner, 'speed', 1, 14, 0.1),
+    bind('zombies.walker.detectionRadius', cfg.zombies.walker, 'detectionRadius', 10, 150, 5),
+    bind('zombies.runner.detectionRadius', cfg.zombies.runner, 'detectionRadius', 10, 150, 5),
+    bind('combat.runOverDamageFactor', cfg.combat, 'runOverDamageFactor', 0.001, 0.05, 0.001),
+    bind('combat.runOverMinSpeed', cfg.combat, 'runOverMinSpeed', 0, 10, 0.5),
+    bind('rewards.metersPerDistanceCoin', cfg.rewards, 'metersPerDistanceCoin', 50, 1000, 10),
+    bind('spawner.density', spawner, 'density', 0, 1, 0.05),
+  ]);
   const loop = new GameLoop({ fixedTimeStep: cfg.physics.fixedTimeStep });
   const target = { position: new Vector3(), quaternion: new Quaternion(), forwardSpeed: 0 };
   const senses = { carPosition: new Vector3(), carSpeed: 0, noise: 0 };

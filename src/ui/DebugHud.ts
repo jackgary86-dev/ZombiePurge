@@ -26,7 +26,7 @@ export class DebugHud {
       `${s.paused ? 'PAUSED — ' : ''}${s.kmh} km/h  |  HP ${hpBar} ${Math.ceil(s.hp)}  |  ` +
       `coins ${s.coins}  |  kills ${s.kills}  |  ${(s.distanceMeters / 1000).toFixed(2)} km  |  ` +
       `zombies ${s.alive}  |  ${s.fps} fps` +
-      `\nWASD / arrows drive · Space handbrake · R flip · Esc pause · click to orbit`;
+      `\nWASD / arrows drive · Space handbrake · R flip · Esc pause · click to orbit · F1 tuning`;
   }
 }
 
