@@ -81,7 +81,7 @@ assets/            # 3D models, textures, sounds
 | # | Goal | Status |
 |---|------|--------|
 | **M0** | Foundation (scaffold, car, camera) | ✅ Done (A1–A7) |
-| **M1** | Zombie Smash Prototype (zombies, coins, demo) | 🔨 In Progress (B1–B5, C1/C2/C4/C5, I12, K2 done; K1 live demo, B6/B7, C3, K3–K6 next) |
+| **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work) |
 | **M2** | Shop & Upgrades | ⬜ TODO |
 | **M3** | Sandbox Mode (first playable) | ⬜ TODO |
 | **M4** | Story Mode: Map 1 (Suburbs) | ⬜ TODO |
@@ -100,7 +100,10 @@ assets/            # 3D models, textures, sounds
 - **B1–B3** Pooled zombie entities, AI (idle/wander → alerted → chase → attack → dead, 40–80 m detection, loud cars heard further), clustered horde spawner that keeps out of view
 - **B4/B5** Run-over kills: damage = relative speed × car mass; slow bumps just shove; heavy ranks hurt the car, armor reduces it
 - **C1/C2/C4/C5** Coins by rank with +N popups, 1 coin per 250 m driven, run summary, persisted wallet (keep a share on death)
+- **B6/B7** Spitter acid projectiles; the whole horde renders as two instanced draw calls (250 zombies) with head LOD
+- **C3** Combo multiplier for chained kills (x2–x4), shown on the HUD and popups
 - **I12/K2** Placeholder zombie art and the drive-and-smash demo loop with HUD and game-over screen; `#autoplay` hunts zombies by itself
+- **K1/K3/K4/K6** GitHub Pages deploy with a build tag, F1 live tuning panel with JSON export, `#debug` cheat console, demo testing checklist
 
 ## Development
 
