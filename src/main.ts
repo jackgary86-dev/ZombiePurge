@@ -32,6 +32,7 @@ import { Garage, repairInGarage, repairPrice } from './game/shop';
 import {
   FuelTank,
   NEUTRAL_INPUT,
+  Nitro,
   readVehicleInput,
   Vehicle,
   type VehicleInput,
@@ -118,6 +119,9 @@ async function boot(): Promise<void> {
   const wallet = new Wallet(cfg.rewards);
   const garage = new Garage(cfg.upgrades, wallet, 1);
   const tank = new FuelTank(garage.effectiveStats(stockVehicle).fuelCapacity);
+  const nitro = new Nitro(0);
+  let effectiveTopSpeed = stockVehicle.topSpeed;
+  let effectiveAcceleration = stockVehicle.acceleration;
   const mount = new WeaponMount(car, ROOF_MOUNT);
   let gun: MachineGun | null = null;
   let stats = new RunStats(cfg.rewards);
@@ -179,8 +183,11 @@ async function boot(): Promise<void> {
   /** D2/D3-D7: push the garage's effective stats into the live systems. */
   function applyGarage(): void {
     const s = garage.applyTo(stockVehicle, cfg.vehicle);
+    effectiveTopSpeed = s.topSpeed;
+    effectiveAcceleration = s.acceleration;
     car.hp = Math.min(car.hp, s.maxHp);
     tank.setCapacity(s.fuelCapacity);
+    nitro.setCapacity(s.nitroSeconds);
     combat.damageMultiplier = s.ramDamageMultiplier;
     combat.selfDamageMultiplier = s.selfDamageMultiplier;
     const roof = garage.equippedIn('roof');
@@ -224,6 +231,7 @@ async function boot(): Promise<void> {
     applyGarage();
     stats = new RunStats(cfg.rewards);
     if (gun) gun.heat = 0;
+    nitro.refill();
     car.getPosition(senses.carPosition);
     spawner.prefill(view);
     car.getPosition(target.position);
@@ -358,8 +366,16 @@ async function boot(): Promise<void> {
     }
     if (attackDamage > 0) car.applyDamage(attackDamage);
 
+    // D13: nitro temporarily lifts the numbers the car physics reads each step.
+    nitro.update(deltaTime, AUTOPLAY ? driverInput.throttle === 1 : input.isDown('nitro'));
+    cfg.vehicle.topSpeed = effectiveTopSpeed + nitro.topSpeedBonus;
+    cfg.vehicle.acceleration = effectiveAcceleration * nitro.accelerationMultiplier;
     car.update(driverInput, deltaTime);
-    tank.update(deltaTime, driverInput.throttle, senses.carSpeed / cfg.vehicle.topSpeed);
+    tank.update(
+      deltaTime,
+      driverInput.throttle * (nitro.boosting ? 1.5 : 1),
+      senses.carSpeed / cfg.vehicle.topSpeed
+    );
     combat.beforeStep();
     physics.step();
     for (const impact of combat.collectImpacts()) {
@@ -455,6 +471,8 @@ async function boot(): Promise<void> {
       fuelLitres: tank.level,
       heat: gun ? gun.heat : null,
       overheated: gun?.overheated ?? false,
+      nitroFraction: nitro.available ? nitro.fraction : null,
+      nitroBoosting: nitro.boosting,
     });
   });
 

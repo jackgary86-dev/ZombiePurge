@@ -15,6 +15,9 @@ export interface HudState {
   /** Weapon heat 0..1, or null when no weapon is mounted. */
   heat: number | null;
   overheated: boolean;
+  /** Nitro charge 0..1, or null without the upgrade. */
+  nitroFraction: number | null;
+  nitroBoosting: boolean;
 }
 
 /** Text-only HUD until G1 lands; enough to see the loop working. */
@@ -39,11 +42,15 @@ export class DebugHud {
       s.heat === null
         ? ''
         : `  |  gun ${s.overheated ? 'OVERHEATED' : '▮'.repeat(Math.round(s.heat * 8)).padEnd(8, '▯')}`;
+    const nitro =
+      s.nitroFraction === null
+        ? ''
+        : `  |  nitro ${'▮'.repeat(Math.round(s.nitroFraction * 6)).padEnd(6, '▯')}${s.nitroBoosting ? ' BOOST' : ''}`;
     this.el.textContent =
       `${s.paused ? 'PAUSED — ' : ''}${s.kmh} km/h  |  HP ${hpBar} ${Math.ceil(s.hp)}  |  ` +
-      `fuel ${fuelBar} ${Math.ceil(s.fuelLitres)}L${heat}  |  coins ${s.coins}  |  kills ${s.kills}${combo}  |  ` +
+      `fuel ${fuelBar} ${Math.ceil(s.fuelLitres)}L${heat}${nitro}  |  coins ${s.coins}  |  kills ${s.kills}${combo}  |  ` +
       `${(s.distanceMeters / 1000).toFixed(2)} km  |  zombies ${s.alive}  |  ${s.fps} fps` +
-      `\nWASD / arrows drive · Space handbrake · R flip · F or click fire · Esc pause · F1 tuning`;
+      `\nWASD / arrows drive · Space handbrake · R flip · F or click fire · Shift nitro · Esc pause · F1 tuning`;
   }
 }
 
