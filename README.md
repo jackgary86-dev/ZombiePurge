@@ -33,6 +33,8 @@ npm run type-check
 | Action | Keyboard | Gamepad |
 |---|---|---|
 | Drive / reverse | W / S or arrow keys | Right / left trigger |
+| Fire | F or left click | Right bumper |
+| Nitro | Shift | X |
 | Steer | A / D or arrow keys | Left stick |
 | Handbrake | Space | A |
 | Flip reset (when upside down) | R | Y |
@@ -82,7 +84,7 @@ assets/            # 3D models, textures, sounds
 |---|------|--------|
 | **M0** | Foundation (scaffold, car, camera) | ✅ Done (A1–A7) |
 | **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work) |
-| **M2** | Shop & Upgrades | ⬜ TODO |
+| **M2** | Shop & Upgrades | ✅ Done (D1–D14, J4; K5 deferred) |
 | **M3** | Sandbox Mode (first playable) | ⬜ TODO |
 | **M4** | Story Mode: Map 1 (Suburbs) | ⬜ TODO |
 | **M5** | Story Mode: Maps 2-5 | ⬜ TODO |
@@ -104,6 +106,10 @@ assets/            # 3D models, textures, sounds
 - **C3** Combo multiplier for chained kills (x2–x4), shown on the HUD and popups
 - **I12/K2** Placeholder zombie art and the drive-and-smash demo loop with HUD and game-over screen; `#autoplay` hunts zombies by itself
 - **K1/K3/K4/K6** GitHub Pages deploy with a build tag, F1 live tuning panel with JSON export, `#debug` cheat console, demo testing checklist
+- **D1/D2/J4** Upgrade model in config and the Garage: buy tiers, mount weapons, before/after stat bars, repair, persisted loadout; the game opens on the garage
+- **D3–D7** Engine, tires, health, armor, fuel tank (drains while driving; empty = OUT OF GAS) and repair applied to the live car each run
+- **D8–D11** Roof/front weapon mounts with auto-aim: machine gun (heat), shotgun (pellets, magazine), rocket launcher (splash), flamethrower (burning, drinks fuel)
+- **D12–D14** Front ram multipliers, nitro boost (Shift), and every owned upgrade visible on the car
 
 ## Development
 

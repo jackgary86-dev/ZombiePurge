@@ -18,6 +18,9 @@ export interface HudState {
   /** Nitro charge 0..1, or null without the upgrade. */
   nitroFraction: number | null;
   nitroBoosting: boolean;
+  /** Magazine readout for shotgun/rockets ("5/6" or "reloading"), null for other weapons. */
+  magazine: string | null;
+  flameOn: boolean;
 }
 
 /** Text-only HUD until G1 lands; enough to see the loop working. */
@@ -39,16 +42,19 @@ export class DebugHud {
     const fuelBar = '█'.repeat(Math.round(10 * s.fuelFraction)).padEnd(10, '░');
     const combo = s.comboMultiplier > 1 ? `  x${s.comboMultiplier} combo (${s.comboChain})` : '';
     const heat =
-      s.heat === null
-        ? ''
-        : `  |  gun ${s.overheated ? 'OVERHEATED' : '▮'.repeat(Math.round(s.heat * 8)).padEnd(8, '▯')}`;
+      s.heat !== null
+        ? `  |  gun ${s.overheated ? 'OVERHEATED' : '▮'.repeat(Math.round(s.heat * 8)).padEnd(8, '▯')}`
+        : s.magazine !== null
+          ? `  |  ammo ${s.magazine}`
+          : '';
+    const flame = s.flameOn ? '  |  FLAME' : '';
     const nitro =
       s.nitroFraction === null
         ? ''
         : `  |  nitro ${'▮'.repeat(Math.round(s.nitroFraction * 6)).padEnd(6, '▯')}${s.nitroBoosting ? ' BOOST' : ''}`;
     this.el.textContent =
       `${s.paused ? 'PAUSED — ' : ''}${s.kmh} km/h  |  HP ${hpBar} ${Math.ceil(s.hp)}  |  ` +
-      `fuel ${fuelBar} ${Math.ceil(s.fuelLitres)}L${heat}${nitro}  |  coins ${s.coins}  |  kills ${s.kills}${combo}  |  ` +
+      `fuel ${fuelBar} ${Math.ceil(s.fuelLitres)}L${heat}${flame}${nitro}  |  coins ${s.coins}  |  kills ${s.kills}${combo}  |  ` +
       `${(s.distanceMeters / 1000).toFixed(2)} km  |  zombies ${s.alive}  |  ${s.fps} fps` +
       `\nWASD / arrows drive · Space handbrake · R flip · F or click fire · Shift nitro · Esc pause · F1 tuning`;
   }

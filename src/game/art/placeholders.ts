@@ -88,6 +88,7 @@ const RANK_STYLE: Record<ZombieRank, { color: number; scale: number }> = {
 };
 
 const DEAD_TINT = new Color(0x3a3030);
+const BURN_TINT = new Color(0xff6a1a);
 const bodyGeometry = new CapsuleGeometry(
   ZOMBIE_CAPSULE.radius,
   ZOMBIE_CAPSULE.halfHeight * 2,
@@ -167,6 +168,15 @@ export class ZombieInstances {
         }
       } else {
         this.quaternion.copy(this.facingQ);
+        if (z.burnTimeLeft > 0) {
+          this.color
+            .set(RANK_STYLE[z.rank].color)
+            .lerp(BURN_TINT, 0.5 + 0.5 * Math.sin(z.burnTimeLeft * 20));
+          this.bodies.setColorAt(i, this.color);
+          this.heads.setColorAt(i, this.color);
+          this.deadFade[i] = 0;
+          this.lastRank[i] = null; // force the base colour to be restored once it stops burning
+        }
       }
       this.scale.set(s, s, s);
       this.matrix.compose(this.position, this.quaternion, this.scale);
@@ -295,5 +305,118 @@ export class ShotTracers {
         material.opacity = 1 - t;
       }
     }
+  }
+}
+
+const rocketGeometry = new CylinderGeometry(0.08, 0.12, 0.7, 8);
+rocketGeometry.rotateX(Math.PI / 2);
+const rocketMaterial = new MeshStandardMaterial({
+  color: 0x9a9a9a,
+  metalness: 0.6,
+  roughness: 0.4,
+});
+const blastGeometry = new SphereGeometry(1, 12, 8);
+
+/** Rockets in flight plus short-lived expanding blast spheres. */
+export class RocketViews {
+  readonly rockets: Mesh[];
+  readonly blasts: Mesh[];
+  private readonly blastAges: number[];
+
+  constructor(rocketCapacity = 12, blastCapacity = 8) {
+    this.rockets = Array.from({ length: rocketCapacity }, () => {
+      const m = new Mesh(rocketGeometry, rocketMaterial);
+      m.visible = false;
+      return m;
+    });
+    this.blasts = Array.from({ length: blastCapacity }, () => {
+      const m = new Mesh(
+        blastGeometry,
+        new MeshStandardMaterial({
+          color: 0xffa040,
+          emissive: 0xff5a1f,
+          transparent: true,
+          opacity: 0.8,
+        })
+      );
+      m.visible = false;
+      return m;
+    });
+    this.blastAges = new Array(blastCapacity).fill(Infinity);
+  }
+
+  syncRockets(rockets: { active: boolean; position: Vector3; velocity: Vector3 }[]): void {
+    rockets.forEach((r, i) => {
+      const m = this.rockets[i];
+      if (!m) return;
+      m.visible = r.active;
+      if (r.active) {
+        m.position.copy(r.position);
+        m.lookAt(
+          r.position.x + r.velocity.x,
+          r.position.y + r.velocity.y,
+          r.position.z + r.velocity.z
+        );
+      }
+    });
+  }
+
+  explode(position: Vector3, radius: number): void {
+    let i = this.blastAges.indexOf(Infinity);
+    if (i < 0) i = this.blastAges.indexOf(Math.max(...this.blastAges));
+    const m = this.blasts[i];
+    m.position.copy(position);
+    m.scale.setScalar(radius * 0.3);
+    m.userData.radius = radius;
+    m.visible = true;
+    this.blastAges[i] = 0;
+  }
+
+  update(dt: number): void {
+    for (let i = 0; i < this.blasts.length; i++) {
+      if (this.blastAges[i] === Infinity) continue;
+      this.blastAges[i] += dt;
+      const t = this.blastAges[i] / 0.45;
+      const m = this.blasts[i];
+      if (t >= 1) {
+        m.visible = false;
+        this.blastAges[i] = Infinity;
+        continue;
+      }
+      m.scale.setScalar((m.userData.radius as number) * (0.3 + 0.7 * t));
+      (m.material as MeshStandardMaterial).opacity = 0.8 * (1 - t);
+    }
+  }
+}
+
+/** Flame cone shown at the front mount while the flamethrower fires. */
+export class FlameView {
+  readonly mesh: Mesh;
+
+  constructor(range: number, cone: number) {
+    const radius = Math.tan(cone) * range;
+    const geometry = new CylinderGeometry(radius, 0.15, range, 12, 1, true);
+    geometry.rotateX(Math.PI / 2);
+    geometry.translate(0, 0, range / 2);
+    this.mesh = new Mesh(
+      geometry,
+      new MeshStandardMaterial({
+        color: 0xff7a1f,
+        emissive: 0xff4a00,
+        emissiveIntensity: 1.2,
+        transparent: true,
+        opacity: 0.45,
+        depthWrite: false,
+      })
+    );
+    this.mesh.visible = false;
+  }
+
+  sync(firing: boolean, origin: Vector3, direction: Vector3): void {
+    this.mesh.visible = firing;
+    if (!firing) return;
+    this.mesh.position.copy(origin);
+    this.mesh.lookAt(origin.x + direction.x, origin.y + direction.y, origin.z + direction.z);
+    this.mesh.rotation.z += Math.random() * 0.5;
   }
 }
