@@ -372,3 +372,11 @@ canvas {
 #garage-menu .status-coins .buy {
   background: rgba(200, 64, 46, 0.35);
 }
+
+#minimap {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+}
