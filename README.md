@@ -90,7 +90,7 @@ assets/            # 3D models, textures, sounds
 | **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                     |
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                   |
 | **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                    |
-| **M6** | Polish & Release                              | ⬜ TODO                                                                                    |
+| **M6** | Polish & Release                              | 🔶 In progress (G1–G3 done)                                                                |
 
 ## What's Built So Far
 
@@ -126,6 +126,9 @@ assets/            # 3D models, textures, sounds
 - **E7/I7** Map 4: Frozen Mountain Forest — a dense pine forest split by a road to the mountain pass, always night, looser tire grip on the snow, and Tank/Ice Zombie enemies
 - **E8/I7** Map 5: Quarantine Lab Zone — concentric ringed corridors spiralling into a central chamber, glowing containment pods, and the final boss
 - **F4** Boss fights from Map 3 on: a shared, config-driven AI (the existing ranged-attack system plus a new AOE ground-slam) gives each boss its own moveset without bespoke code per boss
+- **G1** A real graphical HUD — speed, HP/fuel/nitro bars, weapon ammo/heat, coins/kills/combo, objectives — replacing the old debug text readout; the minimap keeps its own place alongside it
+- **G2** Hit feedback: camera shake from damage and kills, a brief slow-motion beat on a multi-kill (GameLoop's own tick rate slows down, not just visuals), and blood decals that build up on the car (skipped with the Low Gore setting)
+- **G3** Procedural placeholder audio (Web Audio, no assets yet — I2): engine pitch by speed, handbrake skids, impact thumps, a tone per weapon, distance-falloff zombie groans, a per-map ambient drone, and menu click/hover blips, all under the existing volume sliders
 
 ## Development
 

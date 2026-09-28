@@ -42,6 +42,23 @@ describe('GameLoop', () => {
     expect(handler).toHaveBeenCalledTimes(5);
   });
 
+  it('setTimeScale(0.5) halves how many ticks land per real second (G2 slow-mo)', () => {
+    const loop = new GameLoop({ fixedTimeStep: STEP, maxFrameTime: 1 });
+    const playing = vi.fn();
+    loop.registerStateHandler(GameState.Playing, playing);
+    loop.setState(GameState.Playing);
+    expect(loop.getTimeScale()).toBe(1);
+
+    loop.tick(0);
+    loop.setTimeScale(0.5);
+    loop.tick(STEP_MS * 4); // 4 real steps' worth of time, at half speed => 2 ticks
+    expect(playing).toHaveBeenCalledTimes(2);
+
+    loop.setTimeScale(1);
+    loop.tick(STEP_MS * 4 + STEP_MS * 4); // back to normal speed => 4 more ticks
+    expect(playing).toHaveBeenCalledTimes(6);
+  });
+
   it('calls the render handler once per frame and tracks time', () => {
     const loop = new GameLoop({ fixedTimeStep: STEP, maxFrameTime: 1 });
     const render = vi.fn();

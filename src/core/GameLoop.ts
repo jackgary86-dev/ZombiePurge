@@ -19,6 +19,8 @@ export class GameLoop {
   private frameCount = 0;
   private readonly fixedTimeStep: number;
   private readonly maxFrameTime: number;
+  /** G2: scales how fast real time fills the tick accumulator (1 = normal, <1 = slow-mo). */
+  private timeScale = 1;
 
   constructor(config: GameLoopConfig = {}) {
     this.fixedTimeStep = config.fixedTimeStep ?? 1 / 60;
@@ -42,6 +44,15 @@ export class GameLoop {
     return this.currentState;
   }
 
+  /** G2: slow-mo. Fewer fixed-step ticks land per real second, so the world genuinely slows down. */
+  setTimeScale(scale: number): void {
+    this.timeScale = scale;
+  }
+
+  getTimeScale(): number {
+    return this.timeScale;
+  }
+
   start(): void {
     if (this.running) return;
     this.running = true;
@@ -60,7 +71,7 @@ export class GameLoop {
   tick(nowMs: number): void {
     const frameTime = Math.min((nowMs - this.lastFrameTime) / 1000, this.maxFrameTime);
     this.lastFrameTime = nowMs;
-    this.accumulator += frameTime;
+    this.accumulator += frameTime * this.timeScale;
 
     while (this.accumulator >= this.fixedTimeStep) {
       this.elapsedTime += this.fixedTimeStep;
