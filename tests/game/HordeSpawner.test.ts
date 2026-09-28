@@ -167,4 +167,35 @@ describe('HordeSpawner', () => {
     expect(spawner.isInViewCone(new Vector3(0, 0, -100), view.viewForward, 100)).toBe(false);
     expect(spawner.isInViewCone(new Vector3(0, 0, 350), view.viewForward, 350)).toBe(false);
   });
+
+  it('uses weighted spawn zones when the map defines them', () => {
+    const map = {
+      ...getMapConfig('greybox'),
+      size: 2000,
+      spawnZones: [
+        { x: 0, z: 200, radius: 40, weight: 0 }, // disabled
+        { x: 0, z: -200, radius: 40, weight: 1 },
+        { x: 200, z: 0, radius: 40, weight: 3 },
+      ],
+    };
+    const spawner = new HordeSpawner(
+      pool,
+      map,
+      { ...DEFAULT_SPAWNER, clusterMin: 1, clusterMax: 1 },
+      undefined,
+      seeded(4)
+    );
+    spawner.prefill(view);
+    expect(pool.aliveCount).toBe(30);
+    let south = 0;
+    let east = 0;
+    for (const z of pool.active()) {
+      const p = z.getPosition();
+      if (Math.hypot(p.x, p.z + 200) <= 40 + DEFAULT_SPAWNER.clusterRadius + 1) south++;
+      else if (Math.hypot(p.x - 200, p.z) <= 40 + DEFAULT_SPAWNER.clusterRadius + 1) east++;
+      else throw new Error(`zombie outside every zone at ${p.x.toFixed(0)}, ${p.z.toFixed(0)}`);
+    }
+    expect(east).toBeGreaterThan(south); // weight 3 vs 1
+    expect(south).toBeGreaterThan(0);
+  });
 });
