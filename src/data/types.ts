@@ -112,7 +112,61 @@ export interface MapConfig {
   zombieRanks: ZombieRank[];
 }
 
+export interface GunTierStats {
+  damage: number;
+  /** Shots per second. */
+  fireRate: number;
+  range: number;
+  /** Heat added per shot; the gun locks out at 1.0 until it cools below unlockHeat. */
+  heatPerShot: number;
+  /** Heat removed per second while not firing. */
+  coolPerSecond: number;
+  unlockHeat: number;
+  /** Half-angle (radians) of the auto-aim cone. */
+  autoAimCone: number;
+}
+
+export interface FlamethrowerTierStats {
+  /** Direct damage per second to everything in the cone. */
+  damagePerSecond: number;
+  range: number;
+  /** Half-angle (radians) of the flame cone. */
+  cone: number;
+  /** Seconds a zombie keeps burning after leaving the flame. */
+  burnSeconds: number;
+  burnDamagePerSecond: number;
+  /** Car fuel (litres) consumed per second of flame. */
+  fuelPerSecond: number;
+}
+
+export interface ShotgunTierStats {
+  pellets: number;
+  damagePerPellet: number;
+  /** Half-angle (radians) of the pellet spread. */
+  spread: number;
+  range: number;
+  /** Minimum seconds between shots (pump). */
+  pumpSeconds: number;
+  magazine: number;
+  reloadSeconds: number;
+}
+
+export interface RocketTierStats {
+  damage: number;
+  splashRadius: number;
+  speed: number;
+  magazine: number;
+  reloadSeconds: number;
+  /** Minimum seconds between rockets. */
+  fireInterval: number;
+}
+
 export interface CombatConfig {
+  /** Per-tier stats for the machine gun (index 0 = tier 1). */
+  machineGun: GunTierStats[];
+  flamethrower: FlamethrowerTierStats[];
+  shotgun: ShotgunTierStats[];
+  rockets: RocketTierStats[];
   /** Below this relative speed (m/s) a collision only pushes the zombie. */
   runOverMinSpeed: number;
   /** Zombie damage = relativeSpeed * carMass * this factor. */
@@ -128,6 +182,56 @@ export interface PhysicsConfig {
   fixedTimeStep: number;
 }
 
+export type UpgradeCategory =
+  | 'engine'
+  | 'tires'
+  | 'health'
+  | 'armor'
+  | 'fuel'
+  | 'weapon'
+  | 'ram'
+  | 'nitro'
+  | 'radar'
+  | 'headlights';
+
+export type WeaponSlot = 'roof' | 'front';
+
+/** Additive changes to base stats. Multipliers are expressed as fractions (0.1 = +10%). */
+export interface StatModifiers {
+  topSpeed?: number;
+  acceleration?: number;
+  grip?: number;
+  offRoadGrip?: number;
+  maxHp?: number;
+  armor?: number;
+  fuelCapacity?: number;
+  ramDamageMultiplier?: number;
+  selfDamageMultiplier?: number;
+  nitroSeconds?: number;
+  radarRange?: number;
+  headlightRange?: number;
+}
+
+export interface UpgradeTier {
+  /** 1-based tier number. */
+  tier: number;
+  price: number;
+  /** Story map (1-5) that must be reached before this tier can be bought. */
+  unlockMap: number;
+  modifiers: StatModifiers;
+  label?: string;
+}
+
+export interface UpgradeDef {
+  id: string;
+  category: UpgradeCategory;
+  name: string;
+  description: string;
+  /** Weapons occupy a mount slot; only one weapon per slot can be equipped. */
+  slot?: WeaponSlot;
+  tiers: UpgradeTier[];
+}
+
 export interface GameConfig {
   physics: PhysicsConfig;
   vehicle: VehicleConfig;
@@ -135,6 +239,7 @@ export interface GameConfig {
   zombies: Record<ZombieRank, ZombieConfig>;
   rewards: RewardsConfig;
   combat: CombatConfig;
+  upgrades: UpgradeDef[];
   maps: MapConfig[];
 }
 

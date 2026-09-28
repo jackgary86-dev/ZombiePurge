@@ -15,12 +15,40 @@ import { GameLoop } from './core/GameLoop';
 import { GameState } from './core/GameState';
 import { InputManager } from './core/input';
 import { getConfig, getMapConfig } from './data/config';
-import { buildPlaceholderCar, ProjectileViews, ZombieInstances } from './game/art';
+import type { VehicleConfig } from './data/types';
+import {
+  buildPlaceholderCar,
+  FlameView,
+  ProjectileViews,
+  RocketViews,
+  ShotTracers,
+  syncUpgradeParts,
+  TurretView,
+  ZombieInstances,
+} from './game/art';
 import { ChaseCamera } from './game/camera';
-import { RunOverSystem } from './game/combat';
+import {
+  Flamethrower,
+  FRONT_MOUNT,
+  MachineGun,
+  RocketLauncher,
+  ROOF_MOUNT,
+  RunOverSystem,
+  Shotgun,
+  updateBurning,
+  WeaponMount,
+} from './game/combat';
 import { RunStats, Wallet } from './game/economy';
 import { initPhysics, PhysicsWorld, RAPIER } from './game/physics/PhysicsWorld';
-import { NEUTRAL_INPUT, readVehicleInput, Vehicle, type VehicleInput } from './game/vehicle';
+import { Garage, repairInGarage, repairPrice } from './game/shop';
+import {
+  FuelTank,
+  NEUTRAL_INPUT,
+  Nitro,
+  readVehicleInput,
+  Vehicle,
+  type VehicleInput,
+} from './game/vehicle';
 import {
   buildGreyboxColliders,
   buildGreyboxMeshes,
@@ -35,8 +63,9 @@ import {
   type Zombie,
 } from './game/zombies';
 import { showBuildTag } from './ui/BuildTag';
-import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
 import { CheatConsole } from './ui/CheatConsole';
+import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
+import { GarageMenu } from './ui/GarageMenu';
 import { bind, TuningPanel } from './ui/TuningPanel';
 
 const ZOMBIE_CAPACITY = 250;
@@ -44,10 +73,16 @@ const ZOMBIE_CAPACITY = 250;
 const AUTOPLAY = location.hash.includes('autoplay');
 /** K4: the cheat console only exists in dev builds or when the page is opened with #debug. */
 const DEBUG_CONSOLE = import.meta.env.DEV || location.hash.includes('debug');
+/** `#drive` skips the garage on load (used by smoke tests). */
+const SKIP_GARAGE = location.hash.includes('drive') || AUTOPLAY;
+/** After a wreck the car is towed back with this much HP; the rest costs coins to repair. */
+const TOW_HP_FRACTION = 0.25;
 
 async function boot(): Promise<void> {
   const cfg = getConfig();
   const map = getMapConfig('greybox');
+  // Upgrades rewrite cfg.vehicle each run; keep the stock numbers to compute from.
+  const stockVehicle: VehicleConfig = JSON.parse(JSON.stringify(cfg.vehicle));
   await initPhysics();
 
   const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
@@ -75,8 +110,11 @@ async function boot(): Promise<void> {
   buildGreyboxColliders(physics, layout);
   scene.add(buildGreyboxMeshes(layout));
 
-  const car = new Vehicle(physics, cfg.vehicle, greyboxSpawn(layout));
+  const spawn = greyboxSpawn(layout);
+  const car = new Vehicle(physics, cfg.vehicle, spawn);
   const carView = buildPlaceholderCar(cfg.vehicle);
+  const turret = new TurretView(ROOF_MOUNT.localOffset);
+  carView.group.add(turret.group);
   scene.add(carView.group);
   sun.target = carView.group;
 
@@ -87,13 +125,32 @@ async function boot(): Promise<void> {
   const projectiles = new ProjectileSystem(64);
   const projectileViews = new ProjectileViews(64);
   scene.add(...projectileViews.meshes);
+  const tracers = new ShotTracers();
+  scene.add(...tracers.lines);
   const combat = new RunOverSystem(physics, car, pool, cfg.combat, cfg.vehicle.mass);
-  const stats = new RunStats(cfg.rewards);
   const wallet = new Wallet(cfg.rewards);
+  const garage = new Garage(cfg.upgrades, wallet, 1);
+  const tank = new FuelTank(garage.effectiveStats(stockVehicle).fuelCapacity);
+  const nitro = new Nitro(0);
+  let effectiveTopSpeed = stockVehicle.topSpeed;
+  let effectiveAcceleration = stockVehicle.acceleration;
+  const mount = new WeaponMount(car, ROOF_MOUNT);
+  const frontMount = new WeaponMount(car, FRONT_MOUNT);
+  frontMount.aimMode = 'camera';
+  let gun: MachineGun | null = null;
+  let shotgun: Shotgun | null = null;
+  let rockets: RocketLauncher | null = null;
+  let flamethrower: Flamethrower | null = null;
+  const rocketViews = new RocketViews();
+  scene.add(...rocketViews.rockets, ...rocketViews.blasts);
+  let flameView: FlameView | null = null;
+  let stats = new RunStats(cfg.rewards);
 
   const input = new InputManager();
   input.attach();
-  canvas.addEventListener('click', () => canvas.requestPointerLock?.());
+  canvas.addEventListener('click', () => {
+    if (loop.getState() === GameState.Playing) canvas.requestPointerLock?.();
+  });
 
   const camera = new PerspectiveCamera(
     cfg.camera.baseFov,
@@ -124,6 +181,125 @@ async function boot(): Promise<void> {
   const hud = new DebugHud();
   const popups = new CoinPopups();
   showBuildTag();
+  const loop = new GameLoop({ fixedTimeStep: cfg.physics.fixedTimeStep });
+  const target = { position: new Vector3(), quaternion: new Quaternion(), forwardSpeed: 0 };
+  const senses = { carPosition: new Vector3(), carSpeed: 0, noise: 0 };
+  const view = { carPosition: senses.carPosition, viewForward: new Vector3(0, 0, 1) };
+  const camForward = new Vector3();
+  let gameOverEl: HTMLDivElement | null = null;
+
+  const menu = new GarageMenu(garage, stockVehicle, wallet, {
+    onChange: applyGarage,
+    onClose: startRun,
+    repair: (doIt) => {
+      const maxHp = garage.effectiveStats(stockVehicle).maxHp;
+      if (!doIt)
+        return { price: repairPrice(car, maxHp), ok: wallet.balance >= repairPrice(car, maxHp) };
+      const r = repairInGarage(car, maxHp, wallet);
+      return { price: r.price, ok: r.ok };
+    },
+  });
+
+  /** Draws litres from the tank for the flamethrower; returns what was actually drawn. */
+  function drain(litres: number): number {
+    const before = tank.level;
+    tank.update(litres / 0.6, 1, 1); // 0.6 L/s at full burn, so this many "seconds" of it
+    return before - tank.level;
+  }
+
+  /** D2/D3-D7: push the garage's effective stats into the live systems. */
+  function applyGarage(): void {
+    const s = garage.applyTo(stockVehicle, cfg.vehicle);
+    effectiveTopSpeed = s.topSpeed;
+    effectiveAcceleration = s.acceleration;
+    car.hp = Math.min(car.hp, s.maxHp);
+    tank.setCapacity(s.fuelCapacity);
+    nitro.setCapacity(s.nitroSeconds);
+    combat.damageMultiplier = s.ramDamageMultiplier;
+    combat.selfDamageMultiplier = s.selfDamageMultiplier;
+    const roof = garage.equippedIn('roof')?.id;
+    const tierOf = <T>(id: string, tiers: T[]) =>
+      tiers[Math.min(garage.ownedTier(id), tiers.length) - 1];
+    gun =
+      roof === 'machinegun'
+        ? (gun ?? new MachineGun(physics, car, pool, tierOf(roof, cfg.combat.machineGun)))
+        : null;
+    if (gun) gun.stats = tierOf('machinegun', cfg.combat.machineGun);
+    shotgun =
+      roof === 'shotgun'
+        ? (shotgun ?? new Shotgun(physics, car, pool, tierOf(roof, cfg.combat.shotgun)))
+        : null;
+    if (shotgun) shotgun.stats = tierOf('shotgun', cfg.combat.shotgun);
+    rockets =
+      roof === 'rockets'
+        ? (rockets ?? new RocketLauncher(physics, car, pool, tierOf(roof, cfg.combat.rockets)))
+        : null;
+    if (rockets) rockets.stats = tierOf('rockets', cfg.combat.rockets);
+    turret.visible = roof !== undefined;
+
+    const front = garage.equippedIn('front')?.id;
+    if (front === 'flamethrower') {
+      const tier = tierOf(front, cfg.combat.flamethrower);
+      flamethrower = flamethrower ?? new Flamethrower(pool, tier, drain);
+      flamethrower.stats = tier;
+      if (flameView) scene.remove(flameView.mesh);
+      flameView = new FlameView(tier.range, tier.cone);
+      scene.add(flameView.mesh);
+    } else {
+      flamethrower = null;
+      if (flameView) scene.remove(flameView.mesh);
+      flameView = null;
+    }
+    syncUpgradeParts(carView.group, garage, cfg.vehicle);
+  }
+
+  function resetCar(): void {
+    car.body.setTranslation({ x: spawn.x, y: spawn.y, z: spawn.z }, true);
+    car.body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
+    car.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    car.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+  }
+
+  function enterGarage(): void {
+    document.exitPointerLock?.();
+    gameOverEl?.remove();
+    gameOverEl = null;
+    pool.despawnAll();
+    resetCar();
+    tank.fill();
+    applyGarage();
+    loop.setState(GameState.Garage);
+    hud.setVisible(false);
+    menu.open();
+  }
+
+  function startRun(): void {
+    menu.close();
+    hud.setVisible(true);
+    applyGarage();
+    stats = new RunStats(cfg.rewards);
+    if (gun) gun.heat = 0;
+    nitro.refill();
+    rocketViews.syncRockets([]);
+    car.getPosition(senses.carPosition);
+    spawner.prefill(view);
+    car.getPosition(target.position);
+    car.getQuaternion(target.quaternion);
+    chase.snap(target);
+    stats.resetPosition();
+    loop.setState(GameState.Playing);
+  }
+
+  function endRun(title: string): void {
+    const summary = stats.summary();
+    const kept = wallet.bankRun(summary.coinsTotal, true);
+    gameOverEl = showGameOver({ ...summary, kept }, title);
+    document.exitPointerLock?.();
+    // Towed home: some HP comes back for free, the rest is a repair bill.
+    car.hp = Math.max(car.hp, garage.effectiveStats(stockVehicle).maxHp * TOW_HP_FRACTION);
+    loop.setState(GameState.GameOver);
+  }
+
   if (DEBUG_CONSOLE) {
     const ahead = new Vector3();
     new CheatConsole({
@@ -141,8 +317,9 @@ async function boot(): Promise<void> {
         return n;
       },
       addCoins(amount) {
-        stats.addBonus(amount);
-        return stats.coinsTotal;
+        wallet.add(amount);
+        menu.render();
+        return wallet.balance;
       },
       setGodMode(on) {
         car.invulnerable = on;
@@ -154,16 +331,23 @@ async function boot(): Promise<void> {
         stats.resetPosition();
       },
       heal() {
-        car.hp = cfg.vehicle.hp;
+        car.hp = garage.effectiveStats(stockVehicle).maxHp;
+        tank.fill();
       },
       killAll() {
         let n = 0;
         for (const z of pool.active()) if (z.isAlive() && z.takeDamage(Infinity)) n++;
         return n;
       },
-      unlockAllUpgrades: () => 'no upgrades to unlock yet (comes with D2)',
+      unlockAllUpgrades() {
+        garage.unlockAll();
+        applyGarage();
+        menu.render();
+        return 'every upgrade owned and the machine gun mounted';
+      },
     });
   }
+
   // K3: every binding targets a value the systems re-read each step, so edits apply instantly.
   new TuningPanel([
     bind('vehicle.topSpeed', cfg.vehicle, 'topSpeed', 10, 90, 1),
@@ -183,12 +367,6 @@ async function boot(): Promise<void> {
     bind('rewards.metersPerDistanceCoin', cfg.rewards, 'metersPerDistanceCoin', 50, 1000, 10),
     bind('spawner.density', spawner, 'density', 0, 1, 0.05),
   ]);
-  const loop = new GameLoop({ fixedTimeStep: cfg.physics.fixedTimeStep });
-  const target = { position: new Vector3(), quaternion: new Quaternion(), forwardSpeed: 0 };
-  const senses = { carPosition: new Vector3(), carSpeed: 0, noise: 0 };
-  const view = { carPosition: senses.carPosition, viewForward: new Vector3(0, 0, 1) };
-  const camForward = new Vector3();
-  let gameOver = false;
 
   loop.registerStateHandler(GameState.Playing, ({ deltaTime }) => {
     input.update();
@@ -203,6 +381,49 @@ async function boot(): Promise<void> {
     camera.getWorldDirection(camForward);
     view.viewForward.set(camForward.x, 0, camForward.z).normalize();
     spawner.update(deltaTime, view);
+
+    const driverInput = AUTOPLAY ? autoplayInput(car, pool) : readVehicleInput(input);
+    let firing = false;
+    const rewardKill = (zombie: Zombie, position: { x: number; y: number; z: number }) => {
+      const kill = stats.recordKill(zombie.rank, position);
+      popups.add(kill.coins, kill.position, kill.multiplier);
+    };
+    const roofWeapon = gun ?? shotgun ?? rockets;
+    if (roofWeapon) {
+      const cone = gun ? gun.stats.autoAimCone : Math.PI / 5;
+      const range = gun ? gun.stats.range : shotgun ? shotgun.stats.range : 120;
+      mount.update(pool, camForward, cone, range);
+      const trigger = AUTOPLAY ? mount.target !== null : input.isDown('fire');
+      if (gun) {
+        for (const shot of gun.update(deltaTime, trigger, mount)) {
+          firing = true;
+          tracers.add(shot.origin, shot.end);
+          if (shot.killed && shot.hit) rewardKill(shot.hit, shot.hit.getPosition());
+        }
+      } else if (shotgun) {
+        for (const shot of shotgun.update(deltaTime, trigger, mount)) {
+          firing = true;
+          tracers.add(shot.origin, shot.end);
+          if (shot.killed && shot.hit) rewardKill(shot.hit, shot.hit.getPosition());
+        }
+      } else if (rockets) {
+        for (const blast of rockets.update(deltaTime, trigger, mount)) {
+          firing = true;
+          rocketViews.explode(blast.position, blast.radius);
+          for (const k of blast.kills) rewardKill(k.zombie, k.position);
+        }
+      }
+      turret.aim(mount.yawRelativeToCar());
+    }
+    if (flamethrower) {
+      frontMount.update(pool, camForward, 0, flamethrower.stats.range);
+      const trigger = AUTOPLAY ? mount.target !== null : input.isDown('fire');
+      for (const k of flamethrower.update(deltaTime, trigger, frontMount))
+        rewardKill(k.zombie, k.position);
+      firing ||= flamethrower.firing;
+    }
+    for (const k of updateBurning(pool, deltaTime)) rewardKill(k.zombie, k.position);
+    senses.noise = firing ? 0.5 : 0;
 
     let attackDamage = 0;
     for (const z of pool.active()) {
@@ -219,7 +440,16 @@ async function boot(): Promise<void> {
     }
     if (attackDamage > 0) car.applyDamage(attackDamage);
 
-    car.update(AUTOPLAY ? autoplayInput(car, pool) : readVehicleInput(input), deltaTime);
+    // D13: nitro temporarily lifts the numbers the car physics reads each step.
+    nitro.update(deltaTime, AUTOPLAY ? driverInput.throttle === 1 : input.isDown('nitro'));
+    cfg.vehicle.topSpeed = effectiveTopSpeed + nitro.topSpeedBonus;
+    cfg.vehicle.acceleration = effectiveAcceleration * nitro.accelerationMultiplier;
+    car.update(driverInput, deltaTime);
+    tank.update(
+      deltaTime,
+      driverInput.throttle * (nitro.boosting ? 1.5 : 1),
+      senses.carSpeed / cfg.vehicle.topSpeed
+    );
     combat.beforeStep();
     physics.step();
     for (const impact of combat.collectImpacts()) {
@@ -230,14 +460,8 @@ async function boot(): Promise<void> {
     }
     stats.trackPosition(senses.carPosition, deltaTime);
 
-    if (car.isDestroyed() && !gameOver) {
-      gameOver = true;
-      const summary = stats.summary();
-      const kept = wallet.bankRun(summary.coinsTotal, true);
-      showGameOver({ ...summary, kept });
-      document.exitPointerLock?.();
-      loop.setState(GameState.GameOver);
-    }
+    if (car.isDestroyed()) endRun('WRECKED');
+    else if (tank.isEmpty() && senses.carSpeed < 0.5) endRun('OUT OF GAS');
   });
 
   loop.registerStateHandler(GameState.Paused, () => {
@@ -248,8 +472,14 @@ async function boot(): Promise<void> {
   loop.registerStateHandler(GameState.GameOver, () => {
     input.update();
   });
+
+  loop.registerStateHandler(GameState.Garage, () => {
+    input.update();
+    physics.step(); // let the car settle on its suspension while the shop is open
+  });
+
   window.addEventListener('keydown', (e) => {
-    if (gameOver && e.code === 'Enter') location.reload();
+    if (loop.getState() === GameState.GameOver && e.code === 'Enter') enterGarage();
   });
 
   const projected = new Vector3();
@@ -265,17 +495,33 @@ async function boot(): Promise<void> {
   let fpsAccum = 0;
   let fpsFrames = 0;
   let fps = 0;
-  loop.onRender(({ deltaTime }) => {
+  let turntable = 0;
+  loop.onRender(({ deltaTime, elapsedTime }) => {
     car.getPosition(target.position);
     car.getQuaternion(target.quaternion);
     target.forwardSpeed = car.getForwardSpeed();
     carView.sync(car);
     zombieInstances.sync(pool.zombies, camera.position);
     projectileViews.sync(projectiles.projectiles);
+    tracers.update(deltaTime);
+    rocketViews.syncRockets(rockets ? rockets.rockets : []);
+    rocketViews.update(deltaTime);
+    flameView?.sync(flamethrower?.firing ?? false, frontMount.origin, frontMount.direction);
 
-    const mouse = input.consumeMouseDelta();
-    if (document.pointerLockElement === canvas) chase.orbit(mouse.x, mouse.y);
-    chase.update(deltaTime, target);
+    if (loop.getState() === GameState.Garage) {
+      // J4: slow turntable around the car while shopping.
+      turntable = elapsedTime * 0.35;
+      camera.position.set(
+        target.position.x + Math.sin(turntable) * 7,
+        target.position.y + 2.2,
+        target.position.z + Math.cos(turntable) * 7
+      );
+      camera.lookAt(target.position.x, target.position.y + 0.6, target.position.z);
+    } else {
+      const mouse = input.consumeMouseDelta();
+      if (document.pointerLockElement === canvas) chase.orbit(mouse.x, mouse.y);
+      chase.update(deltaTime, target);
+    }
     renderer.render(scene, camera);
     popups.update(deltaTime, project);
 
@@ -298,8 +544,23 @@ async function boot(): Promise<void> {
       paused: loop.getState() === GameState.Paused,
       comboMultiplier: stats.comboMultiplier,
       comboChain: stats.comboChain,
+      fuelFraction: tank.fraction,
+      fuelLitres: tank.level,
+      heat: gun ? gun.heat : null,
+      overheated: gun?.overheated ?? false,
+      nitroFraction: nitro.available ? nitro.fraction : null,
+      nitroBoosting: nitro.boosting,
+      magazine: magazineText(),
+      flameOn: flamethrower?.firing ?? false,
     });
   });
+
+  function magazineText(): string | null {
+    const w = shotgun ?? rockets;
+    if (!w) return null;
+    const st = w.state;
+    return st.reloading ? `reloading ${st.reloadLeft.toFixed(1)}s` : `${st.rounds}/${st.magazine}`;
+  }
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -307,11 +568,11 @@ async function boot(): Promise<void> {
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  car.getPosition(senses.carPosition);
-  spawner.prefill(view);
-  chase.snap(target);
-  loop.setState(GameState.Playing);
+  applyGarage();
+  car.hp = garage.effectiveStats(stockVehicle).maxHp;
   loop.start();
+  if (SKIP_GARAGE) startRun();
+  else enterGarage();
 }
 
 const toTarget = new Vector3();

@@ -1,4 +1,4 @@
-import type { GameConfig, ZombieRank } from './types';
+import type { GameConfig, UpgradeCategory, ZombieRank } from './types';
 
 export const ZOMBIE_RANKS: ZombieRank[] = ['walker', 'runner', 'spitter', 'brute', 'tank', 'boss'];
 
@@ -106,6 +106,43 @@ export function collectConfigProblems(config: GameConfig): string[] {
   }
 
   positive(config.rewards.metersPerDistanceCoin, 'rewards.metersPerDistanceCoin', problems);
+  if (config.combat.machineGun.length === 0)
+    problems.push('combat.machineGun needs at least one tier');
+  config.combat.machineGun.forEach((g, i) => {
+    positive(g.damage, `combat.machineGun[${i}].damage`, problems);
+    positive(g.fireRate, `combat.machineGun[${i}].fireRate`, problems);
+    positive(g.range, `combat.machineGun[${i}].range`, problems);
+    positive(g.heatPerShot, `combat.machineGun[${i}].heatPerShot`, problems);
+    positive(g.coolPerSecond, `combat.machineGun[${i}].coolPerSecond`, problems);
+    if (g.unlockHeat <= 0 || g.unlockHeat >= 1)
+      problems.push(`combat.machineGun[${i}].unlockHeat must be between 0 and 1`);
+    positive(g.autoAimCone, `combat.machineGun[${i}].autoAimCone`, problems);
+  });
+  config.combat.flamethrower.forEach((f, i) => {
+    positive(f.damagePerSecond, `combat.flamethrower[${i}].damagePerSecond`, problems);
+    positive(f.range, `combat.flamethrower[${i}].range`, problems);
+    positive(f.cone, `combat.flamethrower[${i}].cone`, problems);
+    nonNegative(f.burnSeconds, `combat.flamethrower[${i}].burnSeconds`, problems);
+    nonNegative(f.burnDamagePerSecond, `combat.flamethrower[${i}].burnDamagePerSecond`, problems);
+    nonNegative(f.fuelPerSecond, `combat.flamethrower[${i}].fuelPerSecond`, problems);
+  });
+  config.combat.shotgun.forEach((g, i) => {
+    positive(g.pellets, `combat.shotgun[${i}].pellets`, problems);
+    positive(g.damagePerPellet, `combat.shotgun[${i}].damagePerPellet`, problems);
+    positive(g.spread, `combat.shotgun[${i}].spread`, problems);
+    positive(g.range, `combat.shotgun[${i}].range`, problems);
+    positive(g.pumpSeconds, `combat.shotgun[${i}].pumpSeconds`, problems);
+    positive(g.magazine, `combat.shotgun[${i}].magazine`, problems);
+    positive(g.reloadSeconds, `combat.shotgun[${i}].reloadSeconds`, problems);
+  });
+  config.combat.rockets.forEach((r, i) => {
+    positive(r.damage, `combat.rockets[${i}].damage`, problems);
+    positive(r.splashRadius, `combat.rockets[${i}].splashRadius`, problems);
+    positive(r.speed, `combat.rockets[${i}].speed`, problems);
+    positive(r.magazine, `combat.rockets[${i}].magazine`, problems);
+    positive(r.reloadSeconds, `combat.rockets[${i}].reloadSeconds`, problems);
+    positive(r.fireInterval, `combat.rockets[${i}].fireInterval`, problems);
+  });
   nonNegative(config.combat.runOverMinSpeed, 'combat.runOverMinSpeed', problems);
   positive(config.combat.runOverDamageFactor, 'combat.runOverDamageFactor', problems);
   positive(config.combat.impactFullSpeed, 'combat.impactFullSpeed', problems);
@@ -128,6 +165,48 @@ export function collectConfigProblems(config: GameConfig): string[] {
       `rewards.coinsKeptOnDeathPercent must be between 0 and 100 (got ${String(kept)})`
     );
   }
+
+  const upgradeIds = new Set<string>();
+  const categories: UpgradeCategory[] = [
+    'engine',
+    'tires',
+    'health',
+    'armor',
+    'fuel',
+    'weapon',
+    'ram',
+    'nitro',
+    'radar',
+    'headlights',
+  ];
+  config.upgrades.forEach((u, i) => {
+    const at = `upgrades[${i}] (${u.id || '?'})`;
+    if (!u.id) problems.push(`${at}.id is required`);
+    if (upgradeIds.has(u.id)) problems.push(`${at}.id "${u.id}" is duplicated`);
+    upgradeIds.add(u.id);
+    if (!categories.includes(u.category))
+      problems.push(`${at}.category "${u.category}" is unknown`);
+    if (u.category === 'weapon' && !u.slot) problems.push(`${at} is a weapon and needs a slot`);
+    if (u.tiers.length === 0) problems.push(`${at} needs at least one tier`);
+    let lastPrice = 0;
+    u.tiers.forEach((t, ti) => {
+      if (t.tier !== ti + 1)
+        problems.push(`${at}.tiers[${ti}].tier must be ${ti + 1} (got ${t.tier})`);
+      nonNegative(t.price, `${at}.tiers[${ti}].price`, problems);
+      if (t.price < lastPrice)
+        problems.push(`${at}.tiers[${ti}].price must not be lower than the previous tier`);
+      lastPrice = t.price;
+      if (!Number.isInteger(t.unlockMap) || t.unlockMap < 1 || t.unlockMap > 5) {
+        problems.push(
+          `${at}.tiers[${ti}].unlockMap must be a map number 1-5 (got ${String(t.unlockMap)})`
+        );
+      }
+      for (const [k, v] of Object.entries(t.modifiers)) {
+        if (typeof v !== 'number' || !Number.isFinite(v))
+          problems.push(`${at}.tiers[${ti}].modifiers.${k} must be a number`);
+      }
+    });
+  });
 
   if (config.maps.length === 0) problems.push('maps must contain at least one map');
   const ids = new Set<string>();

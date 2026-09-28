@@ -26,6 +26,9 @@ export class Zombie {
   wanderHeading = 0;
   /** Time left before the zombie can attack again. */
   attackCooldown = 0;
+  /** Seconds of burning left (flamethrower); damage per second while burning. */
+  burnTimeLeft = 0;
+  burnDamagePerSecond = 0;
   /** Set by the AI each update; read by the renderer for facing. */
   readonly facing = new Vector3(0, 0, 1);
   /** Velocity captured just before the last physics step (see RunOverSystem.beforeStep). */
@@ -62,6 +65,8 @@ export class Zombie {
     this.state = 'idle';
     this.stateTime = 0;
     this.attackCooldown = 0;
+    this.burnTimeLeft = 0;
+    this.burnDamagePerSecond = 0;
     this.wanderHeading = Math.random() * Math.PI * 2;
     this.active = true;
     this.body.setEnabled(true);
