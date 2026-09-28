@@ -58,6 +58,15 @@ describe('InputManager keyboard', () => {
     expect(input.axis('steer')).toBe(1);
   });
 
+  it('registers a tap that starts and ends between two updates', () => {
+    target.dispatchEvent(key('keydown', 'Escape'));
+    target.dispatchEvent(key('keyup', 'Escape'));
+    input.update();
+    expect(input.justPressed('pause')).toBe(true);
+    input.update();
+    expect(input.isDown('pause')).toBe(false);
+  });
+
   it('reports justPressed only on the first frame', () => {
     target.dispatchEvent(key('keydown', 'Escape'));
     input.update();
