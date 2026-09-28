@@ -11,11 +11,24 @@ import {
   type GameSettings,
   type SandboxOptions,
 } from './data/settings';
-import type { VehicleConfig } from './data/types';
+import {
+  addPlayTime,
+  createSaveSlot,
+  deleteSaveSlot,
+  listSaveSlots,
+  loadPlayTime,
+  loadStoryProgress,
+  saveStoryProgress,
+  setActiveSaveSlotId,
+  slotStorage,
+  touchSaveSlot,
+} from './data/save';
+import type { MapConfig, VehicleConfig } from './data/types';
 import {
   buildPlaceholderCar,
   DetectionRings,
   FlameView,
+  PickupViews,
   ProjectileViews,
   RocketViews,
   ShotTracers,
@@ -39,6 +52,12 @@ import { RunStats, Wallet } from './game/economy';
 import { initPhysics, PhysicsWorld, RAPIER } from './game/physics/PhysicsWorld';
 import { Garage, repairInGarage, repairPrice, type CoinSource } from './game/shop';
 import {
+  completeMap,
+  initialStoryProgress,
+  ObjectiveTracker,
+  type StoryProgressData,
+} from './game/story';
+import {
   FuelTank,
   NEUTRAL_INPUT,
   Nitro,
@@ -50,15 +69,20 @@ import {
   applyLighting,
   buildGreyboxColliders,
   buildGreyboxMeshes,
+  buildSuburbsColliders,
+  buildSuburbsMeshes,
   ChunkStreamer,
   createGreyboxLayout,
   createHeadlights,
   createLights,
   generateOpenField,
+  generateSuburbs,
   greyboxSpawn,
   presetFor,
+  suburbsSpawn,
   type RoadStrip,
 } from './game/world';
+import { collectPickups, resetPickups, type PickupState } from './game/world/Pickups';
 import {
   DEFAULT_ZOMBIE_AI,
   HordeSpawner,
@@ -76,11 +100,16 @@ import { computeMinimapFrame, Minimap } from './ui/Minimap';
 import {
   createControlsScreen,
   createMainMenu,
+  createMapCompleteScreen,
   createPauseMenu,
   createResultsScreen,
   createSandboxSetup,
+  createSaveSlotsScreen,
   createSettingsMenu,
+  createStoryMapSelect,
   LoadingScreen,
+  type SaveSlotSummary,
+  type StoryMapEntry,
 } from './ui/screens';
 import { bind, TuningPanel } from './ui/TuningPanel';
 
@@ -94,6 +123,8 @@ const DEBUG_CONSOLE = import.meta.env.DEV || hashParams.has('debug');
 const SKIP_MENUS = hashParams.has('drive') || AUTOPLAY;
 /** `#map=<id>` overrides the map for this page load. */
 const MAP_OVERRIDE = hashParams.get('map');
+/** Set across a map-switch reload so boot() can land back on the story flow (F2/J3/J5). */
+const STORY_SLOT = hashParams.get('story');
 /** After a wreck the car is towed back with this much HP; the rest costs coins to repair. */
 const TOW_HP_FRACTION = 0.25;
 const LAST_MODE_KEY = 'zombiepurge.lastMode';
@@ -136,6 +167,13 @@ async function boot(): Promise<void> {
     roads = layout.roads;
     spawn = new Vector3(layout.spawn.x, layout.spawn.y, layout.spawn.z);
     streamer.update(spawn, true);
+  } else if (map.generator === 'suburbs') {
+    // E4/I6: small enough (a few hundred metres) to build whole, like the greybox arena.
+    const layout = generateSuburbs(map.seed, map.size);
+    buildSuburbsColliders(physics, layout);
+    scene.add(buildSuburbsMeshes(layout));
+    roads = layout.roads;
+    spawn = suburbsSpawn(layout);
   } else {
     const layout = createGreyboxLayout(map.size);
     buildGreyboxColliders(physics, layout);
@@ -168,6 +206,10 @@ async function boot(): Promise<void> {
   const realGarage = new Garage(cfg.upgrades, wallet, 1);
   let garage = realGarage;
   let coins: CoinSource = wallet;
+  /** F3: whichever wallet actually owns this run's coins — `wallet` in sandbox, a save
+   *  slot's own wallet in story mode. Kept separate from `coins` because the infinite-money
+   *  sandbox `coins` object isn't a real `Wallet` and has no `bankRun`. */
+  let activeWallet: Wallet = wallet;
   const tank = new FuelTank(garage.effectiveStats(stockVehicle).fuelCapacity);
   const nitro = new Nitro(0);
   let effectiveTopSpeed = stockVehicle.topSpeed;
@@ -184,7 +226,22 @@ async function boot(): Promise<void> {
   scene.add(...rocketViews.rockets, ...rocketViews.blasts);
   let flameView: FlameView | null = null;
   let stats = new RunStats(cfg.rewards);
-  const pickupSpots = (map.pickups ?? []).map((p) => ({ ...p, taken: false }));
+  const pickupSpots: PickupState[] = (map.pickups ?? []).map((p) => ({ ...p, taken: false }));
+  const pickupViews = new PickupViews(pickupSpots);
+  scene.add(pickupViews.group);
+
+  // ---------- story mode (F2/F3/J3/J5/J9) ----------
+  const storyMaps = cfg.maps
+    .filter((m): m is MapConfig & { storyIndex: number } => m.storyIndex !== undefined)
+    .sort((a, b) => a.storyIndex - b.storyIndex);
+  const storyMapIds = storyMaps.map((m) => m.id);
+  let inStoryMode = false;
+  let activeSlotId: string | null = null;
+  let storyWallet: Wallet | null = null;
+  let storyGarage: Garage | null = null;
+  let storyProgress: StoryProgressData | null = null;
+  let currentStoryMapId: string | null = null;
+  let objectiveTracker: ObjectiveTracker | null = null;
 
   const input = new InputManager();
   input.attach();
@@ -285,7 +342,7 @@ async function boot(): Promise<void> {
   const mainMenu = createMainMenu({
     canContinue: () => localStorage.getItem(LAST_MODE_KEY) === 'sandbox',
     onContinue: () => beginSandbox(sandbox),
-    onStory: () => menus.push(comingSoon),
+    onStory: () => menus.push(saveSlotsScreen),
     onSandbox: () => menus.push(sandboxScreen),
     onGarage: () => menus.push(garageScreen),
     onSettings: () => menus.push(settingsScreen),
@@ -295,7 +352,7 @@ async function boot(): Promise<void> {
   });
   const sandboxScreen = createSandboxSetup({
     maps: cfg.maps,
-    isUnlocked: () => true, // story unlocks arrive with F2 (M4); everything is open in sandbox for now
+    isUnlocked: () => true, // sandbox is always free play, independent of story progress
     options: sandbox,
     onChange: (o) => {
       Object.assign(sandbox, o);
@@ -330,12 +387,32 @@ async function boot(): Promise<void> {
     onGarage: () => menus.reset(garageScreen),
     onMainMenu: () => enterMainMenu(),
   });
-  const comingSoon = simplePanel(
-    'story-soon',
-    'STORY MODE',
-    'Five maps, new enemies and a final Boss are on the way (milestone M4). Sandbox is open now.',
-    () => menus.pop()
-  );
+  const saveSlotsScreen = createSaveSlotsScreen({
+    getSlots: () => listSaveSlots().map(slotSummary),
+    onNewGame: () => {
+      const meta = createSaveSlot('New Game');
+      enterStorySlot(meta.id);
+      menus.push(storyMapSelectScreen);
+    },
+    onSelect: (id) => {
+      enterStorySlot(id);
+      menus.push(storyMapSelectScreen);
+    },
+    onDelete: (id) => deleteSaveSlot(id),
+    onBack: () => menus.pop(),
+  });
+  const storyMapSelectScreen = createStoryMapSelect({
+    getEntries: () => storyEntries(),
+    onPlay: (mapId) => beginStoryRun(mapId),
+    onBack: () => menus.pop(),
+  });
+  const mapComplete = createMapCompleteScreen({
+    onContinue: () => {
+      pool.despawnAll();
+      resetCar();
+      menus.reset(storyMapSelectScreen);
+    },
+  });
   const credits = simplePanel(
     'credits',
     'CREDITS',
@@ -348,6 +425,91 @@ async function boot(): Promise<void> {
     body.appendChild(menuButton('Back', onBack));
     document.body.appendChild(el);
     return { id, el };
+  }
+
+  // ---------- story mode (F2/F3/J3/J5/J9) ----------
+  /** Reads a save slot's wallet/story progress without disturbing the live game state. */
+  function slotSummary(meta: { id: string; name: string }): SaveSlotSummary {
+    const storage = slotStorage(meta.id);
+    const peekWallet = new Wallet(cfg.rewards, storage);
+    const progress = loadStoryProgress(meta.id, initialStoryProgress(storyMapIds), storage);
+    const furthestId = progress.unlocked[progress.unlocked.length - 1];
+    const furthestMap = storyMaps.find((m) => m.id === furthestId);
+    return {
+      id: meta.id,
+      name: meta.name,
+      mapName: furthestMap?.name ?? 'Unknown map',
+      coins: peekWallet.balance,
+      playTimeSeconds: loadPlayTime(meta.id, storage),
+    };
+  }
+
+  function storyEntries(): StoryMapEntry[] {
+    if (!storyProgress) return [];
+    return storyMaps.map((m) => ({
+      map: m,
+      unlocked: storyProgress!.unlocked.includes(m.id),
+      completed: storyProgress!.completed.includes(m.id),
+    }));
+  }
+
+  /** Loads (or starts) one save slot's wallet, garage and story progress as the active save. */
+  function enterStorySlot(id: string): void {
+    activeSlotId = id;
+    setActiveSaveSlotId(id);
+    touchSaveSlot(id);
+    const storage = slotStorage(id);
+    storyWallet = new Wallet(cfg.rewards, storage);
+    storyProgress = loadStoryProgress(id, initialStoryProgress(storyMapIds), storage);
+    const furthestId = storyProgress.unlocked[storyProgress.unlocked.length - 1];
+    const currentMap = storyMaps.find((m) => m.id === furthestId)?.storyIndex ?? 1;
+    storyGarage = new Garage(cfg.upgrades, storyWallet, currentMap, storage);
+  }
+
+  /** J5: play one story map — switches maps (via reload) when it isn't the one already loaded. */
+  function beginStoryRun(mapId: string): void {
+    inStoryMode = true;
+    currentStoryMapId = mapId;
+    if (mapId !== map.id) {
+      location.hash = `#map=${mapId}&story=${activeSlotId}`;
+      location.reload();
+      return;
+    }
+    garage = storyGarage!;
+    coins = storyWallet!;
+    activeWallet = storyWallet!;
+    noFail = false;
+    spawner.density = map.spawnDensity ?? 1;
+    nightMode = map.night ?? false;
+    applySettings(settings.get());
+    headlights.setOn(nightMode);
+    garageMenu.setGarage(garage, coins);
+    menus.reset(garageScreen);
+  }
+
+  /** F2: every objective for the current map is done — bank the run, unlock the next map. */
+  function completeStoryMap(): void {
+    if (!inStoryMode || !currentStoryMapId || !storyProgress || !activeSlotId) return;
+    const summary = stats.summary();
+    activeWallet.add(summary.coinsTotal);
+    addPlayTime(activeSlotId, summary.durationSeconds);
+    const before = storyProgress;
+    storyProgress = completeMap(storyProgress, currentStoryMapId, storyMapIds);
+    saveStoryProgress(activeSlotId, storyProgress);
+    const nextMapId = storyProgress.unlocked.find((id) => !before.unlocked.includes(id)) ?? null;
+    const nextMap = nextMapId ? (storyMaps.find((m) => m.id === nextMapId) ?? null) : null;
+    const completedMap = storyMaps.find((m) => m.id === currentStoryMapId)!;
+    const newlyUnlocked = nextMap
+      ? cfg.upgrades.flatMap((u) =>
+          u.tiers.filter((t) => t.unlockMap === nextMap.storyIndex).map((t) => t.label ?? u.name)
+        )
+      : [];
+    document.exitPointerLock?.();
+    loop.setState(GameState.MapComplete);
+    hud.setVisible(false);
+    minimap.setVisible(false);
+    mapComplete.show({ completedMap, nextMap, newlyUnlocked, summary });
+    menus.reset(mapComplete.screen);
   }
 
   // ---------- run lifecycle ----------
@@ -416,6 +578,8 @@ async function boot(): Promise<void> {
 
   /** F1: apply the sandbox options, switching maps (via reload) when needed. */
   function beginSandbox(options: SandboxOptions): void {
+    inStoryMode = false;
+    objectiveTracker = null;
     Object.assign(sandbox, options);
     saveSandboxOptions(sandbox);
     localStorage.setItem(LAST_MODE_KEY, 'sandbox');
@@ -429,6 +593,7 @@ async function boot(): Promise<void> {
     noFail = sandbox.noFail;
     applySettings(settings.get());
     headlights.setOn(nightMode);
+    activeWallet = wallet;
     if (sandbox.infiniteMoney) {
       // A throwaway garage with everything unlocked and bottomless coins; nothing persists.
       coins = { balance: 1e9, spend: () => true };
@@ -451,6 +616,9 @@ async function boot(): Promise<void> {
     applyGarage();
     car.hp = Math.max(car.hp, garage.effectiveStats(stockVehicle).maxHp * TOW_HP_FRACTION);
     stats = new RunStats(cfg.rewards);
+    resetPickups(pickupSpots);
+    objectiveTracker =
+      inStoryMode && map.objectives?.length ? new ObjectiveTracker(map.objectives) : null;
     if (gun) gun.heat = 0;
     nitro.refill();
     rocketViews.syncRockets([]);
@@ -478,7 +646,11 @@ async function boot(): Promise<void> {
 
   function endRun(title: string): void {
     const summary = stats.summary();
-    const kept = sandbox.infiniteMoney ? 0 : wallet.bankRun(summary.coinsTotal, true);
+    // Sandbox's "infinite money" free-roam banks nothing; story mode always banks for real,
+    // regardless of whatever the (unrelated) sandbox infinite-money flag last happened to be.
+    const noBank = !inStoryMode && sandbox.infiniteMoney;
+    const kept = noBank ? 0 : activeWallet.bankRun(summary.coinsTotal, true);
+    if (inStoryMode && activeSlotId) addPlayTime(activeSlotId, summary.durationSeconds);
     document.exitPointerLock?.();
     // Towed home: some HP comes back for free, the rest is a repair bill.
     car.hp = Math.max(car.hp, garage.effectiveStats(stockVehicle).maxHp * TOW_HP_FRACTION);
@@ -490,6 +662,7 @@ async function boot(): Promise<void> {
   }
 
   function enterMainMenu(): void {
+    inStoryMode = false;
     document.exitPointerLock?.();
     loop.setState(GameState.MainMenu);
     hud.setVisible(false);
@@ -587,11 +760,35 @@ async function boot(): Promise<void> {
     view.viewForward.set(camForward.x, 0, camForward.z).normalize();
     spawner.update(deltaTime, view);
 
+    // E9: gas/repair/coins/ammo pickups along the way.
+    for (const p of collectPickups(pickupSpots, senses.carPosition.x, senses.carPosition.z)) {
+      if (p.kind === 'gas') tank.refill(30);
+      else if (p.kind === 'repair') {
+        car.hp = Math.min(car.hp + 40, garage.effectiveStats(stockVehicle).maxHp);
+      } else if (p.kind === 'coins') {
+        // Sandbox's infinite-money free roam doesn't need (or want) real coins trickling in.
+        if (inStoryMode || !sandbox.infiniteMoney) activeWallet.add(20);
+        popups.add(20, { x: p.x, y: 1.5, z: p.z });
+      } else if (p.kind === 'ammo') {
+        if (gun) gun.heat = 0;
+        if (shotgun) {
+          shotgun.rounds = shotgun.stats.magazine;
+          shotgun.reloadLeft = 0;
+        }
+        if (rockets) {
+          rockets.rounds = rockets.stats.magazine;
+          rockets.reloadLeft = 0;
+        }
+      }
+    }
+    objectiveTracker?.updatePosition(senses.carPosition.x, senses.carPosition.z);
+
     const driverInput = AUTOPLAY ? autoplayInput(car, pool) : readVehicleInput(input);
     let firing = false;
     const rewardKill = (zombie: Zombie, position: { x: number; y: number; z: number }) => {
       const kill = stats.recordKill(zombie.rank, position);
       popups.add(kill.coins, kill.position, kill.multiplier);
+      objectiveTracker?.recordKill(zombie.rank);
     };
     const roofWeapon = gun ?? shotgun ?? rockets;
     if (roofWeapon) {
@@ -663,7 +860,8 @@ async function boot(): Promise<void> {
     }
     stats.trackPosition(senses.carPosition, deltaTime);
 
-    if (car.isDestroyed()) endRun('WRECKED');
+    if (objectiveTracker?.isComplete()) completeStoryMap();
+    else if (car.isDestroyed()) endRun('WRECKED');
     else if (tank.isEmpty() && senses.carSpeed < 0.5) endRun('OUT OF GAS');
   });
 
@@ -679,6 +877,7 @@ async function boot(): Promise<void> {
   loop.registerStateHandler(GameState.GameOver, menuState);
   loop.registerStateHandler(GameState.Garage, menuState);
   loop.registerStateHandler(GameState.MainMenu, menuState);
+  loop.registerStateHandler(GameState.MapComplete, menuState);
 
   // ---------- render ----------
   const projected = new Vector3();
@@ -705,6 +904,7 @@ async function boot(): Promise<void> {
     rocketViews.syncRockets(rockets ? rockets.rockets : []);
     rocketViews.update(deltaTime);
     flameView?.sync(flamethrower?.firing ?? false, frontMount.origin, frontMount.direction);
+    pickupViews.sync(pickupSpots, elapsedTime);
 
     const state = loop.getState();
     if (state === GameState.Garage || state === GameState.MainMenu) {
@@ -743,6 +943,7 @@ async function boot(): Promise<void> {
           mapSize: map.size,
           roads,
           pickups: pickupSpots,
+          objective: objectiveTracker?.exitTarget() ?? null,
           zombies: zombieBlips(),
         })
       );
@@ -775,6 +976,15 @@ async function boot(): Promise<void> {
       nitroBoosting: nitro.boosting,
       magazine: magazineText(),
       flameOn: flamethrower?.firing ?? false,
+      objectives:
+        objectiveTracker
+          ?.statuses()
+          .map((s) => ({
+            label: s.objective.label,
+            current: s.current,
+            target: s.target,
+            done: s.done,
+          })) ?? null,
     });
   });
 
@@ -807,6 +1017,12 @@ async function boot(): Promise<void> {
   if (SKIP_MENUS) {
     beginSandbox(sandbox);
     startRun();
+  } else if (STORY_SLOT) {
+    // Landed back here after beginStoryRun()'s map-switch reload.
+    enterMainMenu();
+    enterStorySlot(STORY_SLOT);
+    menus.push(storyMapSelectScreen);
+    beginStoryRun(MAP_OVERRIDE ?? map.id);
   } else {
     enterMainMenu();
   }

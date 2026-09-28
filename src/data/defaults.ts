@@ -444,5 +444,27 @@ export const DEFAULT_CONFIG: GameConfig = {
         { kind: 'coins', x: 800, z: 800 },
       ],
     },
+    {
+      id: 'suburbs',
+      name: 'Map 1: Suburbs',
+      size: 900,
+      fogDistance: 220,
+      zombieRanks: ['walker', 'runner'],
+      generator: 'suburbs',
+      seed: 3,
+      chunkSize: 900,
+      storyIndex: 1,
+      spawnDensity: 0.2,
+      pickups: [
+        { kind: 'gas', x: 100, z: 250 },
+        { kind: 'coins', x: -100, z: 250 },
+        { kind: 'repair', x: 180, z: -180 },
+        { kind: 'ammo', x: 60, z: 60 },
+      ],
+      objectives: [
+        { kind: 'kills', count: 10, label: 'Clear 10 zombies from the neighborhood' },
+        { kind: 'reachExit', x: -444, z: -225, label: 'Drive out through the exit gate' },
+      ],
+    },
   ],
 };

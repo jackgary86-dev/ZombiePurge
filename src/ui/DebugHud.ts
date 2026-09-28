@@ -21,6 +21,8 @@ export interface HudState {
   /** Magazine readout for shotgun/rockets ("5/6" or "reloading"), null for other weapons. */
   magazine: string | null;
   flameOn: boolean;
+  /** F2: this map's story objectives, or null outside story mode / maps with none. */
+  objectives: { label: string; current: number; target: number; done: boolean }[] | null;
 }
 
 /** Text-only HUD until G1 lands; enough to see the loop working. */
@@ -52,10 +54,14 @@ export class DebugHud {
       s.nitroFraction === null
         ? ''
         : `  |  nitro ${'▮'.repeat(Math.round(s.nitroFraction * 6)).padEnd(6, '▯')}${s.nitroBoosting ? ' BOOST' : ''}`;
+    const objectives = s.objectives?.length
+      ? `\n${s.objectives.map((o) => `${o.done ? '✓' : '○'} ${o.label}${o.target > 1 ? ` (${o.current}/${o.target})` : ''}`).join('  |  ')}`
+      : '';
     this.el.textContent =
       `${s.paused ? 'PAUSED — ' : ''}${s.kmh} km/h  |  HP ${hpBar} ${Math.ceil(s.hp)}  |  ` +
       `fuel ${fuelBar} ${Math.ceil(s.fuelLitres)}L${heat}${flame}${nitro}  |  coins ${s.coins}  |  kills ${s.kills}${combo}  |  ` +
       `${(s.distanceMeters / 1000).toFixed(2)} km  |  zombies ${s.alive}${s.fps >= 0 ? `  |  ${s.fps} fps` : ''}` +
+      `${objectives}` +
       `\nWASD / arrows drive · Space handbrake · R flip · F or click fire · Shift nitro · Esc pause · F1 tuning · F2 debug`;
   }
 }
