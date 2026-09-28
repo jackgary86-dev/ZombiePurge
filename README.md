@@ -87,7 +87,7 @@ assets/            # 3D models, textures, sounds
 | **M0** | Foundation (scaffold, car, camera)            | ✅ Done (A1–A7)                                                                            |
 | **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work) |
 | **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                          |
-| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, J1/J2/J6–J8/J10–J12; I10/I11 art passes pending)                   |
+| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                     |
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ⬜ TODO                                                                                    |
 | **M5** | Story Mode: Maps 2-5                          | ⬜ TODO                                                                                    |
 | **M6** | Polish & Release                              | ⬜ TODO                                                                                    |
@@ -115,6 +115,8 @@ assets/            # 3D models, textures, sounds
 - **E1–E3** 2 km open-field map streamed in 250 m chunks, weighted spawn zones, rotating minimap with radar range, F2 detection overlay
 - **F1/J1–J12** Main menu → Sandbox setup (map, density, night, infinite money, no-fail) → Garage → run; pause menu, results screen, settings (graphics, draw distance, volumes, rebinding), controls, loading screen
 - **I8** Day/night lighting presets per map with headlights at night
+- **I10** A hand-drawn icon set (coins, HP, fuel, every upgrade/weapon) and a condensed display font for titles and buttons
+- **I11** ZombiePurge wordmark logo on the main menu and loading screen, a left-anchored main menu composition over the live turntable, and a moodier loading screen
 
 ## Development
 

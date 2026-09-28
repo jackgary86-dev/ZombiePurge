@@ -1,6 +1,16 @@
 import type { RunSummary } from '../../game/economy/RunStats';
 import { ZOMBIE_RANKS } from '../../data/validate';
+import { icon, type IconName } from '../icons';
 import { buildPanel, menuButton, type MenuScreen } from '../MenuStack';
+
+const ROW_ICON: Record<string, IconName> = {
+  'Total kills': 'kill',
+  Distance: 'distance',
+  'Coins from kills': 'coin',
+  'Coins from distance': 'coin',
+  'Total earned': 'coin',
+  Kept: 'coin',
+};
 
 export interface ResultsActions {
   onRetry: () => void;
@@ -52,7 +62,8 @@ export function createResultsScreen(actions: ResultsActions, parent: HTMLElement
       ...rows.map(([k, v]) => {
         const tr = document.createElement('tr');
         const td1 = document.createElement('td');
-        td1.textContent = k;
+        const rowIcon = ROW_ICON[k];
+        td1.innerHTML = rowIcon ? `${icon(rowIcon, 15)} ${k}` : k;
         const td2 = document.createElement('td');
         td2.textContent = v;
         tr.append(td1, td2);

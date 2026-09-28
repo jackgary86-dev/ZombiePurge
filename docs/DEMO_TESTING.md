@@ -52,7 +52,8 @@ Tick items in the PR that closes the milestone.
 
 ## M3 – Sandbox Mode
 
-- [ ] Loading screen with a tip, then the ZOMBIEPURGE title over the car turntable; arrow keys / gamepad move the highlight, Enter/A selects, Esc/B goes back
+- [ ] Loading screen: the ZombiePurge logo on a moody red-glow background, a tip, then the main menu with the same logo left-anchored over the car turntable; arrow keys / gamepad move the highlight, Enter/A selects, Esc/B goes back
+- [ ] Every menu button, garage tab and upgrade card shows an icon (play, wrench, gear, gun/flame/rocket per weapon, coin on the balance and results screen)
 - [ ] Sandbox: pick Open Field (2 km), drag density to 50%, tick Night, DRIVE → Garage → DRIVE: dark sky, headlights on, about half as many zombies
 - [ ] Drive for a minute across the field: buildings, trees and roads appear ahead and vanish behind (chunk streaming) without hitches
 - [ ] The minimap rotates with you, shows roads, the radar ring and green/red blips; buy Radar in the garage and the ring grows

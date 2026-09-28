@@ -1,3 +1,5 @@
+import { renderLogo } from '../logo';
+
 const TIPS = [
   'Zombies notice you at 40–80 m; you can see them from 300 m. Plan the line.',
   'Slow bumps just shove zombies. Speed kills.',
@@ -18,7 +20,8 @@ export class LoadingScreen {
     this.el.id = 'loading-screen';
     this.el.hidden = true;
     const title = document.createElement('h1');
-    title.textContent = 'ZOMBIEPURGE';
+    title.innerHTML = renderLogo();
+    title.classList.add('logo-heading');
     this.label = document.createElement('div');
     this.label.className = 'loading-label';
     const track = document.createElement('div');

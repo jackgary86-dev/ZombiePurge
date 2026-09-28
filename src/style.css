@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* I10: a condensed display face for titles and buttons; the HUD keeps its monospace look. */
+  --display-font: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+}
+
 html,
 body,
 #game-canvas {
@@ -82,9 +87,9 @@ canvas {
 }
 
 #game-over h1 {
-  font-size: 64px;
+  font: 64px/1 var(--display-font);
   color: #c8402e;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
 }
 
 #game-over .hint {
@@ -234,10 +239,16 @@ canvas {
 }
 
 #garage-menu h1 {
-  font-size: 28px;
-  letter-spacing: 0.12em;
+  font: 34px/1 var(--display-font);
+  letter-spacing: 0.08em;
   color: #c8402e;
   margin-right: auto;
+}
+
+#garage-menu .garage-balance-icon {
+  display: inline-flex;
+  color: #ffd84a;
+  margin-right: -8px;
 }
 
 #garage-menu .garage-balance {
@@ -274,6 +285,12 @@ canvas {
   flex-wrap: wrap;
 }
 
+#garage-menu .garage-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 #garage-menu .garage-tabs .active {
   background: #f4e9d8;
   color: #1a1a1e;
@@ -303,7 +320,15 @@ canvas {
 }
 
 #garage-menu .tier-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-size: 17px;
+}
+
+#garage-menu .tier-card h2 .icon {
+  color: #ffd84a;
+  flex-shrink: 0;
 }
 
 #garage-menu .tier-pips {
@@ -415,10 +440,50 @@ canvas {
 }
 
 .menu-panel h1 {
-  font-size: 56px;
-  letter-spacing: 0.14em;
+  font: 56px/1 var(--display-font);
+  letter-spacing: 0.08em;
   color: #c8402e;
   text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+}
+
+/* I11: the ZombiePurge wordmark (src/ui/logo.ts) swaps in for the plain text heading. */
+.logo-heading {
+  text-shadow: none;
+}
+
+.zp-logo {
+  display: block;
+  width: min(78vw, 420px);
+  height: auto;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
+}
+
+.zp-logo-word {
+  font-family: var(--display-font);
+  font-size: 46px;
+  letter-spacing: 0.05em;
+}
+
+.zp-logo-word-a {
+  fill: #f4e9d8;
+}
+
+.zp-logo-word-b {
+  fill: #c8402e;
+}
+
+.zp-logo-slash {
+  stroke: #9cff3a;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+/* I10: the inline icon set (src/ui/icons.ts). Sits on the same baseline as its label. */
+.icon {
+  display: inline-block;
+  vertical-align: -4px;
+  flex-shrink: 0;
 }
 
 .menu-panel .menu-subtitle {
@@ -442,6 +507,12 @@ canvas {
   color: #f4e9d8;
   cursor: pointer;
   text-align: left;
+}
+
+.menu-button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .menu-button.primary {
@@ -480,8 +551,29 @@ canvas {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.main-menu h1 {
-  font-size: 72px;
+/* I11: key art for the title screen — the panel anchors left over the live turntable scene,
+   like the garage's own gradient, instead of centering flat over the whole viewport. */
+.main-menu {
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  padding: 8vh 6vw;
+  background: linear-gradient(
+    100deg,
+    rgba(8, 8, 11, 0.94) 0%,
+    rgba(8, 8, 11, 0.82) 38%,
+    rgba(8, 8, 11, 0.25) 72%,
+    rgba(8, 8, 11, 0) 100%
+  );
+}
+
+.main-menu .zp-logo {
+  width: min(70vw, 460px);
+  margin: 0 0 6px;
+}
+
+.main-menu .menu-subtitle {
+  margin-left: 4px;
 }
 
 .results-table {
@@ -494,6 +586,11 @@ canvas {
 .results-table th {
   padding: 4px 14px;
   text-align: left;
+}
+
+.results-table td:first-child .icon {
+  color: #c8402e;
+  opacity: 0.85;
 }
 
 .results-table td:last-child {
@@ -532,8 +629,9 @@ canvas {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  background: #0c0c10;
+  gap: 18px;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(200, 64, 46, 0.22), transparent 60%), #0c0c10;
   color: #f4e9d8;
   font:
     16px/1.5 ui-monospace,
@@ -541,12 +639,23 @@ canvas {
     Menlo,
     monospace;
   z-index: 10;
+  animation: loading-glow 3.5s ease-in-out infinite;
 }
 
-#loading-screen h1 {
-  font-size: 56px;
-  letter-spacing: 0.14em;
-  color: #c8402e;
+@keyframes loading-glow {
+  0%,
+  100% {
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(200, 64, 46, 0.16), transparent 60%), #0c0c10;
+  }
+  50% {
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(200, 64, 46, 0.3), transparent 62%), #0c0c10;
+  }
+}
+
+#loading-screen .zp-logo {
+  width: min(80vw, 440px);
 }
 
 .loading-track {
