@@ -89,3 +89,14 @@ Tick items in the PR that closes the milestone.
 - [ ] Quarantine Lab Zone: concentric ringed corridors, each ring's one doorway in a different place, spiralling into a central chamber with glowing pods and the final boss (ranged + slam, tankiest of the three)
 - [ ] Beating each map's boss and reaching its exit unlocks the next map and shows the Map Complete screen with the new enemies and upgrades
 - [ ] `#map=desertHighway` (and `industrialCity`, `frozenForest`, `quarantineLab`) load directly in Sandbox for a quick look without playing through the story
+
+## M6 – HUD, hit feedback, audio (in progress: G1-G3)
+
+- [ ] The old text HUD is gone: a graphical speed readout, HP/fuel bars (flash red near empty), coins/kills counters that pulse when they change, and a combo badge when chained kills reach x2+
+- [ ] Equip each weapon in turn: the machine gun shows a heat bar that reads OVERHEATED when full, the shotgun/rockets show a magazine count and a reload timer, the flamethrower shows FIRING while held
+- [ ] Buy Nitro: a nitro bar appears next to the other readouts and turns gold while boosting
+- [ ] Story objectives still list under the HUD, and the minimap keeps its own spot in the bottom-left
+- [ ] Ram through a small cluster of zombies at speed: the camera visibly jitters, harder on a bigger hit; a run-over kill leaves a blood decal on the front of the car (toggle Low Gore in Settings and it stops)
+- [ ] Ram through several zombies in the same instant: everything briefly runs in slow motion before ramping back to normal speed
+- [ ] With sound on: the engine note rises with speed and jumps in pitch on Nitro, the handbrake slide has its own skid sound, every weapon has a distinct fire sound, nearby zombies groan (louder up close, silent once they're far enough away), each map has its own ambient drone, and menu buttons click/hover
+- [ ] The Settings volume sliders (master/music/effects) and Low Gore toggle all do what they say, live, without needing a restart

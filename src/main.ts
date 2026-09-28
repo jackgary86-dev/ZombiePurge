@@ -25,6 +25,7 @@ import {
 } from './data/save';
 import type { MapConfig, VehicleConfig } from './data/types';
 import {
+  BloodSplatterView,
   buildPlaceholderCar,
   DetectionRings,
   FlameView,
@@ -36,6 +37,7 @@ import {
   TurretView,
   ZombieInstances,
 } from './game/art';
+import { AudioSystem, skidActive } from './game/audio';
 import { ChaseCamera } from './game/camera';
 import {
   Flamethrower,
@@ -104,10 +106,12 @@ import {
   ZombiePool,
   type Zombie,
 } from './game/zombies';
+import { ScreenShake, SlowMo } from './game/vfx';
 import { showBuildTag } from './ui/BuildTag';
 import { CheatConsole } from './ui/CheatConsole';
-import { CoinPopups, DebugHud } from './ui/DebugHud';
+import { CoinPopups } from './ui/CoinPopups';
 import { GarageMenu } from './ui/GarageMenu';
+import { Hud } from './ui/Hud';
 import { buildPanel, menuButton, MenuStack, type MenuScreen } from './ui/MenuStack';
 import { computeMinimapFrame, Minimap } from './ui/Minimap';
 import {
@@ -312,12 +316,23 @@ async function boot(): Promise<void> {
     },
   });
 
-  const hud = new DebugHud();
+  const hud = new Hud(cfg.hud);
   const popups = new CoinPopups();
   const minimap = new Minimap();
   const rings = new DetectionRings(ZOMBIE_CAPACITY);
   scene.add(rings.zombieRings, rings.viewRing);
   showBuildTag();
+
+  // ---------- hit feedback (G2) ----------
+  const screenShake = new ScreenShake(cfg.vfx.screenShake);
+  const slowMo = new SlowMo(cfg.vfx.slowMo);
+  const blood = new BloodSplatterView(cfg.vfx.blood, cfg.vehicle);
+  carView.group.add(blood.group);
+
+  // ---------- audio (G3) ----------
+  const audio = new AudioSystem(cfg.audio, settings);
+  window.addEventListener('pointerdown', () => audio.resume(), { once: true });
+  audio.playMapMusic(map.music ?? { baseHz: 90, mood: 'calm' });
 
   const loop = new GameLoop({ fixedTimeStep: cfg.physics.fixedTimeStep });
   const target = { position: new Vector3(), quaternion: new Quaternion(), forwardSpeed: 0 };
@@ -352,6 +367,16 @@ async function boot(): Promise<void> {
   // ---------- menus (J1/J2/J6/J7/J8/J10/J11) ----------
   const menus = new MenuStack();
   menus.attach();
+  // G3: a click/hover blip on every button, wherever it lives (menus, garage, settings).
+  let lastHoveredButton: Element | null = null;
+  document.body.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('button')) audio.menuClick();
+  });
+  document.body.addEventListener('mouseover', (e) => {
+    const btn = (e.target as HTMLElement).closest('button');
+    if (btn && btn !== lastHoveredButton) audio.menuHover();
+    lastHoveredButton = btn;
+  });
   const garageMenu = new GarageMenu(garage, stockVehicle, coins, {
     onChange: applyGarage,
     onClose: () => startRun(),
@@ -652,6 +677,7 @@ async function boot(): Promise<void> {
     resetCar();
     tank.fill();
     applyGarage();
+    blood.reset();
     car.hp = Math.max(car.hp, garage.effectiveStats(stockVehicle).maxHp * TOW_HP_FRACTION);
     stats = new RunStats(cfg.rewards);
     resetPickups(pickupSpots);
@@ -838,10 +864,13 @@ async function boot(): Promise<void> {
 
     const driverInput = AUTOPLAY ? autoplayInput(car, pool) : readVehicleInput(input);
     let firing = false;
+    let killsThisTick = 0;
     const rewardKill = (zombie: Zombie, position: { x: number; y: number; z: number }) => {
       const kill = stats.recordKill(zombie.rank, position);
       popups.add(kill.coins, kill.position, kill.multiplier);
       objectiveTracker?.recordKill(zombie.rank);
+      killsThisTick++;
+      screenShake.addKill();
     };
     const roofWeapon = gun ?? shotgun ?? rockets;
     if (roofWeapon) {
@@ -853,18 +882,21 @@ async function boot(): Promise<void> {
         for (const shot of gun.update(deltaTime, trigger, mount)) {
           firing = true;
           tracers.add(shot.origin, shot.end);
+          audio.weaponFire('machinegun');
           if (shot.killed && shot.hit) rewardKill(shot.hit, shot.hit.getPosition());
         }
       } else if (shotgun) {
         for (const shot of shotgun.update(deltaTime, trigger, mount)) {
           firing = true;
           tracers.add(shot.origin, shot.end);
+          audio.weaponFire('shotgun');
           if (shot.killed && shot.hit) rewardKill(shot.hit, shot.hit.getPosition());
         }
       } else if (rockets) {
         for (const blast of rockets.update(deltaTime, trigger, mount)) {
           firing = true;
           rocketViews.explode(blast.position, blast.radius);
+          audio.weaponFire('rockets');
           for (const k of blast.kills) rewardKill(k.zombie, k.position);
         }
       }
@@ -876,6 +908,7 @@ async function boot(): Promise<void> {
       for (const k of flamethrower.update(deltaTime, trigger, frontMount))
         rewardKill(k.zombie, k.position);
       firing ||= flamethrower.firing;
+      audio.setFlame(flamethrower.firing);
     }
     for (const k of updateBurning(pool, deltaTime)) rewardKill(k.zombie, k.position);
     senses.noise = firing ? 0.5 : 0;
@@ -894,7 +927,11 @@ async function boot(): Promise<void> {
     )) {
       attackDamage += hit.damage;
     }
-    if (attackDamage > 0) car.applyDamage(attackDamage);
+    if (attackDamage > 0) {
+      car.applyDamage(attackDamage);
+      screenShake.addDamage(attackDamage);
+      audio.impact(attackDamage / 30);
+    }
 
     // D13: nitro temporarily lifts the numbers the car physics reads each step.
     nitro.update(deltaTime, AUTOPLAY ? driverInput.throttle === 1 : input.isDown('nitro'));
@@ -907,12 +944,31 @@ async function boot(): Promise<void> {
       senses.carSpeed / cfg.vehicle.topSpeed
     );
     if (noFail) tank.fill();
+
+    // G3: engine pitch, tire skid and zombie groans, all driven by this tick's own state.
+    audio.setEngine(senses.carSpeed / cfg.vehicle.topSpeed, nitro.boosting);
+    audio.setSkid(skidActive(senses.carSpeed, input.isDown('handbrake'), cfg.audio.skidMinSpeed));
+    audio.updateZombieGroans(
+      Array.from(pool.active())
+        .filter((z) => z.isAlive())
+        .map((z) => ({ distance: z.getPosition().distanceTo(senses.carPosition) }))
+        .filter((z) => z.distance <= cfg.audio.zombieGroan.maxDistance)
+    );
+
     combat.beforeStep();
     physics.step();
     for (const impact of combat.collectImpacts()) {
-      if (impact.killed) rewardKill(impact.zombie, impact.position);
+      if (impact.damageToCar > 0) {
+        screenShake.addDamage(impact.damageToCar);
+        audio.impact(impact.damageToCar / 30);
+      }
+      if (impact.killed) {
+        rewardKill(impact.zombie, impact.position);
+        blood.addKill(settings.get().lowGore);
+      }
     }
     stats.trackPosition(senses.carPosition, deltaTime);
+    slowMo.trigger(killsThisTick);
 
     if (objectiveTracker?.isComplete()) completeStoryMap();
     else if (car.isDestroyed()) endRun('WRECKED');
@@ -923,10 +979,12 @@ async function boot(): Promise<void> {
     input.update();
     menus.pollGamepad();
     physics.step(); // let the car settle on its suspension behind the menus
+    audio.stopEngine();
   };
   loop.registerStateHandler(GameState.Paused, () => {
     input.update();
     menus.pollGamepad();
+    audio.stopEngine();
   });
   loop.registerStateHandler(GameState.GameOver, menuState);
   loop.registerStateHandler(GameState.Garage, menuState);
@@ -975,7 +1033,16 @@ async function boot(): Promise<void> {
       if (document.pointerLockElement === canvas)
         chase.orbit(mouse.x, invertY ? -mouse.y : mouse.y);
       chase.update(deltaTime, target);
+      // G2: camera jitter from recent damage/kills, on top of the normal chase framing.
+      const shakeMagnitude = screenShake.update(deltaTime);
+      if (shakeMagnitude > 0) {
+        camera.position.x += (Math.random() * 2 - 1) * shakeMagnitude;
+        camera.position.y += (Math.random() * 2 - 1) * shakeMagnitude * 0.6;
+        camera.position.z += (Math.random() * 2 - 1) * shakeMagnitude;
+      }
     }
+    // G2: slow-mo on a multi-kill - fewer fixed-step ticks land per real second while it's active.
+    loop.setTimeScale(slowMo.update(deltaTime));
     rings.sync(
       pool.zombies,
       target.position,
@@ -1024,6 +1091,16 @@ async function boot(): Promise<void> {
       comboChain: stats.comboChain,
       fuelFraction: tank.fraction,
       fuelLitres: tank.level,
+      fuelCapacityLitres: tank.capacity,
+      weaponKind: gun
+        ? 'machinegun'
+        : shotgun
+          ? 'shotgun'
+          : rockets
+            ? 'rockets'
+            : flamethrower
+              ? 'flamethrower'
+              : null,
       heat: gun ? gun.heat : null,
       overheated: gun?.overheated ?? false,
       nitroFraction: nitro.available ? nitro.fraction : null,

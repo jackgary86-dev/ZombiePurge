@@ -105,6 +105,84 @@ export interface RewardsConfig {
   combo: ComboConfig;
 }
 
+/** G1: HUD readout thresholds; the panels themselves live in src/ui/Hud.ts. */
+export interface HudConfig {
+  /** HP fraction at/below which the health bar flashes a warning. */
+  lowHpFraction: number;
+  /** Fuel fraction at/below which the fuel gauge flashes a warning. */
+  lowFuelFraction: number;
+  /** Seconds a stat pulses (scales up, fades back) after it changes. */
+  counterPulseSeconds: number;
+}
+
+/** G2: camera jitter that reads big hits and kills as impact. */
+export interface ScreenShakeConfig {
+  /** Shake magnitude added per point of damage the car takes. */
+  perDamage: number;
+  /** Flat shake magnitude added for every kill, on top of any damage-based shake. */
+  perKill: number;
+  /** A single impulse can never push the magnitude past this. */
+  max: number;
+  /** How fast the magnitude decays back to zero, per second. */
+  decayPerSecond: number;
+}
+
+/** G2: a brief slow-motion beat when the car plows through several zombies at once. */
+export interface SlowMoConfig {
+  /** Kills landed in the same physics step needed to trigger it. */
+  multiKillThreshold: number;
+  /** Game-speed multiplier while it's in full effect (1 = normal speed). */
+  timeScale: number;
+  /** Seconds (real time) it holds at full effect. */
+  holdSeconds: number;
+  /** Seconds (real time) it takes to ramp back to normal speed after that. */
+  rampSeconds: number;
+}
+
+/** G2: blood decals added to the car on a run-over kill; skipped entirely when settings.lowGore. */
+export interface BloodConfig {
+  splattersPerKill: number;
+  /** Oldest splatters are dropped past this count so the car stays readable. */
+  maxSplatters: number;
+}
+
+export interface VfxConfig {
+  screenShake: ScreenShakeConfig;
+  slowMo: SlowMoConfig;
+  blood: BloodConfig;
+}
+
+/** G3: engine note driven by the car's own speed, not a fixed loop. */
+export interface EngineAudioConfig {
+  idleHz: number;
+  maxHz: number;
+  /** Extra pitch multiplier while nitro is boosting. */
+  nitroPitchBoost: number;
+}
+
+/** G3: zombie groans fall off with distance and are capped so a horde doesn't drown itself out. */
+export interface ZombieGroanAudioConfig {
+  maxDistance: number;
+  /** Average seconds between one zombie's groans. */
+  intervalSeconds: number;
+  /** At most this many groan voices play at once; the closest zombies win. */
+  maxVoices: number;
+}
+
+export interface AudioConfig {
+  engine: EngineAudioConfig;
+  /** Car speed (m/s) the handbrake must exceed to play a tire-skid sound. */
+  skidMinSpeed: number;
+  zombieGroan: ZombieGroanAudioConfig;
+}
+
+/** G3: per-map ambient drone; also doubles as the map's mood for other art/lighting hooks. */
+export interface MapMusicConfig {
+  /** Base drone frequency in Hz; sets the map's musical "key". */
+  baseHz: number;
+  mood: 'calm' | 'tense' | 'dread';
+}
+
 export interface CameraConfig {
   distance: number;
   height: number;
@@ -173,6 +251,8 @@ export interface MapConfig {
   groundGrip?: number;
   /** F4: this map's boss encounter, on top of the base `boss` rank config. */
   boss?: MapBossConfig;
+  /** G3: this map's ambient drone; defaults to a calm, mid-range one when omitted. */
+  music?: MapMusicConfig;
 }
 
 /** F4: overrides layered onto the shared `boss` rank config for this map's own fight. */
@@ -314,6 +394,9 @@ export interface GameConfig {
   combat: CombatConfig;
   upgrades: UpgradeDef[];
   maps: MapConfig[];
+  hud: HudConfig;
+  vfx: VfxConfig;
+  audio: AudioConfig;
 }
 
 export type DeepPartial<T> = {

@@ -436,6 +436,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       generator: 'greybox',
       seed: 1,
       chunkSize: 500,
+      music: { baseHz: 110, mood: 'calm' },
     },
     {
       id: 'openfield',
@@ -446,6 +447,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       generator: 'openfield',
       seed: 7,
       chunkSize: 250,
+      music: { baseHz: 98, mood: 'tense' },
       spawnZones: [
         { x: 0, z: 0, radius: 900, weight: 1 },
         { x: 600, z: 600, radius: 250, weight: 2 },
@@ -472,6 +474,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       chunkSize: 900,
       storyIndex: 1,
       spawnDensity: 0.2,
+      music: { baseHz: 130, mood: 'calm' },
       pickups: [
         { kind: 'gas', x: 100, z: 250 },
         { kind: 'coins', x: -100, z: 250 },
@@ -494,6 +497,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       chunkSize: 1600,
       storyIndex: 2,
       spawnDensity: 0.3,
+      music: { baseHz: 90, mood: 'tense' },
       pickups: [
         { kind: 'gas', x: 30, z: -250 },
         { kind: 'gas', x: -30, z: 300 },
@@ -517,6 +521,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       chunkSize: 1100,
       storyIndex: 3,
       spawnDensity: 0.35,
+      music: { baseHz: 82, mood: 'dread' },
       pickups: [
         { kind: 'gas', x: -180, z: -180 },
         { kind: 'repair', x: 180, z: 180 },
@@ -549,6 +554,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       night: true,
       groundGrip: 0.55,
       spawnDensity: 0.35,
+      music: { baseHz: 70, mood: 'dread' },
       pickups: [
         { kind: 'gas', x: 30, z: -300 },
         { kind: 'repair', x: 250, z: 40 },
@@ -580,6 +586,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       chunkSize: 900,
       storyIndex: 5,
       spawnDensity: 0.4,
+      music: { baseHz: 60, mood: 'dread' },
       pickups: [
         { kind: 'gas', x: -300, z: 120 },
         { kind: 'repair', x: 300, z: -120 },
@@ -601,4 +608,40 @@ export const DEFAULT_CONFIG: GameConfig = {
       },
     },
   ],
+  hud: {
+    lowHpFraction: 0.25,
+    lowFuelFraction: 0.2,
+    counterPulseSeconds: 0.35,
+  },
+  vfx: {
+    screenShake: {
+      perDamage: 0.008,
+      perKill: 0.05,
+      max: 0.6,
+      decayPerSecond: 3,
+    },
+    slowMo: {
+      multiKillThreshold: 3,
+      timeScale: 0.35,
+      holdSeconds: 0.25,
+      rampSeconds: 0.4,
+    },
+    blood: {
+      splattersPerKill: 1,
+      maxSplatters: 24,
+    },
+  },
+  audio: {
+    engine: {
+      idleHz: 70,
+      maxHz: 260,
+      nitroPitchBoost: 1.35,
+    },
+    skidMinSpeed: 6,
+    zombieGroan: {
+      maxDistance: 40,
+      intervalSeconds: 3.5,
+      maxVoices: 4,
+    },
+  },
 };

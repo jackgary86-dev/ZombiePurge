@@ -174,6 +174,56 @@ export function collectConfigProblems(config: GameConfig): string[] {
     );
   }
 
+  const hud = config.hud;
+  if (hud.lowHpFraction <= 0 || hud.lowHpFraction >= 1) {
+    problems.push(`hud.lowHpFraction must be between 0 and 1 (got ${String(hud.lowHpFraction)})`);
+  }
+  if (hud.lowFuelFraction <= 0 || hud.lowFuelFraction >= 1) {
+    problems.push(
+      `hud.lowFuelFraction must be between 0 and 1 (got ${String(hud.lowFuelFraction)})`
+    );
+  }
+  positive(hud.counterPulseSeconds, 'hud.counterPulseSeconds', problems);
+
+  const shake = config.vfx.screenShake;
+  nonNegative(shake.perDamage, 'vfx.screenShake.perDamage', problems);
+  nonNegative(shake.perKill, 'vfx.screenShake.perKill', problems);
+  positive(shake.max, 'vfx.screenShake.max', problems);
+  positive(shake.decayPerSecond, 'vfx.screenShake.decayPerSecond', problems);
+
+  const slowMo = config.vfx.slowMo;
+  if (!Number.isInteger(slowMo.multiKillThreshold) || slowMo.multiKillThreshold < 2) {
+    problems.push(
+      `vfx.slowMo.multiKillThreshold must be an integer >= 2 (got ${String(slowMo.multiKillThreshold)})`
+    );
+  }
+  if (slowMo.timeScale <= 0 || slowMo.timeScale >= 1) {
+    problems.push(`vfx.slowMo.timeScale must be between 0 and 1 (got ${String(slowMo.timeScale)})`);
+  }
+  positive(slowMo.holdSeconds, 'vfx.slowMo.holdSeconds', problems);
+  positive(slowMo.rampSeconds, 'vfx.slowMo.rampSeconds', problems);
+
+  const blood = config.vfx.blood;
+  positive(blood.splattersPerKill, 'vfx.blood.splattersPerKill', problems);
+  positive(blood.maxSplatters, 'vfx.blood.maxSplatters', problems);
+
+  const engineAudio = config.audio.engine;
+  nonNegative(engineAudio.idleHz, 'audio.engine.idleHz', problems);
+  positive(engineAudio.maxHz, 'audio.engine.maxHz', problems);
+  if (engineAudio.maxHz <= engineAudio.idleHz) {
+    problems.push('audio.engine.maxHz must be greater than audio.engine.idleHz');
+  }
+  positive(engineAudio.nitroPitchBoost, 'audio.engine.nitroPitchBoost', problems);
+  positive(config.audio.skidMinSpeed, 'audio.skidMinSpeed', problems);
+  const groan = config.audio.zombieGroan;
+  positive(groan.maxDistance, 'audio.zombieGroan.maxDistance', problems);
+  positive(groan.intervalSeconds, 'audio.zombieGroan.intervalSeconds', problems);
+  if (!Number.isInteger(groan.maxVoices) || groan.maxVoices < 1) {
+    problems.push(
+      `audio.zombieGroan.maxVoices must be an integer >= 1 (got ${String(groan.maxVoices)})`
+    );
+  }
+
   const upgradeIds = new Set<string>();
   const categories: UpgradeCategory[] = [
     'engine',
@@ -306,6 +356,12 @@ export function collectConfigProblems(config: GameConfig): string[] {
           `maps[${i}].boss.rangedAttack.hitRadius`,
           problems
         );
+      }
+    }
+    if (map.music) {
+      positive(map.music.baseHz, `maps[${i}].music.baseHz`, problems);
+      if (!['calm', 'tense', 'dread'].includes(map.music.mood)) {
+        problems.push(`maps[${i}].music.mood "${map.music.mood}" is unknown`);
       }
     }
   });
