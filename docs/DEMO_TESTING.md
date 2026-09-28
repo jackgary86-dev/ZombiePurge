@@ -77,3 +77,15 @@ Tick items in the PR that closes the milestone.
 - [ ] Back on the world map, Suburbs now shows "Completed" and (once a Map 2 exists) the next map is unlocked
 - [ ] Back at the save slot screen, the slot's coins and play time reflect the run; Delete needs a second click to confirm and removes the slot
 - [ ] Wrecking or running dry during a story run banks coins into that save's wallet (not the sandbox one) and does not unlock the next map
+
+## M5 – Story Mode: Maps 2-5
+
+- [ ] Completing Suburbs unlocks Map 2 on the world map
+- [ ] Desert Highway: a long straight road across a sandy 1.6 km map, gas stations every few hundred metres, big jump ramps, cacti/rocks instead of trees; kills + reach-the-end objectives
+- [ ] Industrial City: a tight grid of warehouses on narrow streets around an open centre; the HUD lists a Brute Boss objective alongside the kill count
+- [ ] Driving into the centre courtyard finds the boss — it's visibly larger, slams the car for AOE damage on a cooldown when close, and its kill completes that objective and pays 100 coins
+- [ ] Frozen Mountain Forest always loads at night with headlights on; the car handles noticeably looser (E7 ground grip) than on the other maps
+- [ ] The forest's Frost Boss lobs a ranged attack from a distance as well as slamming up close
+- [ ] Quarantine Lab Zone: concentric ringed corridors, each ring's one doorway in a different place, spiralling into a central chamber with glowing pods and the final boss (ranged + slam, tankiest of the three)
+- [ ] Beating each map's boss and reaching its exit unlocks the next map and shows the Map Complete screen with the new enemies and upgrades
+- [ ] `#map=desertHighway` (and `industrialCity`, `frozenForest`, `quarantineLab`) load directly in Sandbox for a quick look without playing through the story

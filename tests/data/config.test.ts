@@ -20,6 +20,7 @@ describe('config layer', () => {
       spitter: 4,
       brute: 6,
       tank: 15,
+      iceZombie: 8,
       boss: 100,
     });
     expect(cfg.rewards.metersPerDistanceCoin).toBe(250);

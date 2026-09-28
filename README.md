@@ -89,7 +89,7 @@ assets/            # 3D models, textures, sounds
 | **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                          |
 | **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                     |
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                   |
-| **M5** | Story Mode: Maps 2-5                          | ⬜ TODO                                                                                    |
+| **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                    |
 | **M6** | Polish & Release                              | ⬜ TODO                                                                                    |
 
 ## What's Built So Far
@@ -121,6 +121,11 @@ assets/            # 3D models, textures, sounds
 - **E9** Gas, repair, coin and ammo pickups placed per map, collected by proximity, each with its own placeholder prop
 - **F2/F3** Story progression (per-map objectives unlock the next map) on top of a versioned, multi-slot save system — each slot has its own wallet, garage and story progress
 - **J3/J5/J9** Save slot picker (new/select/delete), the story map select screen (locked/unlocked/completed), and the map-complete screen between story maps
+- **E5/I7** Map 2: Desert Highway — one long road across a 1.6 km desert, gas stations every few hundred metres, big jump ramps, cacti and rocks instead of trees
+- **E6/I7** Map 3: Industrial City — a tight warehouse grid on narrow streets around a clear boss courtyard; the district's first boss
+- **E7/I7** Map 4: Frozen Mountain Forest — a dense pine forest split by a road to the mountain pass, always night, looser tire grip on the snow, and Tank/Ice Zombie enemies
+- **E8/I7** Map 5: Quarantine Lab Zone — concentric ringed corridors spiralling into a central chamber, glowing containment pods, and the final boss
+- **F4** Boss fights from Map 3 on: a shared, config-driven AI (the existing ranged-attack system plus a new AOE ground-slam) gives each boss its own moveset without bespoke code per boss
 
 ## Development
 

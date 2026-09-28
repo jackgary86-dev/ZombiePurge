@@ -1,6 +1,14 @@
 import type { GameConfig, UpgradeCategory, ZombieRank } from './types';
 
-export const ZOMBIE_RANKS: ZombieRank[] = ['walker', 'runner', 'spitter', 'brute', 'tank', 'boss'];
+export const ZOMBIE_RANKS: ZombieRank[] = [
+  'walker',
+  'runner',
+  'spitter',
+  'brute',
+  'tank',
+  'iceZombie',
+  'boss',
+];
 
 export class ConfigError extends Error {
   constructor(public readonly problems: string[]) {
@@ -218,13 +226,30 @@ export function collectConfigProblems(config: GameConfig): string[] {
     positive(map.fogDistance, `maps[${i}].fogDistance`, problems);
     positive(map.chunkSize, `maps[${i}].chunkSize`, problems);
     if (map.chunkSize > map.size) problems.push(`maps[${i}].chunkSize must not exceed size`);
-    if (!['greybox', 'openfield', 'suburbs'].includes(map.generator))
+    if (
+      ![
+        'greybox',
+        'openfield',
+        'suburbs',
+        'desertHighway',
+        'industrialCity',
+        'frozenForest',
+        'quarantineLab',
+      ].includes(map.generator)
+    ) {
       problems.push(`maps[${i}].generator "${map.generator}" is unknown`);
+    }
     if (
       map.spawnDensity !== undefined &&
       (map.spawnDensity < 0 || map.spawnDensity > 1 || Number.isNaN(map.spawnDensity))
     ) {
       problems.push(`maps[${i}].spawnDensity must be between 0 and 1`);
+    }
+    if (
+      map.groundGrip !== undefined &&
+      (map.groundGrip <= 0 || map.groundGrip > 2 || Number.isNaN(map.groundGrip))
+    ) {
+      problems.push(`maps[${i}].groundGrip must be between 0 (exclusive) and 2`);
     }
     const half = map.size / 2;
     for (const [zi, zone] of (map.spawnZones ?? []).entries()) {
@@ -250,6 +275,36 @@ export function collectConfigProblems(config: GameConfig): string[] {
       else if (config.zombies[rank].detectionRadius >= map.fogDistance) {
         problems.push(
           `maps[${i}] (${map.id}): zombies.${rank}.detectionRadius (${config.zombies[rank].detectionRadius}) must be less than fogDistance (${map.fogDistance})`
+        );
+      }
+    }
+    if (map.boss) {
+      if (Math.abs(map.boss.position.x) > half || Math.abs(map.boss.position.z) > half) {
+        problems.push(`maps[${i}].boss.position is outside the map`);
+      }
+      if (map.boss.hp !== undefined) positive(map.boss.hp, `maps[${i}].boss.hp`, problems);
+      if (map.boss.speed !== undefined) positive(map.boss.speed, `maps[${i}].boss.speed`, problems);
+      if (map.boss.attackDamage !== undefined) {
+        nonNegative(map.boss.attackDamage, `maps[${i}].boss.attackDamage`, problems);
+      }
+      if (map.boss.slam) {
+        positive(map.boss.slam.radius, `maps[${i}].boss.slam.radius`, problems);
+        nonNegative(map.boss.slam.damage, `maps[${i}].boss.slam.damage`, problems);
+        positive(map.boss.slam.cooldown, `maps[${i}].boss.slam.cooldown`, problems);
+      }
+      if (map.boss.rangedAttack) {
+        positive(map.boss.rangedAttack.range, `maps[${i}].boss.rangedAttack.range`, problems);
+        positive(
+          map.boss.rangedAttack.projectileSpeed,
+          `maps[${i}].boss.rangedAttack.projectileSpeed`,
+          problems
+        );
+        positive(map.boss.rangedAttack.cooldown, `maps[${i}].boss.rangedAttack.cooldown`, problems);
+        nonNegative(map.boss.rangedAttack.damage, `maps[${i}].boss.rangedAttack.damage`, problems);
+        positive(
+          map.boss.rangedAttack.hitRadius,
+          `maps[${i}].boss.rangedAttack.hitRadius`,
+          problems
         );
       }
     }

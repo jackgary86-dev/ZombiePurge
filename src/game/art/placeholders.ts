@@ -84,6 +84,7 @@ const RANK_STYLE: Record<ZombieRank, { color: number; scale: number }> = {
   spitter: { color: 0x9cff3a, scale: 1 },
   brute: { color: 0x6f5a4a, scale: 1.35 },
   tank: { color: 0x555a50, scale: 1.8 },
+  iceZombie: { color: 0xaee0ff, scale: 1.1 },
   boss: { color: 0xff5a1f, scale: 2.8 },
 };
 

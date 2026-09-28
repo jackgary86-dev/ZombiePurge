@@ -22,7 +22,15 @@ describe('RunStats (C1 coins per kill, C2 distance bonus, C4 summary)', () => {
   });
 
   it('pays the configured coins for every rank', () => {
-    const expected = { walker: 1, runner: 2, spitter: 4, brute: 6, tank: 15, boss: 100 };
+    const expected = {
+      walker: 1,
+      runner: 2,
+      spitter: 4,
+      brute: 6,
+      tank: 15,
+      iceZombie: 8,
+      boss: 100,
+    };
     const pos = new Vector3();
     for (const rank of ZOMBIE_RANKS) {
       stats.trackPosition(pos, 10); // let any combo chain lapse so each kill pays base value
@@ -31,8 +39,8 @@ describe('RunStats (C1 coins per kill, C2 distance bonus, C4 summary)', () => {
       expect(event.multiplier).toBe(1);
       expect(stats.killsByRank[rank]).toBe(1);
     }
-    expect(stats.totalKills).toBe(6);
-    expect(stats.coinsFromKills).toBe(128);
+    expect(stats.totalKills).toBe(ZOMBIE_RANKS.length);
+    expect(stats.coinsFromKills).toBe(136);
   });
 
   it('awards one coin per 250 m driven', () => {
