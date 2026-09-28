@@ -139,7 +139,7 @@ export interface MapConfig {
   fogDistance: number;
   zombieRanks: ZombieRank[];
   /** Which layout generator builds the map and how it is streamed. */
-  generator: 'greybox' | 'openfield';
+  generator: 'greybox' | 'openfield' | 'suburbs';
   seed: number;
   chunkSize: number;
   /** Optional spawn zones; without them the horde spawner uses the whole map. */
@@ -149,6 +149,8 @@ export interface MapConfig {
   /** Story order (1-5); sandbox-only maps omit it. */
   storyIndex?: number;
   night?: boolean;
+  /** Story mode's fixed horde density (0-1); sandbox uses its own slider instead. Defaults to 1. */
+  spawnDensity?: number;
 }
 
 export interface GunTierStats {

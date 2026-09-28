@@ -688,3 +688,90 @@ canvas {
   height: 22px;
   accent-color: #c8402e;
 }
+
+/* J3: save slot picker */
+.save-slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 420px;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.save-slot-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.save-slot-name {
+  font-weight: bold;
+  color: #ffd84a;
+}
+
+.save-slot-detail {
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+/* J5: story map select / world map */
+.story-map-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  max-width: 900px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.story-map-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.story-map-card.completed {
+  border-color: #ffd84a;
+}
+
+.story-map-card.locked {
+  opacity: 0.5;
+}
+
+.story-map-card h2 {
+  font-size: 18px;
+  color: #c8402e;
+}
+
+.story-map-card ul {
+  margin: 0 0 0 18px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.story-map-status {
+  font-weight: bold;
+  color: #ffd84a;
+}
+
+/* J9: map complete / evolve screen */
+.map-complete-next {
+  margin: 10px 0;
+  text-align: center;
+}
+
+.map-complete-next h2 {
+  color: #c8402e;
+  font-size: 22px;
+  margin-bottom: 4px;
+}

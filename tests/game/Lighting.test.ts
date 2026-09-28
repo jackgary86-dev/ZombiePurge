@@ -10,7 +10,7 @@ import {
 
 describe('I8 lighting presets', () => {
   it('has day and night presets per map and applies them to the scene', () => {
-    for (const id of ['greybox', 'openfield']) {
+    for (const id of ['greybox', 'openfield', 'suburbs']) {
       expect(LIGHTING[id].day.sunIntensity).toBeGreaterThan(LIGHTING[id].night.sunIntensity);
       expect(LIGHTING[id].night.fogFar).toBeLessThan(LIGHTING[id].day.fogFar); // night closes the view in
     }

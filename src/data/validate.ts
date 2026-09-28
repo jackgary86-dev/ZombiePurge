@@ -218,8 +218,14 @@ export function collectConfigProblems(config: GameConfig): string[] {
     positive(map.fogDistance, `maps[${i}].fogDistance`, problems);
     positive(map.chunkSize, `maps[${i}].chunkSize`, problems);
     if (map.chunkSize > map.size) problems.push(`maps[${i}].chunkSize must not exceed size`);
-    if (!['greybox', 'openfield'].includes(map.generator))
+    if (!['greybox', 'openfield', 'suburbs'].includes(map.generator))
       problems.push(`maps[${i}].generator "${map.generator}" is unknown`);
+    if (
+      map.spawnDensity !== undefined &&
+      (map.spawnDensity < 0 || map.spawnDensity > 1 || Number.isNaN(map.spawnDensity))
+    ) {
+      problems.push(`maps[${i}].spawnDensity must be between 0 and 1`);
+    }
     const half = map.size / 2;
     for (const [zi, zone] of (map.spawnZones ?? []).entries()) {
       positive(zone.radius, `maps[${i}].spawnZones[${zi}].radius`, problems);

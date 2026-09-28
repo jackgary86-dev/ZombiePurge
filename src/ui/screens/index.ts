@@ -5,3 +5,6 @@ export * from './ResultsScreen';
 export * from './SettingsMenu';
 export * from './ControlsScreen';
 export * from './LoadingScreen';
+export * from './SaveSlotsScreen';
+export * from './StoryMapSelect';
+export * from './MapCompleteScreen';

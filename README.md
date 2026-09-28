@@ -88,7 +88,7 @@ assets/            # 3D models, textures, sounds
 | **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work) |
 | **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                          |
 | **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                     |
-| **M4** | Story Mode: Map 1 (Suburbs)                   | ⬜ TODO                                                                                    |
+| **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                   |
 | **M5** | Story Mode: Maps 2-5                          | ⬜ TODO                                                                                    |
 | **M6** | Polish & Release                              | ⬜ TODO                                                                                    |
 
@@ -117,6 +117,10 @@ assets/            # 3D models, textures, sounds
 - **I8** Day/night lighting presets per map with headlights at night
 - **I10** A hand-drawn icon set (coins, HP, fuel, every upgrade/weapon) and a condensed display font for titles and buttons
 - **I11** ZombiePurge wordmark logo on the main menu and loading screen, a left-anchored main menu composition over the live turntable, and a moodier loading screen
+- **E4/I6** Map 1: Suburbs — two cul-de-sacs of houses, a park, a signposted exit, all built whole like the greybox arena
+- **E9** Gas, repair, coin and ammo pickups placed per map, collected by proximity, each with its own placeholder prop
+- **F2/F3** Story progression (per-map objectives unlock the next map) on top of a versioned, multi-slot save system — each slot has its own wallet, garage and story progress
+- **J3/J5/J9** Save slot picker (new/select/delete), the story map select screen (locked/unlocked/completed), and the map-complete screen between story maps
 
 ## Development
 

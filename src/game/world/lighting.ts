@@ -81,6 +81,34 @@ export const LIGHTING: Record<string, { day: LightingPreset; night: LightingPres
       fogFar: 0.55,
     },
   },
+  suburbs: {
+    day: {
+      sky: 0xbfe0ff,
+      fog: 0xbfe0ff,
+      hemisphereSky: 0xdcefff,
+      hemisphereGround: 0x5a6a3a,
+      hemisphereIntensity: 1,
+      ambient: 0.18,
+      sunColor: 0xfff6dd,
+      sunIntensity: 1.8,
+      sunPosition: [70, 100, 50],
+      fogNear: 0.65,
+      fogFar: 1,
+    },
+    night: {
+      sky: 0x141c30,
+      fog: 0x141c30,
+      hemisphereSky: 0x2a3a5a,
+      hemisphereGround: 0x0d0d0a,
+      hemisphereIntensity: 0.35,
+      ambient: 0.06,
+      sunColor: 0x8fa8ff,
+      sunIntensity: 0.25,
+      sunPosition: [-60, 90, 40],
+      fogNear: 0.25,
+      fogFar: 0.6,
+    },
+  },
 };
 
 export function presetFor(mapId: string, night: boolean): LightingPreset {

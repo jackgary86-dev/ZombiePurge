@@ -63,3 +63,17 @@ Tick items in the PR that closes the milestone.
 - [ ] Settings: lower draw distance (fog closes in), change camera sensitivity, rebind Handbrake to another key, reload — all remembered
 - [ ] Infinite money + no-fail: garage shows ∞ coins and everything buyable; the car can't be wrecked or run dry; purchases don't persist after leaving sandbox
 - [ ] `#map=greybox` still loads the tuning arena
+
+## M4 – Story Mode: Map 1 (Suburbs)
+
+- [ ] Main menu → Story Mode: the save slot screen; New Game creates a slot named "New Game"
+- [ ] The world map shows "Map 1: Suburbs" unlocked with its objectives listed, Play starts it
+- [ ] Suburbs loads: two cul-de-sacs of houses with peaked roofs, low fences, a parked car here and there, a park with trees, a fountain and benches, and a signposted gate on the far edge
+- [ ] The garage balance is this save's own coins (0 on a new slot), separate from the sandbox wallet
+- [ ] The HUD shows both objectives ("Clear 10 zombies…", "Drive out through the exit gate") and updates the kill count live
+- [ ] Driving over a pickup (gas/repair/coins/ammo) removes its prop immediately and has the expected effect (fuel/HP/coins/ammo topped up)
+- [ ] Killing 10 zombies and reaching the exit gate ends the run with the Map Complete screen, not the wreck/results screen
+- [ ] Map Complete shows kills/distance/coins, names the next map (or says it was the last one), and Continue returns to the world map
+- [ ] Back on the world map, Suburbs now shows "Completed" and (once a Map 2 exists) the next map is unlocked
+- [ ] Back at the save slot screen, the slot's coins and play time reflect the run; Delete needs a second click to confirm and removes the slot
+- [ ] Wrecking or running dry during a story run banks coins into that save's wallet (not the sandbox one) and does not unlock the next map
