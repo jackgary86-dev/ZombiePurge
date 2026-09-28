@@ -26,6 +26,7 @@ const ALL_ICONS: IconName[] = [
   'gamepad',
   'exit',
   'wrench',
+  'credits',
 ];
 
 const ALL_CATEGORIES: UpgradeCategory[] = [

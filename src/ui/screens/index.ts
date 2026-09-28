@@ -4,6 +4,7 @@ export * from './PauseMenu';
 export * from './ResultsScreen';
 export * from './SettingsMenu';
 export * from './ControlsScreen';
+export * from './CreditsScreen';
 export * from './LoadingScreen';
 export * from './SaveSlotsScreen';
 export * from './StoryMapSelect';

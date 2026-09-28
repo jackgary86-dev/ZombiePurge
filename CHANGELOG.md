@@ -41,6 +41,8 @@ with from the initial scaffold.
   a 3D art pass.
 - **I9** VFX art gaps: a muzzle flash at the weapon mount on every shot, tyre-skid decals behind
   the rear wheels while sliding, and dust/snow drive-trail puffs coloured per map's own palette.
+- **J13** A real Credits screen (`CreditsScreen.ts`, its own dedicated menu icon) listing Team,
+  Tools and Asset Licenses, replacing the one-line placeholder panel built inline in `main.ts`.
 
 ## 0.5.0 and earlier - M0-M5
 
