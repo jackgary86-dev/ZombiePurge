@@ -154,4 +154,17 @@ describe('Wallet (C5 persistence)', () => {
     storage.setItem(WALLET_STORAGE_KEY, JSON.stringify({ version: 1, coins: -5 }));
     expect(new Wallet(getConfig().rewards, storage).balance).toBe(0);
   });
+
+  it('ignores zero/negative adds and negative/overdrawn spends, and reset() zeroes both totals', () => {
+    const w = new Wallet(getConfig().rewards, new MemoryStorage());
+    w.add(100);
+    w.add(0);
+    w.add(-50);
+    expect(w.balance).toBe(100);
+    expect(w.spend(-1)).toBe(false);
+    expect(w.balance).toBe(100);
+    w.reset();
+    expect(w.balance).toBe(0);
+    expect(w.lifetime).toBe(0);
+  });
 });

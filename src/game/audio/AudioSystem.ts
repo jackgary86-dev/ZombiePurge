@@ -1,6 +1,6 @@
 import type { AudioConfig, MapMusicConfig } from '../../data/types';
 import type { GameSettings, SettingsStore } from '../../data/settings';
-import { engineFrequency, groanVolume, pickGroanVoices } from './AudioLogic';
+import { distanceXZ, engineFrequency, groanVolume, pickGroanVoices } from './AudioLogic';
 
 type WeaponSfx = 'machinegun' | 'shotgun' | 'rockets';
 
@@ -41,6 +41,7 @@ export class AudioSystem {
   private flameSource: AudioBufferSourceNode | null = null;
   private flameGain: GainNode | null = null;
   private groanVoices: { osc: OscillatorNode; gain: GainNode }[] = [];
+  private readonly groanScratch: { distance: number }[] = [];
   private musicOscA: OscillatorNode | null = null;
   private musicOscB: OscillatorNode | null = null;
   private musicGain: GainNode | null = null;
@@ -190,11 +191,27 @@ export class AudioSystem {
     osc.stop(ctx.currentTime + 0.35);
   }
 
-  /** Distance-falloff groans (G3): call once per Playing tick with every nearby, alive zombie. */
-  updateZombieGroans(candidates: { distance: number }[]): void {
+  /**
+   * Distance-falloff groans (G3): call once per Playing tick with the whole zombie pool (a plain
+   * iterable, so `pool.active()`'s generator can be passed straight through) and the car's
+   * position. Gathers nearby zombies in one pass into a reused scratch array - H1's profiling
+   * pass found the previous call site building four whole-pool arrays here every tick.
+   */
+  updateZombieGroans(
+    zombies: Iterable<{ alive: boolean; x: number; z: number }>,
+    carX: number,
+    carZ: number
+  ): void {
     if (!this.ctx) return;
+    const maxDistance = this.cfg.zombieGroan.maxDistance;
+    this.groanScratch.length = 0;
+    for (const z of zombies) {
+      if (!z.alive) continue;
+      const distance = distanceXZ(z.x, z.z, carX, carZ);
+      if (distance <= maxDistance) this.groanScratch.push({ distance });
+    }
     const now = this.ctx.currentTime;
-    const picked = pickGroanVoices(candidates, this.groanVoices.length);
+    const picked = pickGroanVoices(this.groanScratch, this.groanVoices.length);
     for (let i = 0; i < this.groanVoices.length; i++) {
       const target = picked[i];
       const gain = target

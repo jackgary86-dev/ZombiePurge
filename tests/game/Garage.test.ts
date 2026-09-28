@@ -188,4 +188,21 @@ describe('D2 Garage purchase & equip logic', () => {
     expect(garage.equippedIn('roof')?.id).toBe('machinegun');
     expect(garage.equippedIn('front')?.id).toBe('ram');
   });
+
+  it('get() looks up an upgrade def by id, undefined for an unknown one', () => {
+    expect(garage.get('engine')?.category).toBe('engine');
+    expect(garage.get('nope')).toBeUndefined();
+  });
+
+  it('reset() clears every owned tier and equipped slot, and persists that', () => {
+    wallet.add(5000);
+    garage.buy('tires');
+    garage.buy('machinegun');
+    garage.reset();
+    expect(garage.ownedTier('tires')).toBe(0);
+    expect(garage.equippedIn('roof')).toBeNull();
+    const reloaded = new Garage(getConfig().upgrades, wallet, 1, storage);
+    expect(reloaded.ownedTier('tires')).toBe(0);
+    expect(reloaded.equippedIn('roof')).toBeNull();
+  });
 });

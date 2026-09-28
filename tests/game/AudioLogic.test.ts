@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  distanceXZ,
   engineFrequency,
   groanVolume,
   pickGroanVoices,
@@ -43,5 +44,10 @@ describe('AudioLogic (G3)', () => {
     expect(skidActive(10, true, 6)).toBe(true);
     expect(skidActive(2, true, 6)).toBe(false);
     expect(skidActive(10, false, 6)).toBe(false);
+  });
+
+  it('distanceXZ ignores height and matches the 2D distance formula', () => {
+    expect(distanceXZ(0, 0, 3, 4)).toBeCloseTo(5);
+    expect(distanceXZ(10, 10, 10, 10)).toBe(0);
   });
 });

@@ -90,7 +90,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Beating each map's boss and reaching its exit unlocks the next map and shows the Map Complete screen with the new enemies and upgrades
 - [ ] `#map=desertHighway` (and `industrialCity`, `frozenForest`, `quarantineLab`) load directly in Sandbox for a quick look without playing through the story
 
-## M6 – HUD, hit feedback, audio (in progress: G1-G3)
+## M6 – HUD, hit feedback, audio, polish (in progress: G1-G3, H1-H5)
 
 - [ ] The old text HUD is gone: a graphical speed readout, HP/fuel bars (flash red near empty), coins/kills counters that pulse when they change, and a combo badge when chained kills reach x2+
 - [ ] Equip each weapon in turn: the machine gun shows a heat bar that reads OVERHEATED when full, the shotgun/rockets show a magazine count and a reload timer, the flamethrower shows FIRING while held
@@ -100,3 +100,13 @@ Tick items in the PR that closes the milestone.
 - [ ] Ram through several zombies in the same instant: everything briefly runs in slow motion before ramping back to normal speed
 - [ ] With sound on: the engine note rises with speed and jumps in pitch on Nitro, the handbrake slide has its own skid sound, every weapon has a distinct fire sound, nearby zombies groan (louder up close, silent once they're far enough away), each map has its own ambient drone, and menu buttons click/hover
 - [ ] The Settings volume sliders (master/music/effects) and Low Gore toggle all do what they say, live, without needing a restart
+- [ ] Turn on Show FPS (Settings): the corner readout now shows the live zombie count next to fps (H1); it stays smooth with a full horde on screen
+- [ ] The build tag (bottom-right) now leads with a version number (`v0.6.0 · build #… · …`), confirming H4's versioned release build
+
+### Known quirks (non-blocking)
+
+- Holding throttle in a dead-straight line for many seconds can drift the car slightly off a
+  perfectly straight path with no steering input - a minor artifact of the suspension/tire
+  physics settling asymmetrically, not a bug introduced by any milestone's own work. Noticeable
+  mainly in scripted/headless testing (holding W for 5+ seconds unattended); a human driver
+  correcting with the stick never notices it.
