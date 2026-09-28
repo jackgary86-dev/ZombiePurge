@@ -85,15 +85,15 @@ assets/            # 3D models, textures, sounds
 
 ## Milestones
 
-| #      | Goal                                          | Status                                                                                     |
-| ------ | --------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **M0** | Foundation (scaffold, car, camera)            | ✅ Done (A1–A7)                                                                            |
-| **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work) |
-| **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                          |
-| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                     |
-| **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                   |
-| **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                    |
-| **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5 done)                                                         |
+| #      | Goal                                          | Status                                                                                                                                          |
+| ------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **M0** | Foundation (scaffold, car, camera)            | ✅ Done (A1–A7)                                                                                                                                 |
+| **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work)                                                      |
+| **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                                                                               |
+| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                                                                          |
+| **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                        |
+| **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                         |
+| **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
 
 ## What's Built So Far
 
@@ -137,6 +137,11 @@ assets/            # 3D models, textures, sounds
 - **H3** A real coverage pass (`npm run test:coverage`) targeted genuine gaps in config validation, save/load edge cases and wallet/garage resets — and caught a latent crash when a zombie rank's config went missing
 - **H4** A versioned release build: the app version now ships in the build tag, and three/Rapier are split into their own cached vendor chunks
 - **H5** `docs/DEMO_TESTING.md`'s per-milestone manual checklist, now covering M6's HUD/feedback/audio/perf work too
+- **I1** Art direction & style guide (`docs/ART_STYLE.md`): mood-board notes and a per-map palette table alongside the existing `docs/ART_PROMPT.md` spec; no image-generation tool is available in this environment, so the mood-board images themselves aren't rendered yet — nothing in the engine blocks on it
+- **I2** Asset pipeline: the `assets/models/{category}/` folder convention, `GameConfig.assetBudget` triangle/texture budgets as real validated config (not just docs), and `AssetLoader.loadModel()` (GLTFLoader-based, resolves to `null` on any failure so placeholder art keeps rendering until real `.glb`s land)
+- **I3** Car damage-state visuals: the body tints and grows dent decals through clean → dented → wrecked as HP drops, config-driven thresholds (`carDamage`) — a placeholder-art extension; real clean/dented/wrecked models still need a 3D art pass
+- **I5** Zombie rank variants + simple motion: per-instance colour jitter so a horde of one rank isn't visually identical clones, plus a procedural walk-bob and attack lunge/scale-pulse in lieu of real animation clips — a placeholder-art extension; real rigged/animated models still need a 3D art pass
+- **I9** VFX art gaps: a muzzle flash at the weapon mount on every shot, tyre-skid decals behind the rear wheels while sliding, and dust/snow drive-trail puffs coloured per map's own palette
 
 ## Development
 

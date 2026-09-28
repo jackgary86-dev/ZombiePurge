@@ -630,6 +630,21 @@ export const DEFAULT_CONFIG: GameConfig = {
       splattersPerKill: 1,
       maxSplatters: 24,
     },
+    muzzleFlash: {
+      durationSeconds: 0.06,
+      size: 0.35,
+    },
+    skidMarks: {
+      intervalSeconds: 0.08,
+      lifetimeSeconds: 6,
+      maxMarks: 120,
+    },
+    driveTrail: {
+      minSpeed: 8,
+      intervalSeconds: 0.1,
+      lifetimeSeconds: 0.8,
+      maxPuffs: 40,
+    },
   },
   audio: {
     engine: {
@@ -647,5 +662,27 @@ export const DEFAULT_CONFIG: GameConfig = {
   performance: {
     targetFps: 60,
     zombieBudget: 200,
+  },
+  // I2: numbers straight from docs/ART_PROMPT.md §2's triangle/texture budget table.
+  assetBudget: {
+    car: { maxTriangles: 8000, textureSize: 1024 },
+    upgradePart: { maxTriangles: 1500, textureSize: 0 },
+    zombie: { maxTriangles: 3500, textureSize: 512 },
+    zombieLod1: { maxTriangles: 1200, textureSize: 512 },
+    zombieLod2: { maxTriangles: 400, textureSize: 512 },
+    boss: { maxTriangles: 10000, textureSize: 1024 },
+    smallProp: { maxTriangles: 300, textureSize: 0 },
+    largeProp: { maxTriangles: 2000, textureSize: 1024 },
+  },
+  carDamage: {
+    dentedBelowFraction: 0.66,
+    wreckedBelowFraction: 0.33,
+  },
+  zombieMotion: {
+    colorVariance: 0.12,
+    bobAmplitude: 0.06,
+    bobFrequency: 2.2,
+    attackLungeDistance: 0.35,
+    attackLungeSeconds: 0.3,
   },
 };
