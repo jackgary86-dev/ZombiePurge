@@ -224,6 +224,13 @@ export function collectConfigProblems(config: GameConfig): string[] {
     );
   }
 
+  positive(config.performance.targetFps, 'performance.targetFps', problems);
+  if (!Number.isInteger(config.performance.zombieBudget) || config.performance.zombieBudget < 1) {
+    problems.push(
+      `performance.zombieBudget must be an integer >= 1 (got ${String(config.performance.zombieBudget)})`
+    );
+  }
+
   const upgradeIds = new Set<string>();
   const categories: UpgradeCategory[] = [
     'engine',
@@ -322,7 +329,8 @@ export function collectConfigProblems(config: GameConfig): string[] {
       if (!ZOMBIE_RANKS.includes(rank))
         problems.push(`maps[${i}].zombieRanks has unknown rank "${rank}"`);
       // The visibility advantage: the player must always see zombies before they notice the car.
-      else if (config.zombies[rank].detectionRadius >= map.fogDistance) {
+      // (config.zombies[rank] itself is already reported missing above; skip re-crashing on it.)
+      else if (config.zombies[rank] && config.zombies[rank].detectionRadius >= map.fogDistance) {
         problems.push(
           `maps[${i}] (${map.id}): zombies.${rank}.detectionRadius (${config.zombies[rank].detectionRadius}) must be less than fogDistance (${map.fogDistance})`
         );

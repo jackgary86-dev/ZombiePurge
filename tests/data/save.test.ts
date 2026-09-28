@@ -125,6 +125,30 @@ describe('F3 save slots', () => {
     expect(loadPlayTime(slot.id, storage)).toBeCloseTo(75.5);
   });
 
+  it('falls back to zero on a corrupt or version-mismatched play time save', () => {
+    const slot = createSaveSlot('Alice', storage);
+    const key = slotStorage(slot.id, storage)!;
+    key.setItem('playTime', '{not json');
+    expect(loadPlayTime(slot.id, storage)).toBe(0);
+    key.setItem('playTime', JSON.stringify({ version: 999, seconds: 40 }));
+    expect(loadPlayTime(slot.id, storage)).toBe(0);
+    key.setItem('playTime', JSON.stringify({ version: 1, seconds: 'not a number' }));
+    expect(loadPlayTime(slot.id, storage)).toBe(0);
+  });
+
+  it('a corrupt or version-mismatched slot index falls back to an empty list, not a throw', () => {
+    createSaveSlot('Alice', storage);
+    storage.setItem('zombiepurge.saveSlots', '{not json');
+    expect(listSaveSlots(storage)).toEqual([]);
+    storage.setItem('zombiepurge.saveSlots', JSON.stringify({ version: 999, slots: [] }));
+    expect(listSaveSlots(storage)).toEqual([]);
+    storage.setItem('zombiepurge.saveSlots', JSON.stringify({ version: 1, slots: 'not an array' }));
+    expect(listSaveSlots(storage)).toEqual([]);
+    // The index recovers cleanly on the next write rather than staying wedged.
+    const b = createSaveSlot('Bob', storage);
+    expect(listSaveSlots(storage).map((s) => s.id)).toEqual([b.id]);
+  });
+
   it('a missing storage backend (no localStorage) degrades to a no-op, not a crash', () => {
     expect(() => createSaveSlot('x', null)).not.toThrow();
     expect(listSaveSlots(null)).toEqual([]);

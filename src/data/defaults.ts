@@ -644,4 +644,8 @@ export const DEFAULT_CONFIG: GameConfig = {
       maxVoices: 4,
     },
   },
+  performance: {
+    targetFps: 60,
+    zombieBudget: 200,
+  },
 };

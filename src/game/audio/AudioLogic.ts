@@ -35,3 +35,10 @@ export function pickGroanVoices<T extends { distance: number }>(
 export function skidActive(speed: number, handbrakeHeld: boolean, minSpeed: number): boolean {
   return handbrakeHeld && speed >= minSpeed;
 }
+
+/** Flat ground distance (ignores height), for the groan gather's proximity check. */
+export function distanceXZ(ax: number, az: number, bx: number, bz: number): number {
+  const dx = ax - bx;
+  const dz = az - bz;
+  return Math.sqrt(dx * dx + dz * dz);
+}

@@ -176,6 +176,14 @@ export interface AudioConfig {
   zombieGroan: ZombieGroanAudioConfig;
 }
 
+/** H1: the performance budget the game is tuned to hit. */
+export interface PerformanceConfig {
+  /** Frame rate the game is tuned to sustain on a mid-range laptop. */
+  targetFps: number;
+  /** Max zombies alive at once (the zombie pool's capacity). */
+  zombieBudget: number;
+}
+
 /** G3: per-map ambient drone; also doubles as the map's mood for other art/lighting hooks. */
 export interface MapMusicConfig {
   /** Base drone frequency in Hz; sets the map's musical "key". */
@@ -397,6 +405,7 @@ export interface GameConfig {
   hud: HudConfig;
   vfx: VfxConfig;
   audio: AudioConfig;
+  performance: PerformanceConfig;
 }
 
 export type DeepPartial<T> = {

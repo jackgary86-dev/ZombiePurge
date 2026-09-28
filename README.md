@@ -21,6 +21,9 @@ npm run build
 # Run tests
 npm run test
 
+# Run tests with a coverage report
+npm run test:coverage
+
 # Lint code
 npm run lint
 
@@ -90,7 +93,7 @@ assets/            # 3D models, textures, sounds
 | **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                     |
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                   |
 | **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                    |
-| **M6** | Polish & Release                              | 🔶 In progress (G1–G3 done)                                                                |
+| **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5 done)                                                         |
 
 ## What's Built So Far
 
@@ -129,6 +132,11 @@ assets/            # 3D models, textures, sounds
 - **G1** A real graphical HUD — speed, HP/fuel/nitro bars, weapon ammo/heat, coins/kills/combo, objectives — replacing the old debug text readout; the minimap keeps its own place alongside it
 - **G2** Hit feedback: camera shake from damage and kills, a brief slow-motion beat on a multi-kill (GameLoop's own tick rate slows down, not just visuals), and blood decals that build up on the car (skipped with the Low Gore setting)
 - **G3** Procedural placeholder audio (Web Audio, no assets yet — I2): engine pitch by speed, handbrake skids, impact thumps, a tone per weapon, distance-falloff zombie groans, a per-map ambient drone, and menu click/hover blips, all under the existing volume sliders
+- **H1** A config-driven performance budget (60 fps / 200 zombies); a real profiling pass found and fixed a per-tick allocation hotspot in the G3 audio code; the fps overlay now also shows the live zombie count
+- **H2** A coins-per-minute balance simulator checks every upgrade tier against a documented play-pace assumption — the existing pricing already clusters around the 10–15 minute target
+- **H3** A real coverage pass (`npm run test:coverage`) targeted genuine gaps in config validation, save/load edge cases and wallet/garage resets — and caught a latent crash when a zombie rank's config went missing
+- **H4** A versioned release build: the app version now ships in the build tag, and three/Rapier are split into their own cached vendor chunks
+- **H5** `docs/DEMO_TESTING.md`'s per-milestone manual checklist, now covering M6's HUD/feedback/audio/perf work too
 
 ## Development
 

@@ -198,7 +198,7 @@ export class Hud {
     }
 
     this.fps.hidden = s.fps < 0;
-    if (s.fps >= 0) this.fps.textContent = `${s.fps} fps`;
+    if (s.fps >= 0) this.fps.textContent = `${s.fps} fps · ${s.alive} zombies`;
 
     this.paused.hidden = !s.paused;
 

@@ -130,7 +130,6 @@ import {
 } from './ui/screens';
 import { bind, TuningPanel } from './ui/TuningPanel';
 
-const ZOMBIE_CAPACITY = 250;
 const hashParams = new URLSearchParams(location.hash.replace(/^#/, '').replace(/,/g, '&'));
 /** `#autoplay` drives toward the nearest zombie by itself: handy for smoke tests and profiling. */
 const AUTOPLAY = hashParams.has('autoplay');
@@ -152,6 +151,8 @@ async function boot(): Promise<void> {
   await LoadingScreen.frame();
 
   const cfg = getConfig();
+  // H1: the zombie pool's capacity is the game's own performance budget, not a magic number.
+  const ZOMBIE_CAPACITY = cfg.performance.zombieBudget;
   const settings = new SettingsStore();
   const mapIds = cfg.maps.map((m) => m.id);
   const sandbox = loadSandboxOptions(mapIds);
@@ -948,12 +949,7 @@ async function boot(): Promise<void> {
     // G3: engine pitch, tire skid and zombie groans, all driven by this tick's own state.
     audio.setEngine(senses.carSpeed / cfg.vehicle.topSpeed, nitro.boosting);
     audio.setSkid(skidActive(senses.carSpeed, input.isDown('handbrake'), cfg.audio.skidMinSpeed));
-    audio.updateZombieGroans(
-      Array.from(pool.active())
-        .filter((z) => z.isAlive())
-        .map((z) => ({ distance: z.getPosition().distanceTo(senses.carPosition) }))
-        .filter((z) => z.distance <= cfg.audio.zombieGroan.maxDistance)
-    );
+    audio.updateZombieGroans(groanCandidates(), senses.carPosition.x, senses.carPosition.z);
 
     combat.beforeStep();
     physics.step();
@@ -1121,6 +1117,14 @@ async function boot(): Promise<void> {
     for (const z of pool.active()) {
       const p = z.getPosition();
       yield { x: p.x, z: p.z, alive: z.isAlive(), state: z.state };
+    }
+  }
+
+  /** G3 groan gather (H1: no whole-pool array here - AudioSystem filters by distance itself). */
+  function* groanCandidates() {
+    for (const z of pool.active()) {
+      const p = z.getPosition();
+      yield { x: p.x, z: p.z, alive: z.isAlive() };
     }
   }
 
