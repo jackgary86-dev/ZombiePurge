@@ -49,3 +49,16 @@ Tick items in the PR that closes the milestone.
 - [ ] Get wrecked: WRECKED screen, Enter returns to the garage with a Repair (price) button; repairing charges per missing HP
 - [ ] With `#debug`, `then`unlockall`: every card is maxed and the top-tier gun is mounted
 - [ ] Reload the page: purchases, loadout and coins are still there
+
+## M3 – Sandbox Mode
+
+- [ ] Loading screen with a tip, then the ZOMBIEPURGE title over the car turntable; arrow keys / gamepad move the highlight, Enter/A selects, Esc/B goes back
+- [ ] Sandbox: pick Open Field (2 km), drag density to 50%, tick Night, DRIVE → Garage → DRIVE: dark sky, headlights on, about half as many zombies
+- [ ] Drive for a minute across the field: buildings, trees and roads appear ahead and vanish behind (chunk streaming) without hitches
+- [ ] The minimap rotates with you, shows roads, the radar ring and green/red blips; buy Radar in the garage and the ring grows
+- [ ] F2: rings around zombies (blue idle, yellow alerted, red chasing) and the big view-distance ring
+- [ ] Esc: pause menu; Resume continues, Restart run resets, Return to Garage / Quit to Main Menu work
+- [ ] Wreck or run dry: results screen with kills by rank, distance, time, coins by source; Retry / Garage / Main Menu
+- [ ] Settings: lower draw distance (fog closes in), change camera sensitivity, rebind Handbrake to another key, reload — all remembered
+- [ ] Infinite money + no-fail: garage shows ∞ coins and everything buyable; the car can't be wrecked or run dry; purchases don't persist after leaving sandbox
+- [ ] `#map=greybox` still loads the tuning arena

@@ -177,9 +177,9 @@ export class GarageMenu {
   private readonly repairButton: HTMLButtonElement;
 
   constructor(
-    private readonly garage: Garage,
+    private garage: Garage,
     private readonly base: VehicleConfig,
-    private readonly coins: { readonly balance: number },
+    private coins: { readonly balance: number },
     private readonly options: GarageMenuOptions = {}
   ) {
     this.el = document.createElement('div');
@@ -232,6 +232,13 @@ export class GarageMenu {
     return !this.el.hidden;
   }
 
+  /** Swap the backing garage (sandbox "infinite money" uses a throwaway one). */
+  setGarage(garage: Garage, coins: { readonly balance: number }): void {
+    this.garage = garage;
+    this.coins = coins;
+    this.render();
+  }
+
   open(): void {
     this.el.hidden = false;
     this.render();
@@ -242,7 +249,8 @@ export class GarageMenu {
   }
 
   render(): void {
-    this.balance.textContent = `${this.coins.balance} coins`;
+    this.balance.textContent =
+      this.coins.balance >= 1e8 ? '∞ coins' : `${this.coins.balance} coins`;
     const repair = this.options.repair?.(false);
     this.repairButton.hidden = !repair;
     if (repair) {

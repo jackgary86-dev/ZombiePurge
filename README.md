@@ -30,16 +30,16 @@ npm run type-check
 
 ## Controls
 
-| Action | Keyboard | Gamepad |
-|---|---|---|
-| Drive / reverse | W / S or arrow keys | Right / left trigger |
-| Fire | F or left click | Right bumper |
-| Nitro | Shift | X |
-| Steer | A / D or arrow keys | Left stick |
-| Handbrake | Space | A |
-| Flip reset (when upside down) | R | Y |
-| Pause | Esc / P | Start |
-| Orbit camera | Click the game, then move the mouse | Right stick (coming with the HUD work) |
+| Action                        | Keyboard                            | Gamepad                                |
+| ----------------------------- | ----------------------------------- | -------------------------------------- |
+| Drive / reverse               | W / S or arrow keys                 | Right / left trigger                   |
+| Fire                          | F or left click                     | Right bumper                           |
+| Nitro                         | Shift                               | X                                      |
+| Steer                         | A / D or arrow keys                 | Left stick                             |
+| Handbrake                     | Space                               | A                                      |
+| Flip reset (when upside down) | R                                   | Y                                      |
+| Pause                         | Esc / P                             | Start                                  |
+| Orbit camera                  | Click the game, then move the mouse | Right stick (coming with the HUD work) |
 
 Controls are rebindable; bindings persist in `localStorage`.
 
@@ -63,6 +63,7 @@ assets/            # 3D models, textures, sounds
 **Genre:** 3D open-area vehicular combat sandbox
 
 **Core Loop:**
+
 1. Drive across a large map
 2. Find and run over/shoot zombies
 3. Earn coins by rank and distance
@@ -70,6 +71,7 @@ assets/            # 3D models, textures, sounds
 5. Progress through 5 story maps or play infinite sandbox
 
 **Key Features:**
+
 - Third-person chase camera behind/above car
 - 5 zombie types (Walker, Runner, Spitter, Brute, Tank)
 - Visibility advantage: player sees 300m, zombies detect at 40–80m
@@ -80,15 +82,15 @@ assets/            # 3D models, textures, sounds
 
 ## Milestones
 
-| # | Goal | Status |
-|---|------|--------|
-| **M0** | Foundation (scaffold, car, camera) | ✅ Done (A1–A7) |
+| #      | Goal                                          | Status                                                                                     |
+| ------ | --------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **M0** | Foundation (scaffold, car, camera)            | ✅ Done (A1–A7)                                                                            |
 | **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work) |
-| **M2** | Shop & Upgrades | ✅ Done (D1–D14, J4; K5 deferred) |
-| **M3** | Sandbox Mode (first playable) | ⬜ TODO |
-| **M4** | Story Mode: Map 1 (Suburbs) | ⬜ TODO |
-| **M5** | Story Mode: Maps 2-5 | ⬜ TODO |
-| **M6** | Polish & Release | ⬜ TODO |
+| **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                          |
+| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, J1/J2/J6–J8/J10–J12; I10/I11 art passes pending)                   |
+| **M4** | Story Mode: Map 1 (Suburbs)                   | ⬜ TODO                                                                                    |
+| **M5** | Story Mode: Maps 2-5                          | ⬜ TODO                                                                                    |
+| **M6** | Polish & Release                              | ⬜ TODO                                                                                    |
 
 ## What's Built So Far
 
@@ -110,6 +112,9 @@ assets/            # 3D models, textures, sounds
 - **D3–D7** Engine, tires, health, armor, fuel tank (drains while driving; empty = OUT OF GAS) and repair applied to the live car each run
 - **D8–D11** Roof/front weapon mounts with auto-aim: machine gun (heat), shotgun (pellets, magazine), rocket launcher (splash), flamethrower (burning, drinks fuel)
 - **D12–D14** Front ram multipliers, nitro boost (Shift), and every owned upgrade visible on the car
+- **E1–E3** 2 km open-field map streamed in 250 m chunks, weighted spawn zones, rotating minimap with radar range, F2 detection overlay
+- **F1/J1–J12** Main menu → Sandbox setup (map, density, night, infinite money, no-fail) → Garage → run; pause menu, results screen, settings (graphics, draw distance, volumes, rebinding), controls, loading screen
+- **I8** Day/night lighting presets per map with headlights at night
 
 ## Development
 
@@ -126,6 +131,7 @@ assets/            # 3D models, textures, sounds
 See the [GitHub Issues](https://github.com/jackgary86-dev/ZombiePurge/issues) for the full ticket backlog (85 tickets across 11 epics, M0–M6).
 
 Each ticket is tagged with:
+
 - **Epic:** A–K (11 epics)
 - **Milestone:** M0–M6
 - **Priority:** high/medium/low

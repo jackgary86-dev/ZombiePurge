@@ -1,20 +1,16 @@
-import {
-  AmbientLight,
-  Color,
-  DirectionalLight,
-  Fog,
-  HemisphereLight,
-  PerspectiveCamera,
-  Quaternion,
-  Scene,
-  Vector3,
-  WebGLRenderer,
-} from 'three';
+import { PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three';
 import './style.css';
 import { GameLoop } from './core/GameLoop';
 import { GameState } from './core/GameState';
 import { InputManager } from './core/input';
 import { getConfig, getMapConfig } from './data/config';
+import {
+  loadSandboxOptions,
+  saveSandboxOptions,
+  SettingsStore,
+  type GameSettings,
+  type SandboxOptions,
+} from './data/settings';
 import type { VehicleConfig } from './data/types';
 import {
   buildPlaceholderCar,
@@ -41,7 +37,7 @@ import {
 } from './game/combat';
 import { RunStats, Wallet } from './game/economy';
 import { initPhysics, PhysicsWorld, RAPIER } from './game/physics/PhysicsWorld';
-import { Garage, repairInGarage, repairPrice } from './game/shop';
+import { Garage, repairInGarage, repairPrice, type CoinSource } from './game/shop';
 import {
   FuelTank,
   NEUTRAL_INPUT,
@@ -51,15 +47,20 @@ import {
   type VehicleInput,
 } from './game/vehicle';
 import {
+  applyLighting,
   buildGreyboxColliders,
   buildGreyboxMeshes,
   ChunkStreamer,
   createGreyboxLayout,
+  createHeadlights,
+  createLights,
   generateOpenField,
   greyboxSpawn,
+  presetFor,
   type RoadStrip,
 } from './game/world';
 import {
+  DEFAULT_ZOMBIE_AI,
   HordeSpawner,
   ProjectileSystem,
   updateZombieAI,
@@ -68,51 +69,60 @@ import {
 } from './game/zombies';
 import { showBuildTag } from './ui/BuildTag';
 import { CheatConsole } from './ui/CheatConsole';
-import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
+import { CoinPopups, DebugHud } from './ui/DebugHud';
 import { GarageMenu } from './ui/GarageMenu';
+import { buildPanel, menuButton, MenuStack, type MenuScreen } from './ui/MenuStack';
 import { computeMinimapFrame, Minimap } from './ui/Minimap';
-import { DEFAULT_ZOMBIE_AI } from './game/zombies';
+import {
+  createControlsScreen,
+  createMainMenu,
+  createPauseMenu,
+  createResultsScreen,
+  createSandboxSetup,
+  createSettingsMenu,
+  LoadingScreen,
+} from './ui/screens';
 import { bind, TuningPanel } from './ui/TuningPanel';
 
 const ZOMBIE_CAPACITY = 250;
+const hashParams = new URLSearchParams(location.hash.replace(/^#/, '').replace(/,/g, '&'));
 /** `#autoplay` drives toward the nearest zombie by itself: handy for smoke tests and profiling. */
-const AUTOPLAY = location.hash.includes('autoplay');
+const AUTOPLAY = hashParams.has('autoplay');
 /** K4: the cheat console only exists in dev builds or when the page is opened with #debug. */
-const DEBUG_CONSOLE = import.meta.env.DEV || location.hash.includes('debug');
-/** `#drive` skips the garage on load (used by smoke tests). */
-const SKIP_GARAGE = location.hash.includes('drive') || AUTOPLAY;
-/** `#map=<id>` picks a map (default: the 2 km open field; `greybox` is the tuning arena). */
-const MAP_ID =
-  new URLSearchParams(location.hash.replace(/^#/, '').replace(/,/g, '&')).get('map') ?? 'openfield';
+const DEBUG_CONSOLE = import.meta.env.DEV || hashParams.has('debug');
+/** `#drive` skips the menus and starts a sandbox run (used by smoke tests). */
+const SKIP_MENUS = hashParams.has('drive') || AUTOPLAY;
+/** `#map=<id>` overrides the map for this page load. */
+const MAP_OVERRIDE = hashParams.get('map');
 /** After a wreck the car is towed back with this much HP; the rest costs coins to repair. */
 const TOW_HP_FRACTION = 0.25;
+const LAST_MODE_KEY = 'zombiepurge.lastMode';
 
 async function boot(): Promise<void> {
+  const loading = new LoadingScreen();
+  loading.show('Warming up the engine…');
+  await LoadingScreen.frame();
+
   const cfg = getConfig();
-  const map = getMapConfig(MAP_ID);
+  const settings = new SettingsStore();
+  const mapIds = cfg.maps.map((m) => m.id);
+  const sandbox = loadSandboxOptions(mapIds);
+  const map = getMapConfig(
+    MAP_OVERRIDE && mapIds.includes(MAP_OVERRIDE) ? MAP_OVERRIDE : sandbox.mapId
+  );
+  sandbox.mapId = map.id;
   // Upgrades rewrite cfg.vehicle each run; keep the stock numbers to compute from.
   const stockVehicle: VehicleConfig = JSON.parse(JSON.stringify(cfg.vehicle));
   await initPhysics();
+  loading.progress(0.2, 'Building the world…');
+  await LoadingScreen.frame();
 
   const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
   const renderer = new WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-
   const scene = new Scene();
-  scene.background = new Color(0x8fa3b8);
-  scene.fog = new Fog(0x8fa3b8, map.fogDistance * 0.6, map.fogDistance);
-  scene.add(new HemisphereLight(0xbfd4ff, 0x3a2f28, 0.9));
-  scene.add(new AmbientLight(0xffffff, 0.15));
-  const sun = new DirectionalLight(0xfff2dd, 1.6);
-  sun.position.set(80, 120, 40);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -80;
-  sun.shadow.camera.right = sun.shadow.camera.top = 80;
-  sun.shadow.camera.far = 400;
-  scene.add(sun);
+  const lights = createLights(scene);
+  let viewDistance = map.fogDistance;
 
   const physics = new PhysicsWorld(cfg.physics.gravity, cfg.physics.fixedTimeStep);
   // E1: the greybox arena is small enough to build whole; big maps stream chunks around the car.
@@ -132,12 +142,17 @@ async function boot(): Promise<void> {
     scene.add(buildGreyboxMeshes(layout));
     spawn = greyboxSpawn(layout);
   }
+  loading.progress(0.6, 'Raising the dead…');
+  await LoadingScreen.frame();
+
   const car = new Vehicle(physics, cfg.vehicle, spawn);
   const carView = buildPlaceholderCar(cfg.vehicle);
   const turret = new TurretView(ROOF_MOUNT.localOffset);
   carView.group.add(turret.group);
+  const headlights = createHeadlights(30);
+  for (const l of headlights.lights) carView.group.add(l, l.target);
   scene.add(carView.group);
-  sun.target = carView.group;
+  lights.sun.target = carView.group;
 
   const pool = new ZombiePool(physics, ZOMBIE_CAPACITY, cfg.zombies);
   const zombieInstances = new ZombieInstances(ZOMBIE_CAPACITY);
@@ -150,11 +165,14 @@ async function boot(): Promise<void> {
   scene.add(...tracers.lines);
   const combat = new RunOverSystem(physics, car, pool, cfg.combat, cfg.vehicle.mass);
   const wallet = new Wallet(cfg.rewards);
-  const garage = new Garage(cfg.upgrades, wallet, 1);
+  const realGarage = new Garage(cfg.upgrades, wallet, 1);
+  let garage = realGarage;
+  let coins: CoinSource = wallet;
   const tank = new FuelTank(garage.effectiveStats(stockVehicle).fuelCapacity);
   const nitro = new Nitro(0);
   let effectiveTopSpeed = stockVehicle.topSpeed;
   let effectiveAcceleration = stockVehicle.acceleration;
+  let radarRange = garage.effectiveStats(stockVehicle).radarRange;
   const mount = new WeaponMount(car, ROOF_MOUNT);
   const frontMount = new WeaponMount(car, FRONT_MOUNT);
   frontMount.aimMode = 'camera';
@@ -166,6 +184,7 @@ async function boot(): Promise<void> {
   scene.add(...rocketViews.rockets, ...rocketViews.blasts);
   let flameView: FlameView | null = null;
   let stats = new RunStats(cfg.rewards);
+  const pickupSpots = (map.pickups ?? []).map((p) => ({ ...p, taken: false }));
 
   const input = new InputManager();
   input.attach();
@@ -204,34 +223,134 @@ async function boot(): Promise<void> {
   const minimap = new Minimap();
   const rings = new DetectionRings(ZOMBIE_CAPACITY);
   scene.add(rings.zombieRings, rings.viewRing);
-  let radarRange = garage.effectiveStats(stockVehicle).radarRange;
-  const pickupSpots = (map.pickups ?? []).map((p) => ({ ...p, taken: false }));
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'F2') {
-      e.preventDefault();
-      rings.enabled = !rings.enabled;
-    }
-  });
   showBuildTag();
+
   const loop = new GameLoop({ fixedTimeStep: cfg.physics.fixedTimeStep });
   const target = { position: new Vector3(), quaternion: new Quaternion(), forwardSpeed: 0 };
   const senses = { carPosition: new Vector3(), carSpeed: 0, noise: 0 };
   const view = { carPosition: senses.carPosition, viewForward: new Vector3(0, 0, 1) };
   const camForward = new Vector3();
-  let gameOverEl: HTMLDivElement | null = null;
+  const baseOrbitSensitivity = cfg.camera.orbitSensitivity;
+  let invertY = false;
+  let showFps = true;
+  let noFail = false;
+  let nightMode = false;
 
-  const menu = new GarageMenu(garage, stockVehicle, wallet, {
+  // ---------- settings (J10) ----------
+  function applySettings(s: GameSettings): void {
+    const quality = s.graphicsQuality;
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, quality === 'high' ? 2 : quality === 'medium' ? 1.5 : 1)
+    );
+    renderer.shadowMap.enabled = quality !== 'low';
+    lights.sun.castShadow = quality !== 'low';
+    viewDistance = map.fogDistance * s.drawDistanceScale;
+    camera.far = viewDistance * 1.5;
+    camera.updateProjectionMatrix();
+    applyLighting(scene, lights, presetFor(map.id, nightMode), viewDistance);
+    cfg.camera.orbitSensitivity = baseOrbitSensitivity * s.cameraSensitivity;
+    invertY = s.invertCameraY;
+    showFps = s.showFps;
+  }
+  applySettings(settings.get());
+  settings.onChange(applySettings);
+
+  // ---------- menus (J1/J2/J6/J7/J8/J10/J11) ----------
+  const menus = new MenuStack();
+  menus.attach();
+  const garageMenu = new GarageMenu(garage, stockVehicle, coins, {
     onChange: applyGarage,
-    onClose: startRun,
+    onClose: () => startRun(),
     repair: (doIt) => {
       const maxHp = garage.effectiveStats(stockVehicle).maxHp;
       if (!doIt)
-        return { price: repairPrice(car, maxHp), ok: wallet.balance >= repairPrice(car, maxHp) };
-      const r = repairInGarage(car, maxHp, wallet);
+        return { price: repairPrice(car, maxHp), ok: coins.balance >= repairPrice(car, maxHp) };
+      const r = repairInGarage(car, maxHp, coins);
       return { price: r.price, ok: r.ok };
     },
   });
+  const garageScreen: MenuScreen = {
+    id: 'garage',
+    el: garageMenu.el,
+    onEnter: () => {
+      loop.setState(GameState.Garage);
+      pool.despawnAll();
+      resetCar();
+      tank.fill();
+      applyGarage();
+      garageMenu.open();
+    },
+    onLeave: () => garageMenu.close(),
+  };
+  const mainMenu = createMainMenu({
+    canContinue: () => localStorage.getItem(LAST_MODE_KEY) === 'sandbox',
+    onContinue: () => beginSandbox(sandbox),
+    onStory: () => menus.push(comingSoon),
+    onSandbox: () => menus.push(sandboxScreen),
+    onGarage: () => menus.push(garageScreen),
+    onSettings: () => menus.push(settingsScreen),
+    onControls: () => menus.push(controlsScreen),
+    onCredits: () => menus.push(credits),
+    onQuit: () => menus.reset(mainMenu),
+  });
+  const sandboxScreen = createSandboxSetup({
+    maps: cfg.maps,
+    isUnlocked: () => true, // story unlocks arrive with F2 (M4); everything is open in sandbox for now
+    options: sandbox,
+    onChange: (o) => {
+      Object.assign(sandbox, o);
+      saveSandboxOptions(sandbox);
+    },
+    onStart: (o) => beginSandbox(o),
+    onBack: () => menus.pop(),
+  });
+  const settingsScreen = createSettingsMenu({
+    store: settings,
+    getBindings: () => input.getBindings(),
+    setBindings: (b) => input.setBindings(b),
+    onBack: () => menus.pop(),
+  });
+  const controlsScreen = createControlsScreen(() => menus.pop());
+  const pauseScreen = createPauseMenu({
+    onResume: resumeRun,
+    onRestart: () => {
+      menus.reset(null);
+      startRun();
+    },
+    onSettings: () => menus.push(settingsScreen),
+    onControls: () => menus.push(controlsScreen),
+    onGarage: () => menus.reset(garageScreen),
+    onMainMenu: () => enterMainMenu(),
+  });
+  const results = createResultsScreen({
+    onRetry: () => {
+      menus.reset(null);
+      startRun();
+    },
+    onGarage: () => menus.reset(garageScreen),
+    onMainMenu: () => enterMainMenu(),
+  });
+  const comingSoon = simplePanel(
+    'story-soon',
+    'STORY MODE',
+    'Five maps, new enemies and a final Boss are on the way (milestone M4). Sandbox is open now.',
+    () => menus.pop()
+  );
+  const credits = simplePanel(
+    'credits',
+    'CREDITS',
+    'ZombiePurge — built by a dad and his son. Made with Three.js, Rapier, TypeScript and Vite. Placeholder art by primitives; real art coming soon.',
+    () => menus.pop()
+  );
 
+  function simplePanel(id: string, title: string, text: string, onBack: () => void): MenuScreen {
+    const { el, body } = buildPanel(id, title, text);
+    body.appendChild(menuButton('Back', onBack));
+    document.body.appendChild(el);
+    return { id, el };
+  }
+
+  // ---------- run lifecycle ----------
   /** Draws litres from the tank for the flamethrower; returns what was actually drawn. */
   function drain(litres: number): number {
     const before = tank.level;
@@ -248,6 +367,7 @@ async function boot(): Promise<void> {
     car.hp = Math.min(car.hp, s.maxHp);
     tank.setCapacity(s.fuelCapacity);
     nitro.setCapacity(s.nitroSeconds);
+    headlights.setRange(30 + s.headlightRange);
     combat.damageMultiplier = s.ramDamageMultiplier;
     combat.selfDamageMultiplier = s.selfDamageMultiplier;
     const roof = garage.equippedIn('roof')?.id;
@@ -291,32 +411,51 @@ async function boot(): Promise<void> {
     car.body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
     car.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     car.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    car.invulnerable = noFail;
   }
 
-  function enterGarage(): void {
-    document.exitPointerLock?.();
-    gameOverEl?.remove();
-    gameOverEl = null;
+  /** F1: apply the sandbox options, switching maps (via reload) when needed. */
+  function beginSandbox(options: SandboxOptions): void {
+    Object.assign(sandbox, options);
+    saveSandboxOptions(sandbox);
+    localStorage.setItem(LAST_MODE_KEY, 'sandbox');
+    if (sandbox.mapId !== map.id) {
+      location.hash = `#map=${sandbox.mapId}`;
+      location.reload();
+      return;
+    }
+    spawner.density = sandbox.zombieDensity;
+    nightMode = sandbox.night;
+    noFail = sandbox.noFail;
+    applySettings(settings.get());
+    headlights.setOn(nightMode);
+    if (sandbox.infiniteMoney) {
+      // A throwaway garage with everything unlocked and bottomless coins; nothing persists.
+      coins = { balance: 1e9, spend: () => true };
+      garage = new Garage(cfg.upgrades, coins, 5, null);
+    } else {
+      coins = wallet;
+      garage = realGarage;
+    }
+    garageMenu.setGarage(garage, coins);
+    menus.reset(garageScreen);
+  }
+
+  function startRun(): void {
+    menus.reset(null);
+    hud.setVisible(true);
+    minimap.setVisible(true);
     pool.despawnAll();
     resetCar();
     tank.fill();
     applyGarage();
-    loop.setState(GameState.Garage);
-    hud.setVisible(false);
-    minimap.setVisible(false);
-    menu.open();
-  }
-
-  function startRun(): void {
-    menu.close();
-    hud.setVisible(true);
-    minimap.setVisible(true);
-    applyGarage();
+    car.hp = Math.max(car.hp, garage.effectiveStats(stockVehicle).maxHp * TOW_HP_FRACTION);
     stats = new RunStats(cfg.rewards);
     if (gun) gun.heat = 0;
     nitro.refill();
     rocketViews.syncRockets([]);
     car.getPosition(senses.carPosition);
+    streamer?.update(senses.carPosition, true);
     spawner.prefill(view);
     car.getPosition(target.position);
     car.getQuaternion(target.quaternion);
@@ -325,16 +464,42 @@ async function boot(): Promise<void> {
     loop.setState(GameState.Playing);
   }
 
+  function pauseRun(): void {
+    if (loop.getState() !== GameState.Playing) return;
+    loop.setState(GameState.Paused);
+    document.exitPointerLock?.();
+    menus.push(pauseScreen);
+  }
+
+  function resumeRun(): void {
+    menus.reset(null);
+    loop.setState(GameState.Playing);
+  }
+
   function endRun(title: string): void {
     const summary = stats.summary();
-    const kept = wallet.bankRun(summary.coinsTotal, true);
-    gameOverEl = showGameOver({ ...summary, kept }, title);
+    const kept = sandbox.infiniteMoney ? 0 : wallet.bankRun(summary.coinsTotal, true);
     document.exitPointerLock?.();
     // Towed home: some HP comes back for free, the rest is a repair bill.
     car.hp = Math.max(car.hp, garage.effectiveStats(stockVehicle).maxHp * TOW_HP_FRACTION);
     loop.setState(GameState.GameOver);
+    hud.setVisible(false);
+    minimap.setVisible(false);
+    results.show({ title, summary, coinsKept: kept });
+    menus.reset(results.screen);
   }
 
+  function enterMainMenu(): void {
+    document.exitPointerLock?.();
+    loop.setState(GameState.MainMenu);
+    hud.setVisible(false);
+    minimap.setVisible(false);
+    pool.despawnAll();
+    resetCar();
+    menus.reset(mainMenu);
+  }
+
+  // ---------- debug tools (K3/K4/E2) ----------
   if (DEBUG_CONSOLE) {
     const ahead = new Vector3();
     new CheatConsole({
@@ -353,7 +518,7 @@ async function boot(): Promise<void> {
       },
       addCoins(amount) {
         wallet.add(amount);
-        menu.render();
+        garageMenu.render();
         return wallet.balance;
       },
       setGodMode(on) {
@@ -377,13 +542,17 @@ async function boot(): Promise<void> {
       unlockAllUpgrades() {
         garage.unlockAll();
         applyGarage();
-        menu.render();
+        garageMenu.render();
         return 'every upgrade owned and the machine gun mounted';
       },
     });
   }
-
-  // K3: every binding targets a value the systems re-read each step, so edits apply instantly.
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'F2') {
+      e.preventDefault();
+      rings.enabled = !rings.enabled;
+    }
+  });
   new TuningPanel([
     bind('vehicle.topSpeed', cfg.vehicle, 'topSpeed', 10, 90, 1),
     bind('vehicle.acceleration', cfg.vehicle, 'acceleration', 2, 25, 0.5),
@@ -403,11 +572,11 @@ async function boot(): Promise<void> {
     bind('spawner.density', spawner, 'density', 0, 1, 0.05),
   ]);
 
+  // ---------- fixed-step game states ----------
   loop.registerStateHandler(GameState.Playing, ({ deltaTime }) => {
     input.update();
     if (input.justPressed('pause')) {
-      loop.setState(GameState.Paused);
-      document.exitPointerLock?.();
+      pauseRun();
       return;
     }
 
@@ -486,13 +655,11 @@ async function boot(): Promise<void> {
       driverInput.throttle * (nitro.boosting ? 1.5 : 1),
       senses.carSpeed / cfg.vehicle.topSpeed
     );
+    if (noFail) tank.fill();
     combat.beforeStep();
     physics.step();
     for (const impact of combat.collectImpacts()) {
-      if (impact.killed) {
-        const kill = stats.recordKill(impact.rank, impact.position);
-        popups.add(kill.coins, kill.position, kill.multiplier);
-      }
+      if (impact.killed) rewardKill(impact.zombie, impact.position);
     }
     stats.trackPosition(senses.carPosition, deltaTime);
 
@@ -500,24 +667,20 @@ async function boot(): Promise<void> {
     else if (tank.isEmpty() && senses.carSpeed < 0.5) endRun('OUT OF GAS');
   });
 
+  const menuState = () => {
+    input.update();
+    menus.pollGamepad();
+    physics.step(); // let the car settle on its suspension behind the menus
+  };
   loop.registerStateHandler(GameState.Paused, () => {
     input.update();
-    if (input.justPressed('pause')) loop.setState(GameState.Playing);
+    menus.pollGamepad();
   });
+  loop.registerStateHandler(GameState.GameOver, menuState);
+  loop.registerStateHandler(GameState.Garage, menuState);
+  loop.registerStateHandler(GameState.MainMenu, menuState);
 
-  loop.registerStateHandler(GameState.GameOver, () => {
-    input.update();
-  });
-
-  loop.registerStateHandler(GameState.Garage, () => {
-    input.update();
-    physics.step(); // let the car settle on its suspension while the shop is open
-  });
-
-  window.addEventListener('keydown', (e) => {
-    if (loop.getState() === GameState.GameOver && e.code === 'Enter') enterGarage();
-  });
-
+  // ---------- render ----------
   const projected = new Vector3();
   const project = (p: { x: number; y: number; z: number }) => {
     projected.set(p.x, p.y + 1.5, p.z).project(camera);
@@ -531,7 +694,6 @@ async function boot(): Promise<void> {
   let fpsAccum = 0;
   let fpsFrames = 0;
   let fps = 0;
-  let turntable = 0;
   loop.onRender(({ deltaTime, elapsedTime }) => {
     car.getPosition(target.position);
     car.getQuaternion(target.quaternion);
@@ -544,31 +706,33 @@ async function boot(): Promise<void> {
     rocketViews.update(deltaTime);
     flameView?.sync(flamethrower?.firing ?? false, frontMount.origin, frontMount.direction);
 
-    if (loop.getState() === GameState.Garage) {
-      // J4: slow turntable around the car while shopping.
-      turntable = elapsedTime * 0.35;
+    const state = loop.getState();
+    if (state === GameState.Garage || state === GameState.MainMenu) {
+      // Slow turntable around the car behind the garage and the title screen.
+      const t = elapsedTime * 0.35;
       camera.position.set(
-        target.position.x + Math.sin(turntable) * 7,
+        target.position.x + Math.sin(t) * 7,
         target.position.y + 2.2,
-        target.position.z + Math.cos(turntable) * 7
+        target.position.z + Math.cos(t) * 7
       );
       camera.lookAt(target.position.x, target.position.y + 0.6, target.position.z);
     } else {
       const mouse = input.consumeMouseDelta();
-      if (document.pointerLockElement === canvas) chase.orbit(mouse.x, mouse.y);
+      if (document.pointerLockElement === canvas)
+        chase.orbit(mouse.x, invertY ? -mouse.y : mouse.y);
       chase.update(deltaTime, target);
     }
     rings.sync(
       pool.zombies,
       target.position,
-      map.fogDistance,
+      viewDistance,
       Math.abs(target.forwardSpeed) > DEFAULT_ZOMBIE_AI.loudSpeed
         ? DEFAULT_ZOMBIE_AI.loudMultiplier
         : 1
     );
     renderer.render(scene, camera);
     popups.update(deltaTime, project);
-    if (loop.getState() !== GameState.Garage) {
+    if (state === GameState.Playing || state === GameState.Paused) {
       minimap.draw(
         computeMinimapFrame({
           carX: target.position.x,
@@ -593,14 +757,14 @@ async function boot(): Promise<void> {
     }
     hud.update({
       kmh: Math.round(Math.abs(target.forwardSpeed) * 3.6),
-      fps,
+      fps: showFps ? fps : -1,
       hp: car.hp,
       maxHp: cfg.vehicle.hp,
       coins: stats.coinsTotal,
       kills: stats.totalKills,
       distanceMeters: stats.distanceMeters,
       alive: pool.aliveCount,
-      paused: loop.getState() === GameState.Paused,
+      paused: state === GameState.Paused,
       comboMultiplier: stats.comboMultiplier,
       comboChain: stats.comboChain,
       fuelFraction: tank.fraction,
@@ -636,9 +800,16 @@ async function boot(): Promise<void> {
 
   applyGarage();
   car.hp = garage.effectiveStats(stockVehicle).maxHp;
+  loading.progress(1, 'Ready');
+  await LoadingScreen.frame();
+  loading.hide();
   loop.start();
-  if (SKIP_GARAGE) startRun();
-  else enterGarage();
+  if (SKIP_MENUS) {
+    beginSandbox(sandbox);
+    startRun();
+  } else {
+    enterMainMenu();
+  }
 }
 
 const toTarget = new Vector3();
