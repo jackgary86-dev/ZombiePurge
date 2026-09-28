@@ -380,3 +380,102 @@ canvas {
   border-radius: 50%;
   pointer-events: none;
 }
+
+.menu-panel {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(10, 10, 14, 0.88);
+  color: #f4e9d8;
+  font:
+    16px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-align: center;
+}
+
+.menu-panel.menu-enter {
+  animation: menu-fade 0.18s ease-out;
+}
+
+@keyframes menu-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.menu-panel h1 {
+  font-size: 56px;
+  letter-spacing: 0.14em;
+  color: #c8402e;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+}
+
+.menu-panel .menu-subtitle {
+  opacity: 0.75;
+  margin-bottom: 10px;
+}
+
+.menu-panel .menu-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 320px;
+}
+
+.menu-button {
+  font: inherit;
+  padding: 12px 22px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4e9d8;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menu-button.primary {
+  background: #c8402e;
+  color: #fff;
+  font-weight: bold;
+}
+
+.menu-button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.menu-button:focus,
+.menu-panel input:focus,
+.menu-panel select:focus {
+  outline: none;
+  border-color: #ffd84a;
+  box-shadow: 0 0 0 3px rgba(255, 216, 74, 0.25);
+}
+
+.menu-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.menu-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.menu-row:focus-within {
+  background: rgba(255, 255, 255, 0.06);
+}
