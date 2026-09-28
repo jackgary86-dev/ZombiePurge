@@ -1,4 +1,4 @@
-export type ZombieRank = 'walker' | 'runner' | 'spitter' | 'brute' | 'tank' | 'boss';
+export type ZombieRank = 'walker' | 'runner' | 'spitter' | 'brute' | 'tank' | 'iceZombie' | 'boss';
 
 export interface VehicleConfig {
   mass: number;
@@ -67,6 +67,15 @@ export interface RangedAttackConfig {
   hitRadius: number;
 }
 
+/** F4: a boss's area-of-effect slam, on top of its normal melee/ranged attack. */
+export interface SlamAttackConfig {
+  /** Radius of the damage pulse around the boss (m). */
+  radius: number;
+  damage: number;
+  /** Seconds between slams. */
+  cooldown: number;
+}
+
 export interface ZombieConfig {
   rank: ZombieRank;
   hp: number;
@@ -76,6 +85,8 @@ export interface ZombieConfig {
   coinValue: number;
   /** Spitter-style ranged attack; melee only when absent. */
   rangedAttack?: RangedAttackConfig;
+  /** F4: bosses only — a periodic AOE pulse independent of the normal attack. */
+  slam?: SlamAttackConfig;
 }
 
 export interface ComboConfig {
@@ -139,7 +150,14 @@ export interface MapConfig {
   fogDistance: number;
   zombieRanks: ZombieRank[];
   /** Which layout generator builds the map and how it is streamed. */
-  generator: 'greybox' | 'openfield' | 'suburbs';
+  generator:
+    | 'greybox'
+    | 'openfield'
+    | 'suburbs'
+    | 'desertHighway'
+    | 'industrialCity'
+    | 'frozenForest'
+    | 'quarantineLab';
   seed: number;
   chunkSize: number;
   /** Optional spawn zones; without them the horde spawner uses the whole map. */
@@ -151,6 +169,20 @@ export interface MapConfig {
   night?: boolean;
   /** Story mode's fixed horde density (0-1); sandbox uses its own slider instead. Defaults to 1. */
   spawnDensity?: number;
+  /** E7: multiplies tire grip for the whole map (snow/ice); omit for normal grip (1). */
+  groundGrip?: number;
+  /** F4: this map's boss encounter, on top of the base `boss` rank config. */
+  boss?: MapBossConfig;
+}
+
+/** F4: overrides layered onto the shared `boss` rank config for this map's own fight. */
+export interface MapBossConfig {
+  position: { x: number; z: number };
+  hp?: number;
+  speed?: number;
+  attackDamage?: number;
+  rangedAttack?: RangedAttackConfig;
+  slam?: SlamAttackConfig;
 }
 
 export interface GunTierStats {

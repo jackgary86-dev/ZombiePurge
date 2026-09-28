@@ -163,7 +163,7 @@ describe('J9 map complete screen', () => {
   });
 
   const summary = {
-    killsByRank: { walker: 5, runner: 2, spitter: 0, brute: 0, tank: 0, boss: 0 },
+    killsByRank: { walker: 5, runner: 2, spitter: 0, brute: 0, tank: 0, iceZombie: 0, boss: 0 },
     totalKills: 7,
     distanceMeters: 900,
     coinsFromKills: 20,

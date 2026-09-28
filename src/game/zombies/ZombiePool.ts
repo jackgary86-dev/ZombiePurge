@@ -24,11 +24,20 @@ export class ZombiePool {
     }
   }
 
-  /** Returns the spawned zombie, or null when the max-alive cap is reached. */
-  spawn(rank: ZombieRank, position: { x: number; y: number; z: number }): Zombie | null {
+  /**
+   * Returns the spawned zombie, or null when the max-alive cap is reached. `override`
+   * layers extra fields onto that rank's shared config for this one instance — F4 uses
+   * it so each story boss gets its own stats/moveset without a separate rank per boss.
+   */
+  spawn(
+    rank: ZombieRank,
+    position: { x: number; y: number; z: number },
+    override?: Partial<ZombieConfig>
+  ): Zombie | null {
     const zombie = this.free.pop();
     if (!zombie) return null;
-    zombie.spawn(rank, this.configs[rank], position);
+    const cfg = override ? { ...this.configs[rank], ...override } : this.configs[rank];
+    zombie.spawn(rank, cfg, position);
     return zombie;
   }
 

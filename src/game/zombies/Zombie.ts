@@ -29,6 +29,8 @@ export class Zombie {
   /** Seconds of burning left (flamethrower); damage per second while burning. */
   burnTimeLeft = 0;
   burnDamagePerSecond = 0;
+  /** F4: time left before a boss can slam again (see BossSlam.ts); unused without cfg.slam. */
+  slamCooldown = 0;
   /** Set by the AI each update; read by the renderer for facing. */
   readonly facing = new Vector3(0, 0, 1);
   /** Velocity captured just before the last physics step (see RunOverSystem.beforeStep). */
@@ -67,6 +69,7 @@ export class Zombie {
     this.attackCooldown = 0;
     this.burnTimeLeft = 0;
     this.burnDamagePerSecond = 0;
+    this.slamCooldown = cfg.slam ? cfg.slam.cooldown * 0.5 : 0;
     this.wanderHeading = Math.random() * Math.PI * 2;
     this.active = true;
     this.body.setEnabled(true);

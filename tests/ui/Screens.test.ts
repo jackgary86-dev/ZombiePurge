@@ -108,7 +108,15 @@ describe('M3 menu screens', () => {
       title: 'OUT OF GAS',
       coinsKept: 7,
       summary: {
-        killsByRank: { walker: 3, runner: 1, spitter: 0, brute: 0, tank: 0, boss: 0 },
+        killsByRank: {
+          walker: 3,
+          runner: 1,
+          spitter: 0,
+          brute: 0,
+          tank: 0,
+          iceZombie: 0,
+          boss: 0,
+        },
         totalKills: 4,
         distanceMeters: 1234,
         coinsFromKills: 5,

@@ -67,15 +67,27 @@ import {
 } from './game/vehicle';
 import {
   applyLighting,
+  buildDesertHighwayColliders,
+  buildDesertHighwayMeshes,
+  buildFrozenForestColliders,
+  buildFrozenForestMeshes,
   buildGreyboxColliders,
   buildGreyboxMeshes,
+  buildIndustrialCityColliders,
+  buildIndustrialCityMeshes,
+  buildQuarantineLabColliders,
+  buildQuarantineLabMeshes,
   buildSuburbsColliders,
   buildSuburbsMeshes,
   ChunkStreamer,
   createGreyboxLayout,
   createHeadlights,
   createLights,
+  generateDesertHighway,
+  generateFrozenForest,
+  generateIndustrialCity,
   generateOpenField,
+  generateQuarantineLab,
   generateSuburbs,
   greyboxSpawn,
   presetFor,
@@ -87,6 +99,7 @@ import {
   DEFAULT_ZOMBIE_AI,
   HordeSpawner,
   ProjectileSystem,
+  updateBossSlam,
   updateZombieAI,
   ZombiePool,
   type Zombie,
@@ -174,6 +187,30 @@ async function boot(): Promise<void> {
     scene.add(buildSuburbsMeshes(layout));
     roads = layout.roads;
     spawn = suburbsSpawn(layout);
+  } else if (map.generator === 'desertHighway') {
+    const layout = generateDesertHighway(map.seed, map.size);
+    buildDesertHighwayColliders(physics, layout);
+    scene.add(buildDesertHighwayMeshes(layout));
+    roads = layout.roads;
+    spawn = new Vector3(layout.spawn.x, layout.spawn.y, layout.spawn.z);
+  } else if (map.generator === 'industrialCity') {
+    const layout = generateIndustrialCity(map.seed, map.size);
+    buildIndustrialCityColliders(physics, layout);
+    scene.add(buildIndustrialCityMeshes(layout));
+    roads = layout.roads;
+    spawn = new Vector3(layout.spawn.x, layout.spawn.y, layout.spawn.z);
+  } else if (map.generator === 'frozenForest') {
+    const layout = generateFrozenForest(map.seed, map.size);
+    buildFrozenForestColliders(physics, layout);
+    scene.add(buildFrozenForestMeshes(layout));
+    roads = layout.roads;
+    spawn = new Vector3(layout.spawn.x, layout.spawn.y, layout.spawn.z);
+  } else if (map.generator === 'quarantineLab') {
+    const layout = generateQuarantineLab(map.seed, map.size);
+    buildQuarantineLabColliders(physics, layout);
+    scene.add(buildQuarantineLabMeshes(layout));
+    roads = layout.roads;
+    spawn = new Vector3(layout.spawn.x, layout.spawn.y, layout.spawn.z);
   } else {
     const layout = createGreyboxLayout(map.size);
     buildGreyboxColliders(physics, layout);
@@ -523,6 +560,7 @@ async function boot(): Promise<void> {
   /** D2/D3-D7: push the garage's effective stats into the live systems. */
   function applyGarage(): void {
     const s = garage.applyTo(stockVehicle, cfg.vehicle);
+    cfg.vehicle.tires.grip *= map.groundGrip ?? 1; // E7: snow/ice maps corner looser
     effectiveTopSpeed = s.topSpeed;
     effectiveAcceleration = s.acceleration;
     radarRange = s.radarRange;
@@ -625,6 +663,21 @@ async function boot(): Promise<void> {
     car.getPosition(senses.carPosition);
     streamer?.update(senses.carPosition, true);
     spawner.prefill(view);
+    // F4: story maps 3+ get their own boss, spawned once and never respawned by the horde
+    // spawner (bosses are deliberately left out of every map's zombieRanks list).
+    if (inStoryMode && map.boss) {
+      pool.spawn(
+        'boss',
+        { x: map.boss.position.x, y: 0, z: map.boss.position.z },
+        {
+          hp: map.boss.hp,
+          speed: map.boss.speed,
+          attackDamage: map.boss.attackDamage,
+          rangedAttack: map.boss.rangedAttack,
+          slam: map.boss.slam,
+        }
+      );
+    }
     car.getPosition(target.position);
     car.getQuaternion(target.quaternion);
     chase.snap(target);
@@ -832,6 +885,7 @@ async function boot(): Promise<void> {
       const result = updateZombieAI(z, deltaTime, senses);
       attackDamage += result.damage;
       if (result.shot) projectiles.fire(result.shot);
+      if (z.cfg.slam) attackDamage += updateBossSlam(z, deltaTime, senses.carPosition);
     }
     for (const hit of projectiles.update(
       deltaTime,
@@ -977,14 +1031,12 @@ async function boot(): Promise<void> {
       magazine: magazineText(),
       flameOn: flamethrower?.firing ?? false,
       objectives:
-        objectiveTracker
-          ?.statuses()
-          .map((s) => ({
-            label: s.objective.label,
-            current: s.current,
-            target: s.target,
-            done: s.done,
-          })) ?? null,
+        objectiveTracker?.statuses().map((s) => ({
+          label: s.objective.label,
+          current: s.current,
+          target: s.target,
+          done: s.done,
+        })) ?? null,
     });
   });
 
