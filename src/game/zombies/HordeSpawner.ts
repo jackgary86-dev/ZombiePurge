@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import type { MapConfig, ZombieRank } from '../../data/types';
+import type { MapConfig, SpawnZone, ZombieRank } from '../../data/types';
 import { canDespawnCorpse, DEFAULT_ZOMBIE_AI, type ZombieAIConfig } from './ZombieAI';
 import type { ZombiePool } from './ZombiePool';
 
@@ -126,19 +126,43 @@ export class HordeSpawner {
     ignoreView = false
   ): { x: number; y: number; z: number } | null {
     const half = this.map.size / 2 - 5;
+    const zones = (this.map.spawnZones ?? []).filter((z) => z.weight > 0);
     for (let i = 0; i < this.cfg.attemptsPerSpawn; i++) {
-      const angle = this.rng() * Math.PI * 2;
-      const dist =
-        this.cfg.spawnMinDistance +
-        this.rng() * (this.cfg.spawnMaxDistance - this.cfg.spawnMinDistance);
-      offset.set(Math.sin(angle) * dist, 0, Math.cos(angle) * dist);
-      const x = view.carPosition.x + offset.x;
-      const z = view.carPosition.z + offset.z;
+      let x: number;
+      let z: number;
+      if (zones.length > 0) {
+        // Weighted zone, then a random point inside it (uniform over the disc).
+        const zone = this.pickZone(zones);
+        const a = this.rng() * Math.PI * 2;
+        const r = Math.sqrt(this.rng()) * zone.radius;
+        x = zone.x + Math.sin(a) * r;
+        z = zone.z + Math.cos(a) * r;
+      } else {
+        const angle = this.rng() * Math.PI * 2;
+        const dist =
+          this.cfg.spawnMinDistance +
+          this.rng() * (this.cfg.spawnMaxDistance - this.cfg.spawnMinDistance);
+        x = view.carPosition.x + Math.sin(angle) * dist;
+        z = view.carPosition.z + Math.cos(angle) * dist;
+      }
       if (Math.abs(x) > half || Math.abs(z) > half) continue;
+      offset.set(x - view.carPosition.x, 0, z - view.carPosition.z);
+      const dist = offset.length();
+      if (dist < this.cfg.spawnMinDistance || dist > this.cfg.spawnMaxDistance) continue;
       if (!ignoreView && this.isInViewCone(offset, view.viewForward, dist)) continue;
       return { x, y: 0, z };
     }
     return null;
+  }
+
+  private pickZone(zones: SpawnZone[]): SpawnZone {
+    const total = zones.reduce((n, z) => n + z.weight, 0);
+    let roll = this.rng() * total;
+    for (const zone of zones) {
+      roll -= zone.weight;
+      if (roll <= 0) return zone;
+    }
+    return zones[zones.length - 1];
   }
 
   isInViewCone(toPoint: Vector3, viewForward: Vector3, dist: number): boolean {

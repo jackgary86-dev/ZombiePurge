@@ -22,6 +22,8 @@ export class InputManager {
   private readonly deadzone: number;
 
   private readonly keysDown = new Set<string>();
+  /** Keys tapped since the last update(); a press shorter than a frame still counts once. */
+  private readonly tapped = new Set<string>();
   private readonly actionsDown = new Set<GameAction>();
   private readonly actionsDownLastFrame = new Set<GameAction>();
   private readonly analog = new Map<GameAction, number>();
@@ -73,11 +75,16 @@ export class InputManager {
     this.analog.clear();
 
     for (const action of GAME_ACTIONS) {
-      if (this.bindings.keyboard[action].some((code) => this.keysDown.has(code))) {
+      if (
+        this.bindings.keyboard[action].some(
+          (code) => this.keysDown.has(code) || this.tapped.has(code)
+        )
+      ) {
         this.actionsDown.add(action);
         this.analog.set(action, 1);
       }
     }
+    this.tapped.clear();
 
     for (const pad of this.getGamepads()) {
       if (!pad) continue;
@@ -152,6 +159,7 @@ export class InputManager {
     const e = event as KeyboardEvent;
     if (e.repeat) return;
     this.keysDown.add(e.code);
+    this.tapped.add(e.code);
   };
 
   private onKeyUp = (event: Event): void => {
@@ -159,7 +167,9 @@ export class InputManager {
   };
 
   private onMouseDown = (event: Event): void => {
-    this.keysDown.add(`Mouse${(event as MouseEvent).button}`);
+    const code = `Mouse${(event as MouseEvent).button}`;
+    this.keysDown.add(code);
+    this.tapped.add(code);
   };
 
   private onMouseUp = (event: Event): void => {

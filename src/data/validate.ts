@@ -216,6 +216,27 @@ export function collectConfigProblems(config: GameConfig): string[] {
     ids.add(map.id);
     positive(map.size, `maps[${i}].size`, problems);
     positive(map.fogDistance, `maps[${i}].fogDistance`, problems);
+    positive(map.chunkSize, `maps[${i}].chunkSize`, problems);
+    if (map.chunkSize > map.size) problems.push(`maps[${i}].chunkSize must not exceed size`);
+    if (!['greybox', 'openfield'].includes(map.generator))
+      problems.push(`maps[${i}].generator "${map.generator}" is unknown`);
+    const half = map.size / 2;
+    for (const [zi, zone] of (map.spawnZones ?? []).entries()) {
+      positive(zone.radius, `maps[${i}].spawnZones[${zi}].radius`, problems);
+      nonNegative(zone.weight, `maps[${i}].spawnZones[${zi}].weight`, problems);
+      if (Math.abs(zone.x) > half || Math.abs(zone.z) > half)
+        problems.push(`maps[${i}].spawnZones[${zi}] centre is outside the map`);
+    }
+    for (const [pi, pickup] of (map.pickups ?? []).entries()) {
+      if (Math.abs(pickup.x) > half || Math.abs(pickup.z) > half)
+        problems.push(`maps[${i}].pickups[${pi}] is outside the map`);
+    }
+    if (
+      map.storyIndex !== undefined &&
+      (!Number.isInteger(map.storyIndex) || map.storyIndex < 1 || map.storyIndex > 5)
+    ) {
+      problems.push(`maps[${i}].storyIndex must be 1-5`);
+    }
     for (const rank of map.zombieRanks) {
       if (!ZOMBIE_RANKS.includes(rank))
         problems.push(`maps[${i}].zombieRanks has unknown rank "${rank}"`);

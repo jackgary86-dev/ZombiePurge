@@ -55,8 +55,8 @@ export class DebugHud {
     this.el.textContent =
       `${s.paused ? 'PAUSED — ' : ''}${s.kmh} km/h  |  HP ${hpBar} ${Math.ceil(s.hp)}  |  ` +
       `fuel ${fuelBar} ${Math.ceil(s.fuelLitres)}L${heat}${flame}${nitro}  |  coins ${s.coins}  |  kills ${s.kills}${combo}  |  ` +
-      `${(s.distanceMeters / 1000).toFixed(2)} km  |  zombies ${s.alive}  |  ${s.fps} fps` +
-      `\nWASD / arrows drive · Space handbrake · R flip · F or click fire · Shift nitro · Esc pause · F1 tuning`;
+      `${(s.distanceMeters / 1000).toFixed(2)} km  |  zombies ${s.alive}${s.fps >= 0 ? `  |  ${s.fps} fps` : ''}` +
+      `\nWASD / arrows drive · Space handbrake · R flip · F or click fire · Shift nitro · Esc pause · F1 tuning · F2 debug`;
   }
 }
 

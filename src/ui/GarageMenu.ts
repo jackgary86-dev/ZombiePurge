@@ -1,5 +1,6 @@
 import type { StatModifiers, UpgradeCategory, UpgradeDef, VehicleConfig } from '../data/types';
 import { Garage, type EffectiveStats, type PurchaseResult } from '../game/shop/Garage';
+import { icon, iconForCategory, iconForUpgrade } from './icons';
 
 export interface StatDelta {
   key: keyof EffectiveStats;
@@ -177,9 +178,9 @@ export class GarageMenu {
   private readonly repairButton: HTMLButtonElement;
 
   constructor(
-    private readonly garage: Garage,
+    private garage: Garage,
     private readonly base: VehicleConfig,
-    private readonly coins: { readonly balance: number },
+    private coins: { readonly balance: number },
     private readonly options: GarageMenuOptions = {}
   ) {
     this.el = document.createElement('div');
@@ -190,6 +191,11 @@ export class GarageMenu {
     header.className = 'garage-header';
     const title = document.createElement('h1');
     title.textContent = 'GARAGE';
+    const coin = document.createElement('span');
+    coin.className = 'garage-balance-icon';
+    coin.innerHTML = icon('coin', 20);
+    // The balance span's textContent is asserted verbatim in tests, so the coin icon lives
+    // in its own sibling element rather than inside .garage-balance.
     this.balance = document.createElement('span');
     this.balance.className = 'garage-balance';
     this.repairButton = document.createElement('button');
@@ -205,14 +211,14 @@ export class GarageMenu {
     play.className = 'garage-play';
     play.textContent = 'DRIVE ▶';
     play.addEventListener('click', () => this.options.onClose?.());
-    header.append(title, this.balance, this.repairButton, play);
+    header.append(title, coin, this.balance, this.repairButton, play);
 
     this.tabs = document.createElement('div');
     this.tabs.className = 'garage-tabs';
     for (const tab of CATEGORY_TABS) {
       const b = document.createElement('button');
       b.type = 'button';
-      b.textContent = tab.label;
+      b.innerHTML = `${iconForCategory(tab.id === 'all' ? 'weapon' : tab.id, 15)} ${tab.label}`;
       b.dataset.category = tab.id;
       b.addEventListener('click', () => {
         this.category = tab.id;
@@ -232,6 +238,13 @@ export class GarageMenu {
     return !this.el.hidden;
   }
 
+  /** Swap the backing garage (sandbox "infinite money" uses a throwaway one). */
+  setGarage(garage: Garage, coins: { readonly balance: number }): void {
+    this.garage = garage;
+    this.coins = coins;
+    this.render();
+  }
+
   open(): void {
     this.el.hidden = false;
     this.render();
@@ -242,7 +255,8 @@ export class GarageMenu {
   }
 
   render(): void {
-    this.balance.textContent = `${this.coins.balance} coins`;
+    this.balance.textContent =
+      this.coins.balance >= 1e8 ? '∞ coins' : `${this.coins.balance} coins`;
     const repair = this.options.repair?.(false);
     this.repairButton.hidden = !repair;
     if (repair) {
@@ -264,7 +278,7 @@ export class GarageMenu {
     el.dataset.upgrade = card.upgradeId;
 
     const name = document.createElement('h2');
-    name.textContent = card.name;
+    name.innerHTML = `${iconForUpgrade(card.upgradeId, card.category, 18)} ${card.name}`;
     const tier = document.createElement('div');
     tier.className = 'tier-pips';
     tier.textContent = `${'●'.repeat(card.ownedTier)}${'○'.repeat(card.maxTier - card.ownedTier)}${card.nextLabel ? `  ${card.nextLabel}` : ''}`;

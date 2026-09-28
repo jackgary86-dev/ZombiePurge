@@ -1,0 +1,76 @@
+import type { RunSummary } from '../../game/economy/RunStats';
+import { ZOMBIE_RANKS } from '../../data/validate';
+import { icon, type IconName } from '../icons';
+import { buildPanel, menuButton, type MenuScreen } from '../MenuStack';
+
+const ROW_ICON: Record<string, IconName> = {
+  'Total kills': 'kill',
+  Distance: 'distance',
+  'Coins from kills': 'coin',
+  'Coins from distance': 'coin',
+  'Total earned': 'coin',
+  Kept: 'coin',
+};
+
+export interface ResultsActions {
+  onRetry: () => void;
+  onGarage: () => void;
+  onMainMenu: () => void;
+}
+
+export interface ResultsData {
+  title: string;
+  summary: RunSummary;
+  coinsKept: number;
+}
+
+/** J8: kills by rank, distance, coins from kills vs. distance, total earned / kept. */
+export function createResultsScreen(actions: ResultsActions, parent: HTMLElement = document.body) {
+  const { el, body } = buildPanel('results-screen', 'WRECKED');
+  const title = el.querySelector('h1')!;
+  const table = document.createElement('table');
+  table.className = 'results-table';
+  body.appendChild(table);
+  body.append(
+    menuButton('Retry', actions.onRetry, 'primary'),
+    menuButton('Garage', actions.onGarage),
+    menuButton('Main Menu', actions.onMainMenu)
+  );
+  parent.appendChild(el);
+
+  const screen: MenuScreen = { id: 'results', el, onBack: () => false };
+
+  function show(data: ResultsData): void {
+    title.textContent = data.title;
+    const s = data.summary;
+    const rows: [string, string][] = [];
+    for (const rank of ZOMBIE_RANKS) {
+      if (s.killsByRank[rank] > 0)
+        rows.push([`${rank[0].toUpperCase()}${rank.slice(1)}s`, String(s.killsByRank[rank])]);
+    }
+    rows.push(['Total kills', String(s.totalKills)]);
+    rows.push(['Distance', `${(s.distanceMeters / 1000).toFixed(2)} km`]);
+    rows.push([
+      'Time',
+      `${Math.floor(s.durationSeconds / 60)}:${String(Math.floor(s.durationSeconds % 60)).padStart(2, '0')}`,
+    ]);
+    rows.push(['Coins from kills', String(s.coinsFromKills)]);
+    rows.push(['Coins from distance', String(s.coinsFromDistance)]);
+    rows.push(['Total earned', String(s.coinsTotal)]);
+    rows.push(['Kept', String(data.coinsKept)]);
+    table.replaceChildren(
+      ...rows.map(([k, v]) => {
+        const tr = document.createElement('tr');
+        const td1 = document.createElement('td');
+        const rowIcon = ROW_ICON[k];
+        td1.innerHTML = rowIcon ? `${icon(rowIcon, 15)} ${k}` : k;
+        const td2 = document.createElement('td');
+        td2.textContent = v;
+        tr.append(td1, td2);
+        return tr;
+      })
+    );
+  }
+
+  return { screen, show };
+}

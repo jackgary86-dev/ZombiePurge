@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* I10: a condensed display face for titles and buttons; the HUD keeps its monospace look. */
+  --display-font: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+}
+
 html,
 body,
 #game-canvas {
@@ -82,9 +87,9 @@ canvas {
 }
 
 #game-over h1 {
-  font-size: 64px;
+  font: 64px/1 var(--display-font);
   color: #c8402e;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
 }
 
 #game-over .hint {
@@ -234,10 +239,16 @@ canvas {
 }
 
 #garage-menu h1 {
-  font-size: 28px;
-  letter-spacing: 0.12em;
+  font: 34px/1 var(--display-font);
+  letter-spacing: 0.08em;
   color: #c8402e;
   margin-right: auto;
+}
+
+#garage-menu .garage-balance-icon {
+  display: inline-flex;
+  color: #ffd84a;
+  margin-right: -8px;
 }
 
 #garage-menu .garage-balance {
@@ -274,6 +285,12 @@ canvas {
   flex-wrap: wrap;
 }
 
+#garage-menu .garage-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 #garage-menu .garage-tabs .active {
   background: #f4e9d8;
   color: #1a1a1e;
@@ -303,7 +320,15 @@ canvas {
 }
 
 #garage-menu .tier-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-size: 17px;
+}
+
+#garage-menu .tier-card h2 .icon {
+  color: #ffd84a;
+  flex-shrink: 0;
 }
 
 #garage-menu .tier-pips {
@@ -371,4 +396,295 @@ canvas {
 
 #garage-menu .status-coins .buy {
   background: rgba(200, 64, 46, 0.35);
+}
+
+#minimap {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.menu-panel {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(10, 10, 14, 0.88);
+  color: #f4e9d8;
+  font:
+    16px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-align: center;
+}
+
+.menu-panel.menu-enter {
+  animation: menu-fade 0.18s ease-out;
+}
+
+@keyframes menu-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.menu-panel h1 {
+  font: 56px/1 var(--display-font);
+  letter-spacing: 0.08em;
+  color: #c8402e;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+}
+
+/* I11: the ZombiePurge wordmark (src/ui/logo.ts) swaps in for the plain text heading. */
+.logo-heading {
+  text-shadow: none;
+}
+
+.zp-logo {
+  display: block;
+  width: min(78vw, 420px);
+  height: auto;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
+}
+
+.zp-logo-word {
+  font-family: var(--display-font);
+  font-size: 46px;
+  letter-spacing: 0.05em;
+}
+
+.zp-logo-word-a {
+  fill: #f4e9d8;
+}
+
+.zp-logo-word-b {
+  fill: #c8402e;
+}
+
+.zp-logo-slash {
+  stroke: #9cff3a;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+/* I10: the inline icon set (src/ui/icons.ts). Sits on the same baseline as its label. */
+.icon {
+  display: inline-block;
+  vertical-align: -4px;
+  flex-shrink: 0;
+}
+
+.menu-panel .menu-subtitle {
+  opacity: 0.75;
+  margin-bottom: 10px;
+}
+
+.menu-panel .menu-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 320px;
+}
+
+.menu-button {
+  font: inherit;
+  padding: 12px 22px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4e9d8;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menu-button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-button.primary {
+  background: #c8402e;
+  color: #fff;
+  font-weight: bold;
+}
+
+.menu-button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.menu-button:focus,
+.menu-panel input:focus,
+.menu-panel select:focus {
+  outline: none;
+  border-color: #ffd84a;
+  box-shadow: 0 0 0 3px rgba(255, 216, 74, 0.25);
+}
+
+.menu-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.menu-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.menu-row:focus-within {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* I11: key art for the title screen — the panel anchors left over the live turntable scene,
+   like the garage's own gradient, instead of centering flat over the whole viewport. */
+.main-menu {
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  padding: 8vh 6vw;
+  background: linear-gradient(
+    100deg,
+    rgba(8, 8, 11, 0.94) 0%,
+    rgba(8, 8, 11, 0.82) 38%,
+    rgba(8, 8, 11, 0.25) 72%,
+    rgba(8, 8, 11, 0) 100%
+  );
+}
+
+.main-menu .zp-logo {
+  width: min(70vw, 460px);
+  margin: 0 0 6px;
+}
+
+.main-menu .menu-subtitle {
+  margin-left: 4px;
+}
+
+.results-table {
+  border-collapse: collapse;
+  margin-bottom: 12px;
+  min-width: 320px;
+}
+
+.results-table td,
+.results-table th {
+  padding: 4px 14px;
+  text-align: left;
+}
+
+.results-table td:first-child .icon {
+  color: #c8402e;
+  opacity: 0.85;
+}
+
+.results-table td:last-child {
+  text-align: right;
+  color: #ffd84a;
+  font-weight: bold;
+}
+
+.results-table th {
+  color: #c8402e;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.slider-with-value {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.keybinds h2 {
+  font-size: 18px;
+  color: #c8402e;
+  margin: 10px 0 4px;
+}
+
+.menu-button.key {
+  min-width: 160px;
+  text-align: center;
+  padding: 6px 10px;
+}
+
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(200, 64, 46, 0.22), transparent 60%), #0c0c10;
+  color: #f4e9d8;
+  font:
+    16px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  z-index: 10;
+  animation: loading-glow 3.5s ease-in-out infinite;
+}
+
+@keyframes loading-glow {
+  0%,
+  100% {
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(200, 64, 46, 0.16), transparent 60%), #0c0c10;
+  }
+  50% {
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(200, 64, 46, 0.3), transparent 62%), #0c0c10;
+  }
+}
+
+#loading-screen .zp-logo {
+  width: min(80vw, 440px);
+}
+
+.loading-track {
+  width: 360px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.loading-bar {
+  height: 100%;
+  width: 0;
+  background: #c8402e;
+  transition: width 0.15s linear;
+}
+
+.menu-panel select,
+.menu-panel input[type='checkbox'] {
+  font: inherit;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4e9d8;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.menu-panel input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  accent-color: #c8402e;
 }
