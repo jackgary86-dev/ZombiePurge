@@ -83,6 +83,20 @@ export function collectConfigProblems(config: GameConfig): string[] {
     positive(z.speed, `zombies.${rank}.speed`, problems);
     positive(z.detectionRadius, `zombies.${rank}.detectionRadius`, problems);
     nonNegative(z.attackDamage, `zombies.${rank}.attackDamage`, problems);
+    if (z.rangedAttack) {
+      positive(z.rangedAttack.range, `zombies.${rank}.rangedAttack.range`, problems);
+      positive(
+        z.rangedAttack.projectileSpeed,
+        `zombies.${rank}.rangedAttack.projectileSpeed`,
+        problems
+      );
+      positive(z.rangedAttack.cooldown, `zombies.${rank}.rangedAttack.cooldown`, problems);
+      nonNegative(z.rangedAttack.damage, `zombies.${rank}.rangedAttack.damage`, problems);
+      positive(z.rangedAttack.hitRadius, `zombies.${rank}.rangedAttack.hitRadius`, problems);
+      if (z.rangedAttack.range >= z.detectionRadius) {
+        problems.push(`zombies.${rank}.rangedAttack.range must be less than detectionRadius`);
+      }
+    }
     nonNegative(z.coinValue, `zombies.${rank}.coinValue`, problems);
     if (config.rewards.coinsPerRank[rank] === undefined) {
       problems.push(`rewards.coinsPerRank.${rank} is missing`);
@@ -92,6 +106,22 @@ export function collectConfigProblems(config: GameConfig): string[] {
   }
 
   positive(config.rewards.metersPerDistanceCoin, 'rewards.metersPerDistanceCoin', problems);
+  nonNegative(config.combat.runOverMinSpeed, 'combat.runOverMinSpeed', problems);
+  positive(config.combat.runOverDamageFactor, 'combat.runOverDamageFactor', problems);
+  positive(config.combat.impactFullSpeed, 'combat.impactFullSpeed', problems);
+  for (const rank of ZOMBIE_RANKS) {
+    const dmg = config.combat.impactDamageToCar[rank];
+    if (dmg === undefined) problems.push(`combat.impactDamageToCar.${rank} is missing`);
+    else nonNegative(dmg, `combat.impactDamageToCar.${rank}`, problems);
+  }
+  const combo = config.rewards.combo;
+  positive(combo.windowSeconds, 'rewards.combo.windowSeconds', problems);
+  positive(combo.killsPerStep, 'rewards.combo.killsPerStep', problems);
+  if (!Number.isInteger(combo.maxMultiplier) || combo.maxMultiplier < 1) {
+    problems.push(
+      `rewards.combo.maxMultiplier must be an integer >= 1 (got ${String(combo.maxMultiplier)})`
+    );
+  }
   const kept = config.rewards.coinsKeptOnDeathPercent;
   if (typeof kept !== 'number' || kept < 0 || kept > 100) {
     problems.push(

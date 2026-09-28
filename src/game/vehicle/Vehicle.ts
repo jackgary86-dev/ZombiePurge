@@ -50,6 +50,9 @@ export class Vehicle {
   readonly body: RAPIER.RigidBody;
   readonly collider: RAPIER.Collider;
   readonly wheels: WheelState[];
+  hp: number;
+  /** Debug god mode: damage is ignored while set. */
+  invulnerable = false;
   private steerAngle = 0;
   private readonly physics: PhysicsWorld;
   private readonly cfg: VehicleConfig;
@@ -87,9 +90,13 @@ export class Vehicle {
     );
     // Density 0 so the configured mass is the whole story; a low centre of mass resists rolling.
     this.collider = physics.world.createCollider(
-      RAPIER.ColliderDesc.cuboid(he.x, he.y, he.z).setDensity(0).setFriction(0.3),
+      RAPIER.ColliderDesc.cuboid(he.x, he.y, he.z)
+        .setDensity(0)
+        .setFriction(0.3)
+        .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS),
       this.body
     );
+    this.hp = cfg.hp;
     this.body.setAdditionalMassProperties(
       cfg.mass,
       { x: 0, y: -he.y * 0.5, z: 0 },
@@ -264,6 +271,23 @@ export class Vehicle {
       this.tmp.copy(this.right).multiplyScalar(pitch).addScaledVector(UP, yaw);
       this.body.addTorque(this.tmp, true);
     }
+  }
+
+  /** Applies damage reduced by armor percent; returns the damage actually taken. */
+  applyDamage(raw: number): number {
+    if (raw <= 0 || this.hp <= 0 || this.invulnerable) return 0;
+    const taken = Math.min(this.hp, raw * (1 - Math.min(100, this.cfg.armor) / 100));
+    this.hp -= taken;
+    return taken;
+  }
+
+  isDestroyed(): boolean {
+    return this.hp <= 0;
+  }
+
+  getLinearVelocity(target = new Vector3()): Vector3 {
+    const v = this.body.linvel();
+    return target.set(v.x, v.y, v.z);
   }
 
   /** Forward speed in m/s (negative when reversing). */

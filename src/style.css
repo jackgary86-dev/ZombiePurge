@@ -36,3 +36,165 @@ canvas {
   pointer-events: none;
   user-select: none;
 }
+
+#popup-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.coin-popup {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #ffd84a;
+  font:
+    bold 22px/1 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  will-change: transform, opacity;
+}
+
+#game-over {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(20, 0, 0, 0.75);
+  color: #f4e9d8;
+  font:
+    18px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-align: center;
+}
+
+#game-over h1 {
+  font-size: 64px;
+  color: #c8402e;
+  letter-spacing: 0.1em;
+}
+
+#game-over .hint {
+  margin-top: 16px;
+  opacity: 0.8;
+}
+
+#build-tag {
+  position: fixed;
+  right: 10px;
+  bottom: 8px;
+  padding: 3px 8px;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  font:
+    11px/1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  pointer-events: none;
+  user-select: none;
+}
+
+#tuning-panel {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 360px;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  padding: 10px 12px;
+  background: rgba(10, 10, 14, 0.9);
+  color: #f4e9d8;
+  border-radius: 8px;
+  font:
+    12px/1.6 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+
+#tuning-panel .tuning-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #ffd84a;
+}
+
+#tuning-panel .tuning-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 52px;
+  gap: 8px;
+  align-items: center;
+}
+
+#tuning-panel .tuning-value {
+  text-align: right;
+}
+
+#tuning-panel .tuning-actions {
+  margin-top: 8px;
+}
+
+#tuning-panel button {
+  font: inherit;
+  padding: 4px 10px;
+  background: #c8402e;
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#tuning-panel .tuning-json {
+  margin-top: 6px;
+  max-height: 160px;
+  overflow: auto;
+  font-size: 11px;
+  color: #bfe3a5;
+}
+
+#cheat-console {
+  position: fixed;
+  left: 12px;
+  bottom: 36px;
+  width: 460px;
+  background: rgba(10, 10, 14, 0.92);
+  color: #f4e9d8;
+  border-radius: 8px;
+  font:
+    12px/1.5 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  overflow: hidden;
+}
+
+#cheat-console .console-log {
+  max-height: 180px;
+  overflow: auto;
+  padding: 8px 10px;
+}
+
+#cheat-console .console-log .err {
+  color: #ff8a80;
+}
+
+#cheat-console input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font: inherit;
+  outline: none;
+}

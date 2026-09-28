@@ -81,6 +81,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       detectionRadius: 80,
       attackDamage: 5,
       coinValue: 4,
+      rangedAttack: { range: 30, projectileSpeed: 22, cooldown: 2.5, damage: 5, hitRadius: 1.6 },
     },
     brute: {
       rank: 'brute',
@@ -111,6 +112,13 @@ export const DEFAULT_CONFIG: GameConfig = {
     coinsPerRank: { walker: 1, runner: 2, spitter: 4, brute: 6, tank: 15, boss: 100 },
     metersPerDistanceCoin: 250,
     coinsKeptOnDeathPercent: 50,
+    combo: { enabled: true, windowSeconds: 2.5, killsPerStep: 3, maxMultiplier: 4 },
+  },
+  combat: {
+    runOverMinSpeed: 3,
+    runOverDamageFactor: 0.01,
+    impactDamageToCar: { walker: 0, runner: 0, spitter: 0, brute: 8, tank: 20, boss: 35 },
+    impactFullSpeed: 12,
   },
   maps: [
     {

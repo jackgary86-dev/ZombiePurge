@@ -54,6 +54,19 @@ export interface VehicleConfig {
   armor: number;
 }
 
+export interface RangedAttackConfig {
+  /** Fires when the car is within this distance (m). */
+  range: number;
+  /** Projectile launch speed (m/s). */
+  projectileSpeed: number;
+  /** Seconds between shots. */
+  cooldown: number;
+  /** Damage on a direct hit. */
+  damage: number;
+  /** Hit radius around the projectile (m). */
+  hitRadius: number;
+}
+
 export interface ZombieConfig {
   rank: ZombieRank;
   hp: number;
@@ -61,12 +74,24 @@ export interface ZombieConfig {
   detectionRadius: number;
   attackDamage: number;
   coinValue: number;
+  /** Spitter-style ranged attack; melee only when absent. */
+  rangedAttack?: RangedAttackConfig;
+}
+
+export interface ComboConfig {
+  enabled: boolean;
+  /** Kills within this many seconds of the previous kill extend the chain. */
+  windowSeconds: number;
+  /** Kills needed per extra multiplier step (e.g. 3 => x2 at 3 kills, x3 at 6). */
+  killsPerStep: number;
+  maxMultiplier: number;
 }
 
 export interface RewardsConfig {
   coinsPerRank: Record<ZombieRank, number>;
   metersPerDistanceCoin: number;
   coinsKeptOnDeathPercent: number;
+  combo: ComboConfig;
 }
 
 export interface CameraConfig {
@@ -87,6 +112,17 @@ export interface MapConfig {
   zombieRanks: ZombieRank[];
 }
 
+export interface CombatConfig {
+  /** Below this relative speed (m/s) a collision only pushes the zombie. */
+  runOverMinSpeed: number;
+  /** Zombie damage = relativeSpeed * carMass * this factor. */
+  runOverDamageFactor: number;
+  /** Raw damage the car takes when it hits each rank at full impact speed. */
+  impactDamageToCar: Record<ZombieRank, number>;
+  /** Relative speed at which impact damage to the car reaches its full value. */
+  impactFullSpeed: number;
+}
+
 export interface PhysicsConfig {
   gravity: number;
   fixedTimeStep: number;
@@ -98,9 +134,10 @@ export interface GameConfig {
   camera: CameraConfig;
   zombies: Record<ZombieRank, ZombieConfig>;
   rewards: RewardsConfig;
+  combat: CombatConfig;
   maps: MapConfig[];
 }
 
 export type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+  [K in keyof T]?: NonNullable<T[K]> extends object ? DeepPartial<NonNullable<T[K]>> : T[K];
 };
