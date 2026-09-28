@@ -18,6 +18,7 @@ import { getConfig, getMapConfig } from './data/config';
 import type { VehicleConfig } from './data/types';
 import {
   buildPlaceholderCar,
+  DetectionRings,
   FlameView,
   ProjectileViews,
   RocketViews,
@@ -52,8 +53,11 @@ import {
 import {
   buildGreyboxColliders,
   buildGreyboxMeshes,
+  ChunkStreamer,
   createGreyboxLayout,
+  generateOpenField,
   greyboxSpawn,
+  type RoadStrip,
 } from './game/world';
 import {
   HordeSpawner,
@@ -66,6 +70,8 @@ import { showBuildTag } from './ui/BuildTag';
 import { CheatConsole } from './ui/CheatConsole';
 import { CoinPopups, DebugHud, showGameOver } from './ui/DebugHud';
 import { GarageMenu } from './ui/GarageMenu';
+import { computeMinimapFrame, Minimap } from './ui/Minimap';
+import { DEFAULT_ZOMBIE_AI } from './game/zombies';
 import { bind, TuningPanel } from './ui/TuningPanel';
 
 const ZOMBIE_CAPACITY = 250;
@@ -75,12 +81,15 @@ const AUTOPLAY = location.hash.includes('autoplay');
 const DEBUG_CONSOLE = import.meta.env.DEV || location.hash.includes('debug');
 /** `#drive` skips the garage on load (used by smoke tests). */
 const SKIP_GARAGE = location.hash.includes('drive') || AUTOPLAY;
+/** `#map=<id>` picks a map (default: the 2 km open field; `greybox` is the tuning arena). */
+const MAP_ID =
+  new URLSearchParams(location.hash.replace(/^#/, '').replace(/,/g, '&')).get('map') ?? 'openfield';
 /** After a wreck the car is towed back with this much HP; the rest costs coins to repair. */
 const TOW_HP_FRACTION = 0.25;
 
 async function boot(): Promise<void> {
   const cfg = getConfig();
-  const map = getMapConfig('greybox');
+  const map = getMapConfig(MAP_ID);
   // Upgrades rewrite cfg.vehicle each run; keep the stock numbers to compute from.
   const stockVehicle: VehicleConfig = JSON.parse(JSON.stringify(cfg.vehicle));
   await initPhysics();
@@ -106,11 +115,23 @@ async function boot(): Promise<void> {
   scene.add(sun);
 
   const physics = new PhysicsWorld(cfg.physics.gravity, cfg.physics.fixedTimeStep);
-  const layout = createGreyboxLayout(map.size);
-  buildGreyboxColliders(physics, layout);
-  scene.add(buildGreyboxMeshes(layout));
-
-  const spawn = greyboxSpawn(layout);
+  // E1: the greybox arena is small enough to build whole; big maps stream chunks around the car.
+  let streamer: ChunkStreamer | null = null;
+  let roads: RoadStrip[] = [];
+  let spawn: Vector3;
+  if (map.generator === 'openfield') {
+    const layout = generateOpenField(map.seed, map.size, map.chunkSize);
+    streamer = new ChunkStreamer(layout, physics, map.fogDistance + map.chunkSize);
+    scene.add(streamer.root);
+    roads = layout.roads;
+    spawn = new Vector3(layout.spawn.x, layout.spawn.y, layout.spawn.z);
+    streamer.update(spawn, true);
+  } else {
+    const layout = createGreyboxLayout(map.size);
+    buildGreyboxColliders(physics, layout);
+    scene.add(buildGreyboxMeshes(layout));
+    spawn = greyboxSpawn(layout);
+  }
   const car = new Vehicle(physics, cfg.vehicle, spawn);
   const carView = buildPlaceholderCar(cfg.vehicle);
   const turret = new TurretView(ROOF_MOUNT.localOffset);
@@ -180,6 +201,17 @@ async function boot(): Promise<void> {
 
   const hud = new DebugHud();
   const popups = new CoinPopups();
+  const minimap = new Minimap();
+  const rings = new DetectionRings(ZOMBIE_CAPACITY);
+  scene.add(rings.zombieRings, rings.viewRing);
+  let radarRange = garage.effectiveStats(stockVehicle).radarRange;
+  const pickupSpots = (map.pickups ?? []).map((p) => ({ ...p, taken: false }));
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'F2') {
+      e.preventDefault();
+      rings.enabled = !rings.enabled;
+    }
+  });
   showBuildTag();
   const loop = new GameLoop({ fixedTimeStep: cfg.physics.fixedTimeStep });
   const target = { position: new Vector3(), quaternion: new Quaternion(), forwardSpeed: 0 };
@@ -212,6 +244,7 @@ async function boot(): Promise<void> {
     const s = garage.applyTo(stockVehicle, cfg.vehicle);
     effectiveTopSpeed = s.topSpeed;
     effectiveAcceleration = s.acceleration;
+    radarRange = s.radarRange;
     car.hp = Math.min(car.hp, s.maxHp);
     tank.setCapacity(s.fuelCapacity);
     nitro.setCapacity(s.nitroSeconds);
@@ -270,12 +303,14 @@ async function boot(): Promise<void> {
     applyGarage();
     loop.setState(GameState.Garage);
     hud.setVisible(false);
+    minimap.setVisible(false);
     menu.open();
   }
 
   function startRun(): void {
     menu.close();
     hud.setVisible(true);
+    minimap.setVisible(true);
     applyGarage();
     stats = new RunStats(cfg.rewards);
     if (gun) gun.heat = 0;
@@ -378,6 +413,7 @@ async function boot(): Promise<void> {
 
     car.getPosition(senses.carPosition);
     senses.carSpeed = Math.abs(car.getForwardSpeed());
+    streamer?.update(senses.carPosition);
     camera.getWorldDirection(camForward);
     view.viewForward.set(camForward.x, 0, camForward.z).normalize();
     spawner.update(deltaTime, view);
@@ -522,8 +558,31 @@ async function boot(): Promise<void> {
       if (document.pointerLockElement === canvas) chase.orbit(mouse.x, mouse.y);
       chase.update(deltaTime, target);
     }
+    rings.sync(
+      pool.zombies,
+      target.position,
+      map.fogDistance,
+      Math.abs(target.forwardSpeed) > DEFAULT_ZOMBIE_AI.loudSpeed
+        ? DEFAULT_ZOMBIE_AI.loudMultiplier
+        : 1
+    );
     renderer.render(scene, camera);
     popups.update(deltaTime, project);
+    if (loop.getState() !== GameState.Garage) {
+      minimap.draw(
+        computeMinimapFrame({
+          carX: target.position.x,
+          carZ: target.position.z,
+          heading: car.getYaw(),
+          radarRange,
+          viewRange: Math.max(120, radarRange * 1.1),
+          mapSize: map.size,
+          roads,
+          pickups: pickupSpots,
+          zombies: zombieBlips(),
+        })
+      );
+    }
 
     fpsAccum += deltaTime;
     fpsFrames++;
@@ -554,6 +613,13 @@ async function boot(): Promise<void> {
       flameOn: flamethrower?.firing ?? false,
     });
   });
+
+  function* zombieBlips() {
+    for (const z of pool.active()) {
+      const p = z.getPosition();
+      yield { x: p.x, z: p.z, alive: z.isAlive(), state: z.state };
+    }
+  }
 
   function magazineText(): string | null {
     const w = shotgun ?? rockets;
