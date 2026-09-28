@@ -27,12 +27,17 @@ import type { MapConfig, VehicleConfig } from './data/types';
 import {
   BloodSplatterView,
   buildPlaceholderCar,
+  CarDamageView,
   DetectionRings,
+  DriveTrailView,
+  driveTrailColor,
   FlameView,
+  MuzzleFlashView,
   PickupViews,
   ProjectileViews,
   RocketViews,
   ShotTracers,
+  SkidMarkView,
   syncUpgradeParts,
   TurretView,
   ZombieInstances,
@@ -235,7 +240,7 @@ async function boot(): Promise<void> {
   lights.sun.target = carView.group;
 
   const pool = new ZombiePool(physics, ZOMBIE_CAPACITY, cfg.zombies);
-  const zombieInstances = new ZombieInstances(ZOMBIE_CAPACITY);
+  const zombieInstances = new ZombieInstances(ZOMBIE_CAPACITY, cfg.zombieMotion);
   scene.add(zombieInstances.bodies, zombieInstances.heads);
   const spawner = new HordeSpawner(pool, map);
   const projectiles = new ProjectileSystem(64);
@@ -329,6 +334,14 @@ async function boot(): Promise<void> {
   const slowMo = new SlowMo(cfg.vfx.slowMo);
   const blood = new BloodSplatterView(cfg.vfx.blood, cfg.vehicle);
   carView.group.add(blood.group);
+  const carDamage = new CarDamageView(carView.body, cfg.carDamage, cfg.vehicle);
+  carView.group.add(carDamage.group);
+  const muzzleFlash = new MuzzleFlashView(cfg.vfx.muzzleFlash);
+  scene.add(muzzleFlash.mesh);
+  const skidMarks = new SkidMarkView(cfg.vfx.skidMarks);
+  scene.add(skidMarks.group);
+  const driveTrail = new DriveTrailView(cfg.vfx.driveTrail);
+  scene.add(driveTrail.group);
 
   // ---------- audio (G3) ----------
   const audio = new AudioSystem(cfg.audio, settings);
@@ -679,6 +692,7 @@ async function boot(): Promise<void> {
     tank.fill();
     applyGarage();
     blood.reset();
+    carDamage.reset();
     car.hp = Math.max(car.hp, garage.effectiveStats(stockVehicle).maxHp * TOW_HP_FRACTION);
     stats = new RunStats(cfg.rewards);
     resetPickups(pickupSpots);
@@ -883,6 +897,7 @@ async function boot(): Promise<void> {
         for (const shot of gun.update(deltaTime, trigger, mount)) {
           firing = true;
           tracers.add(shot.origin, shot.end);
+          muzzleFlash.trigger(shot.origin);
           audio.weaponFire('machinegun');
           if (shot.killed && shot.hit) rewardKill(shot.hit, shot.hit.getPosition());
         }
@@ -890,6 +905,7 @@ async function boot(): Promise<void> {
         for (const shot of shotgun.update(deltaTime, trigger, mount)) {
           firing = true;
           tracers.add(shot.origin, shot.end);
+          muzzleFlash.trigger(shot.origin);
           audio.weaponFire('shotgun');
           if (shot.killed && shot.hit) rewardKill(shot.hit, shot.hit.getPosition());
         }
@@ -897,6 +913,7 @@ async function boot(): Promise<void> {
         for (const blast of rockets.update(deltaTime, trigger, mount)) {
           firing = true;
           rocketViews.explode(blast.position, blast.radius);
+          muzzleFlash.trigger(mount.origin);
           audio.weaponFire('rockets');
           for (const k of blast.kills) rewardKill(k.zombie, k.position);
         }
@@ -989,6 +1006,7 @@ async function boot(): Promise<void> {
 
   // ---------- render ----------
   const projected = new Vector3();
+  const rearTrailOrigin = new Vector3();
   const project = (p: { x: number; y: number; z: number }) => {
     projected.set(p.x, p.y + 1.5, p.z).project(camera);
     if (projected.z > 1) return null;
@@ -1006,6 +1024,7 @@ async function boot(): Promise<void> {
     car.getQuaternion(target.quaternion);
     target.forwardSpeed = car.getForwardSpeed();
     carView.sync(car);
+    carDamage.setHpFraction(car.hp / garage.effectiveStats(stockVehicle).maxHp);
     zombieInstances.sync(pool.zombies, camera.position);
     projectileViews.sync(projectiles.projectiles);
     tracers.update(deltaTime);
@@ -1013,6 +1032,17 @@ async function boot(): Promise<void> {
     rocketViews.update(deltaTime);
     flameView?.sync(flamethrower?.firing ?? false, frontMount.origin, frontMount.direction);
     pickupViews.sync(pickupSpots, elapsedTime);
+    muzzleFlash.update(deltaTime);
+    const rearWheels = car.wheels.filter((w) => !w.isFront).map((w) => w.worldPosition);
+    skidMarks.update(
+      deltaTime,
+      skidActive(senses.carSpeed, input.isDown('handbrake'), cfg.audio.skidMinSpeed),
+      rearWheels
+    );
+    rearTrailOrigin.set(0, 0, 0);
+    for (const w of rearWheels) rearTrailOrigin.add(w);
+    if (rearWheels.length > 0) rearTrailOrigin.divideScalar(rearWheels.length);
+    driveTrail.update(deltaTime, senses.carSpeed, rearTrailOrigin, driveTrailColor(map.generator));
 
     const state = loop.getState();
     if (state === GameState.Garage || state === GameState.MainMenu) {

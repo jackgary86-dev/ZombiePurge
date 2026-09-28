@@ -16,7 +16,7 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
-import type { VehicleConfig, ZombieRank } from '../../data/types';
+import type { VehicleConfig, ZombieMotionConfig, ZombieRank } from '../../data/types';
 import type { Vehicle } from '../vehicle/Vehicle';
 import type { Zombie } from '../zombies/Zombie';
 import { ZOMBIE_CAPSULE } from '../zombies/Zombie';
@@ -25,6 +25,7 @@ import { ZOMBIE_CAPSULE } from '../zombies/Zombie';
 
 export interface CarView {
   group: Group;
+  body: Mesh;
   wheels: Mesh[];
   sync(car: Vehicle): void;
 }
@@ -63,6 +64,7 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
   const up = new Vector3(0, 1, 0);
   return {
     group,
+    body,
     wheels,
     sync(car: Vehicle) {
       car.getPosition(group.position);
@@ -90,6 +92,19 @@ const RANK_STYLE: Record<ZombieRank, { color: number; scale: number }> = {
 
 const DEAD_TINT = new Color(0x3a3030);
 const BURN_TINT = new Color(0xff6a1a);
+
+const hslScratch = { h: 0, s: 0, l: 0 };
+/** I5: a random per-instance hue/lightness jitter around a rank's base colour, so a horde
+ * of the same rank doesn't render as visually identical clones. */
+function jitterColor(hex: number, variance: number, out: Color): Color {
+  out.set(hex);
+  if (variance <= 0) return out;
+  out.getHSL(hslScratch);
+  const h = (hslScratch.h + (Math.random() * 2 - 1) * variance * 0.5 + 1) % 1;
+  const l = Math.min(1, Math.max(0, hslScratch.l + (Math.random() * 2 - 1) * variance * 0.5));
+  return out.setHSL(h, hslScratch.s, l);
+}
+
 const bodyGeometry = new CapsuleGeometry(
   ZOMBIE_CAPSULE.radius,
   ZOMBIE_CAPSULE.halfHeight * 2,
@@ -117,8 +132,15 @@ export class ZombieInstances {
   private readonly hidden = new Matrix4().makeScale(0, 0, 0);
   private readonly lastRank: (ZombieRank | null)[];
   private readonly deadFade: number[];
+  /** I5: each instance's jittered rank colour, so dead/burn tints blend from its own variant. */
+  private readonly baseColor: Color[];
+  /** I5: per-slot phase offset so the horde's walk-bob doesn't move in lockstep. */
+  private readonly phase: number[];
 
-  constructor(readonly capacity: number) {
+  constructor(
+    readonly capacity: number,
+    private readonly motion: ZombieMotionConfig
+  ) {
     const material = new MeshStandardMaterial({ roughness: 0.95 });
     this.bodies = new InstancedMesh(bodyGeometry, material, capacity);
     this.heads = new InstancedMesh(headGeometry, material, capacity);
@@ -133,6 +155,8 @@ export class ZombieInstances {
     }
     this.lastRank = new Array(capacity).fill(null);
     this.deadFade = new Array(capacity).fill(0);
+    this.baseColor = Array.from({ length: capacity }, () => new Color(0xffffff));
+    this.phase = Array.from({ length: capacity }, () => Math.random() * Math.PI * 2);
   }
 
   /** Writes one instance per pool slot. `viewer` is the camera position for LOD. */
@@ -150,11 +174,12 @@ export class ZombieInstances {
       if (this.lastRank[i] !== z.rank) {
         this.lastRank[i] = z.rank;
         this.deadFade[i] = 0;
-        this.color.set(RANK_STYLE[z.rank].color);
-        this.bodies.setColorAt(i, this.color);
-        this.heads.setColorAt(i, this.color);
+        jitterColor(RANK_STYLE[z.rank].color, this.motion.colorVariance, this.baseColor[i]);
+        this.bodies.setColorAt(i, this.baseColor[i]);
+        this.heads.setColorAt(i, this.baseColor[i]);
       }
       const s = RANK_STYLE[z.rank].scale;
+      let scaleMul = 1;
       z.getPosition(this.position);
       const yaw = Math.atan2(z.facing.x, z.facing.z);
       this.facingQ.setFromAxisAngle(this.up, yaw);
@@ -163,7 +188,7 @@ export class ZombieInstances {
         this.position.y -= ZOMBIE_CAPSULE.halfHeight * s * 0.8;
         if (this.deadFade[i] < 1) {
           this.deadFade[i] = Math.min(1, this.deadFade[i] + 0.05);
-          this.color.set(RANK_STYLE[z.rank].color).lerp(DEAD_TINT, this.deadFade[i]);
+          this.color.copy(this.baseColor[i]).lerp(DEAD_TINT, this.deadFade[i]);
           this.bodies.setColorAt(i, this.color);
           this.heads.setColorAt(i, this.color);
         }
@@ -171,15 +196,27 @@ export class ZombieInstances {
         this.quaternion.copy(this.facingQ);
         if (z.burnTimeLeft > 0) {
           this.color
-            .set(RANK_STYLE[z.rank].color)
+            .copy(this.baseColor[i])
             .lerp(BURN_TINT, 0.5 + 0.5 * Math.sin(z.burnTimeLeft * 20));
           this.bodies.setColorAt(i, this.color);
           this.heads.setColorAt(i, this.color);
           this.deadFade[i] = 0;
           this.lastRank[i] = null; // force the base colour to be restored once it stops burning
         }
+        // I5: simple procedural motion in lieu of real walk/attack animation clips.
+        if (z.getSpeed() > 0.15) {
+          this.position.y +=
+            Math.sin(z.stateTime * this.motion.bobFrequency * Math.PI * 2 + this.phase[i]) *
+            this.motion.bobAmplitude;
+        }
+        if (z.state === 'attack' && this.motion.attackLungeDistance > 0) {
+          const t = Math.min(1, z.stateTime / this.motion.attackLungeSeconds);
+          const pulse = t < 0.5 ? t * 2 : (1 - t) * 2;
+          this.position.addScaledVector(z.facing, pulse * this.motion.attackLungeDistance);
+          scaleMul = 1 + pulse * 0.12;
+        }
       }
-      this.scale.set(s, s, s);
+      this.scale.set(s * scaleMul, s * scaleMul, s * scaleMul);
       this.matrix.compose(this.position, this.quaternion, this.scale);
       this.bodies.setMatrixAt(i, this.matrix);
 

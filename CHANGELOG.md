@@ -26,6 +26,21 @@ with from the initial scaffold.
 - **H4** This changelog, an embedded app version in the build tag, and vendor code (three,
   Rapier) split into their own build chunks so they cache across releases instead of
   re-downloading with every small change.
+- **I1** `docs/ART_STYLE.md`: a style guide referencing the existing `docs/ART_PROMPT.md` spec,
+  a per-map mood-board table, and silhouette/scale notes for the car and each zombie rank.
+- **I2** Asset pipeline: the `assets/models/{category}/` folder convention, `GameConfig.assetBudget`
+  (real validated config, not just docs) for per-category triangle/texture budgets, and
+  `AssetLoader.loadModel()` (GLTFLoader, resolves to `null` on any failure so placeholder art
+  keeps rendering until real `.glb`s land).
+- **I3** Car damage-state visuals: the body tints and grows dent decals through clean → dented →
+  wrecked as HP drops (`carDamage` config thresholds) - a placeholder-art extension; real
+  modeled damage states still need a 3D art pass.
+- **I5** Zombie rank variants + simple motion: per-instance colour jitter so a horde of one rank
+  isn't visually identical, plus a procedural walk-bob and attack lunge/scale-pulse
+  (`zombieMotion` config) - a placeholder-art extension; real rigged/animated models still need
+  a 3D art pass.
+- **I9** VFX art gaps: a muzzle flash at the weapon mount on every shot, tyre-skid decals behind
+  the rear wheels while sliding, and dust/snow drive-trail puffs coloured per map's own palette.
 
 ## 0.5.0 and earlier - M0-M5
 

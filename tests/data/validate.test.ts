@@ -188,6 +188,30 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     );
   });
 
+  it('vfx (I9): muzzle flash, skid marks, drive trail', () => {
+    expect(problems((c) => (c.vfx.muzzleFlash.durationSeconds = 0))).toContain(
+      'vfx.muzzleFlash.durationSeconds must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.vfx.muzzleFlash.size = -1))).toContain(
+      'vfx.muzzleFlash.size must be a positive number (got -1)'
+    );
+    expect(problems((c) => (c.vfx.skidMarks.intervalSeconds = 0))).toContain(
+      'vfx.skidMarks.intervalSeconds must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.vfx.skidMarks.maxMarks = 0.5))).toContain(
+      'vfx.skidMarks.maxMarks must be an integer >= 1 (got 0.5)'
+    );
+    expect(problems((c) => (c.vfx.driveTrail.minSpeed = -1))).toContain(
+      'vfx.driveTrail.minSpeed must be zero or greater (got -1)'
+    );
+    expect(problems((c) => (c.vfx.driveTrail.intervalSeconds = 0))).toContain(
+      'vfx.driveTrail.intervalSeconds must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.vfx.driveTrail.maxPuffs = 0))).toContain(
+      'vfx.driveTrail.maxPuffs must be an integer >= 1 (got 0)'
+    );
+  });
+
   it('audio (G3): engine range, skid speed, zombie groan voices', () => {
     expect(problems((c) => (c.audio.engine.maxHz = c.audio.engine.idleHz))).toContain(
       'audio.engine.maxHz must be greater than audio.engine.idleHz'
@@ -218,6 +242,61 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     );
     expect(problems((c) => (c.performance.zombieBudget = 10.5))).toContain(
       'performance.zombieBudget must be an integer >= 1 (got 10.5)'
+    );
+  });
+
+  it('assetBudget (I2): every category needs a positive triangle count and a valid texture size', () => {
+    expect(problems((c) => (c.assetBudget.car.maxTriangles = 0))).toContain(
+      'assetBudget.car.maxTriangles must be an integer >= 1 (got 0)'
+    );
+    expect(problems((c) => (c.assetBudget.zombie.maxTriangles = 100.5))).toContain(
+      'assetBudget.zombie.maxTriangles must be an integer >= 1 (got 100.5)'
+    );
+    expect(problems((c) => (c.assetBudget.boss.textureSize = -1))).toContain(
+      'assetBudget.boss.textureSize must be an integer >= 0 (got -1)'
+    );
+    // 0 is valid for a category that shares another kit's atlas (upgradePart, smallProp).
+    expect(problems((c) => (c.assetBudget.upgradePart.textureSize = 0))).toEqual([]);
+  });
+
+  it('carDamage (I3): thresholds must be fractions with wrecked below dented', () => {
+    expect(problems((c) => (c.carDamage.dentedBelowFraction = 0))).toContain(
+      'carDamage.dentedBelowFraction must be between 0 and 1 (got 0)'
+    );
+    expect(problems((c) => (c.carDamage.dentedBelowFraction = 1))).toContain(
+      'carDamage.dentedBelowFraction must be between 0 and 1 (got 1)'
+    );
+    expect(problems((c) => (c.carDamage.wreckedBelowFraction = 0))).toContain(
+      'carDamage.wreckedBelowFraction must be between 0 and 1 (got 0)'
+    );
+    expect(
+      problems((c) => {
+        c.carDamage.dentedBelowFraction = 0.3;
+        c.carDamage.wreckedBelowFraction = 0.5;
+      })
+    ).toContain(
+      'carDamage.wreckedBelowFraction must be less than carDamage.dentedBelowFraction (got 0.5 >= 0.3)'
+    );
+  });
+
+  it('zombieMotion (I5): variance is a fraction, bob/lunge magnitudes are non-negative', () => {
+    expect(problems((c) => (c.zombieMotion.colorVariance = 1.5))).toContain(
+      'zombieMotion.colorVariance must be between 0 and 1 (got 1.5)'
+    );
+    expect(problems((c) => (c.zombieMotion.colorVariance = -0.1))).toContain(
+      'zombieMotion.colorVariance must be between 0 and 1 (got -0.1)'
+    );
+    expect(problems((c) => (c.zombieMotion.bobAmplitude = -1))).toContain(
+      'zombieMotion.bobAmplitude must be zero or greater (got -1)'
+    );
+    expect(problems((c) => (c.zombieMotion.bobFrequency = 0))).toContain(
+      'zombieMotion.bobFrequency must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.zombieMotion.attackLungeDistance = -1))).toContain(
+      'zombieMotion.attackLungeDistance must be zero or greater (got -1)'
+    );
+    expect(problems((c) => (c.zombieMotion.attackLungeSeconds = 0))).toContain(
+      'zombieMotion.attackLungeSeconds must be a positive number (got 0)'
     );
   });
 

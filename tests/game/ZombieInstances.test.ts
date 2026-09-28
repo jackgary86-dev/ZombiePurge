@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { Matrix4, Vector3 } from 'three';
+import { Color, Matrix4, Vector3 } from 'three';
 import { getConfig, resetConfig } from '../../src/data/config';
 import { ZombieInstances } from '../../src/game/art';
 import { initPhysics, PhysicsWorld } from '../../src/game/physics/PhysicsWorld';
@@ -15,7 +15,7 @@ describe('ZombieInstances (B7)', () => {
     const physics = new PhysicsWorld(-9.81, 1 / 60);
     physics.addGround(200);
     const pool = new ZombiePool(physics, 8, getConfig().zombies);
-    const view = new ZombieInstances(8);
+    const view = new ZombieInstances(8, getConfig().zombieMotion);
     expect(view.bodies.count).toBe(8);
     expect(view.heads.count).toBe(8);
 
@@ -53,7 +53,7 @@ describe('ZombieInstances (B7)', () => {
     const near = pool.spawn('walker', { x: 0, y: 0, z: 10 })!;
     const far = pool.spawn('walker', { x: 0, y: 0, z: 200 })!;
     physics.step();
-    const view = new ZombieInstances(2);
+    const view = new ZombieInstances(2, getConfig().zombieMotion);
     view.sync(pool.zombies, new Vector3(0, 3, 0));
     const m = new Matrix4();
     view.heads.getMatrixAt(near.poolIndex, m);
@@ -62,6 +62,44 @@ describe('ZombieInstances (B7)', () => {
     expect(new Vector3().setFromMatrixScale(m).length()).toBe(0);
     view.bodies.getMatrixAt(far.poolIndex, m);
     expect(new Vector3().setFromMatrixScale(m).x).toBeCloseTo(1, 5); // body still drawn
+    pool.dispose();
+    physics.dispose();
+  });
+
+  it('gives same-rank instances slightly different colours when colorVariance > 0 (I5)', () => {
+    const physics = new PhysicsWorld(-9.81, 1 / 60);
+    physics.addGround(200);
+    const pool = new ZombiePool(physics, 20, getConfig().zombies);
+    for (let i = 0; i < 20; i++) pool.spawn('walker', { x: i, y: 0, z: 0 });
+    physics.step();
+    const view = new ZombieInstances(20, getConfig().zombieMotion);
+    view.sync(pool.zombies, new Vector3());
+    const c = new Color();
+    const hexes = new Set<number>();
+    for (let i = 0; i < 20; i++) {
+      view.bodies.getColorAt(i, c);
+      hexes.add(c.getHex());
+    }
+    expect(hexes.size).toBeGreaterThan(1);
+    pool.dispose();
+    physics.dispose();
+  });
+
+  it('lunges forward and scales up mid-attack (I5)', () => {
+    const physics = new PhysicsWorld(-9.81, 1 / 60);
+    physics.addGround(200);
+    const pool = new ZombiePool(physics, 1, getConfig().zombies);
+    const z = pool.spawn('walker', { x: 0, y: 0, z: 0 })!;
+    physics.step();
+    const motion = getConfig().zombieMotion;
+    const view = new ZombieInstances(1, motion);
+    z.setState('attack');
+    z.stateTime = motion.attackLungeSeconds / 2; // mid-swing, near the pulse's peak
+    view.sync(pool.zombies, new Vector3());
+    const m = new Matrix4();
+    view.bodies.getMatrixAt(z.poolIndex, m);
+    const scale = new Vector3().setFromMatrixScale(m);
+    expect(scale.x).toBeGreaterThan(1); // walker's base scale is 1
     pool.dispose();
     physics.dispose();
   });

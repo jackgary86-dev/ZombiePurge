@@ -146,10 +146,44 @@ export interface BloodConfig {
   maxSplatters: number;
 }
 
+/** I9: a brief flash at the weapon mount on each shot fired. */
+export interface MuzzleFlashConfig {
+  /** Seconds the flash stays visible before fading out. */
+  durationSeconds: number;
+  /** Flash size in world units. */
+  size: number;
+}
+
+/** I9: tyre-skid decals dropped behind the rear wheels while actively sliding. */
+export interface SkidMarkConfig {
+  /** Seconds between dropping a new mark segment while skidding. */
+  intervalSeconds: number;
+  /** Marks fade out and are recycled after this many seconds. */
+  lifetimeSeconds: number;
+  /** Oldest marks are dropped past this count so the trail stays cheap. */
+  maxMarks: number;
+}
+
+/** I9: dust/snow puffs kicked up behind the car while driving fast; colour is per-map (see
+ * `driveTrailColor`). */
+export interface DriveTrailConfig {
+  /** Minimum forward speed (world units/sec) before puffs start appearing. */
+  minSpeed: number;
+  /** Seconds between spawning a new puff while above minSpeed. */
+  intervalSeconds: number;
+  /** Seconds a puff takes to expand and fade out. */
+  lifetimeSeconds: number;
+  /** Oldest puffs are dropped past this count. */
+  maxPuffs: number;
+}
+
 export interface VfxConfig {
   screenShake: ScreenShakeConfig;
   slowMo: SlowMoConfig;
   blood: BloodConfig;
+  muzzleFlash: MuzzleFlashConfig;
+  skidMarks: SkidMarkConfig;
+  driveTrail: DriveTrailConfig;
 }
 
 /** G3: engine note driven by the car's own speed, not a fixed loop. */
@@ -182,6 +216,51 @@ export interface PerformanceConfig {
   targetFps: number;
   /** Max zombies alive at once (the zombie pool's capacity). */
   zombieBudget: number;
+}
+
+/** I2: the poly/texture budget for one asset category, per docs/ART_PROMPT.md §2. */
+export interface AssetBudget {
+  maxTriangles: number;
+  /** Texture edge length in pixels (square), or 0 when the asset shares another kit's atlas. */
+  textureSize: number;
+}
+
+/** I2: asset pipeline budgets - kept in config, not hard-coded, so a future budget-checker
+ * tool (or a stricter/looser pass) only has to change numbers here. */
+export interface AssetBudgetConfig {
+  car: AssetBudget;
+  upgradePart: AssetBudget;
+  /** LOD0 - the zombie's normal up-close mesh. */
+  zombie: AssetBudget;
+  zombieLod1: AssetBudget;
+  zombieLod2: AssetBudget;
+  boss: AssetBudget;
+  smallProp: AssetBudget;
+  largeProp: AssetBudget;
+}
+
+/** I3: HP-fraction thresholds for the car's placeholder damage states, until the real
+ * clean/dented/wrecked models (I3) land. */
+export interface CarDamageConfig {
+  /** HP fraction at/below which the car switches from clean to dented. */
+  dentedBelowFraction: number;
+  /** HP fraction at/below which the car switches from dented to wrecked. */
+  wreckedBelowFraction: number;
+}
+
+/** I5: per-instance colour variance and simple procedural motion for the zombie horde,
+ * until real rigged/animated models (I5) land. */
+export interface ZombieMotionConfig {
+  /** Random hue/lightness jitter applied per-instance around its rank's base colour, 0-1. */
+  colorVariance: number;
+  /** Vertical bob amplitude while moving, in world units. */
+  bobAmplitude: number;
+  /** Bob cycles per second at full stride. */
+  bobFrequency: number;
+  /** Forward lunge distance during an attack swing, in world units. */
+  attackLungeDistance: number;
+  /** Seconds for the attack lunge to reach full extension and settle back. */
+  attackLungeSeconds: number;
 }
 
 /** G3: per-map ambient drone; also doubles as the map's mood for other art/lighting hooks. */
@@ -406,6 +485,9 @@ export interface GameConfig {
   vfx: VfxConfig;
   audio: AudioConfig;
   performance: PerformanceConfig;
+  assetBudget: AssetBudgetConfig;
+  carDamage: CarDamageConfig;
+  zombieMotion: ZombieMotionConfig;
 }
 
 export type DeepPartial<T> = {

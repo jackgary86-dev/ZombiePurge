@@ -207,6 +207,29 @@ export function collectConfigProblems(config: GameConfig): string[] {
   positive(blood.splattersPerKill, 'vfx.blood.splattersPerKill', problems);
   positive(blood.maxSplatters, 'vfx.blood.maxSplatters', problems);
 
+  const muzzleFlash = config.vfx.muzzleFlash;
+  positive(muzzleFlash.durationSeconds, 'vfx.muzzleFlash.durationSeconds', problems);
+  positive(muzzleFlash.size, 'vfx.muzzleFlash.size', problems);
+
+  const skidMarks = config.vfx.skidMarks;
+  positive(skidMarks.intervalSeconds, 'vfx.skidMarks.intervalSeconds', problems);
+  positive(skidMarks.lifetimeSeconds, 'vfx.skidMarks.lifetimeSeconds', problems);
+  if (!Number.isInteger(skidMarks.maxMarks) || skidMarks.maxMarks < 1) {
+    problems.push(
+      `vfx.skidMarks.maxMarks must be an integer >= 1 (got ${String(skidMarks.maxMarks)})`
+    );
+  }
+
+  const driveTrail = config.vfx.driveTrail;
+  nonNegative(driveTrail.minSpeed, 'vfx.driveTrail.minSpeed', problems);
+  positive(driveTrail.intervalSeconds, 'vfx.driveTrail.intervalSeconds', problems);
+  positive(driveTrail.lifetimeSeconds, 'vfx.driveTrail.lifetimeSeconds', problems);
+  if (!Number.isInteger(driveTrail.maxPuffs) || driveTrail.maxPuffs < 1) {
+    problems.push(
+      `vfx.driveTrail.maxPuffs must be an integer >= 1 (got ${String(driveTrail.maxPuffs)})`
+    );
+  }
+
   const engineAudio = config.audio.engine;
   nonNegative(engineAudio.idleHz, 'audio.engine.idleHz', problems);
   positive(engineAudio.maxHz, 'audio.engine.maxHz', problems);
@@ -230,6 +253,58 @@ export function collectConfigProblems(config: GameConfig): string[] {
       `performance.zombieBudget must be an integer >= 1 (got ${String(config.performance.zombieBudget)})`
     );
   }
+
+  const budgetCategories = [
+    'car',
+    'upgradePart',
+    'zombie',
+    'zombieLod1',
+    'zombieLod2',
+    'boss',
+    'smallProp',
+    'largeProp',
+  ] as const;
+  for (const cat of budgetCategories) {
+    const b = config.assetBudget[cat];
+    if (!Number.isInteger(b.maxTriangles) || b.maxTriangles < 1) {
+      problems.push(
+        `assetBudget.${cat}.maxTriangles must be an integer >= 1 (got ${String(b.maxTriangles)})`
+      );
+    }
+    if (!Number.isInteger(b.textureSize) || b.textureSize < 0) {
+      problems.push(
+        `assetBudget.${cat}.textureSize must be an integer >= 0 (got ${String(b.textureSize)})`
+      );
+    }
+  }
+
+  const carDamage = config.carDamage;
+  if (carDamage.dentedBelowFraction <= 0 || carDamage.dentedBelowFraction >= 1) {
+    problems.push(
+      `carDamage.dentedBelowFraction must be between 0 and 1 (got ${String(carDamage.dentedBelowFraction)})`
+    );
+  }
+  if (carDamage.wreckedBelowFraction <= 0 || carDamage.wreckedBelowFraction >= 1) {
+    problems.push(
+      `carDamage.wreckedBelowFraction must be between 0 and 1 (got ${String(carDamage.wreckedBelowFraction)})`
+    );
+  }
+  if (carDamage.wreckedBelowFraction >= carDamage.dentedBelowFraction) {
+    problems.push(
+      `carDamage.wreckedBelowFraction must be less than carDamage.dentedBelowFraction (got ${String(carDamage.wreckedBelowFraction)} >= ${String(carDamage.dentedBelowFraction)})`
+    );
+  }
+
+  const motion = config.zombieMotion;
+  if (motion.colorVariance < 0 || motion.colorVariance > 1) {
+    problems.push(
+      `zombieMotion.colorVariance must be between 0 and 1 (got ${String(motion.colorVariance)})`
+    );
+  }
+  nonNegative(motion.bobAmplitude, 'zombieMotion.bobAmplitude', problems);
+  positive(motion.bobFrequency, 'zombieMotion.bobFrequency', problems);
+  nonNegative(motion.attackLungeDistance, 'zombieMotion.attackLungeDistance', problems);
+  positive(motion.attackLungeSeconds, 'zombieMotion.attackLungeSeconds', problems);
 
   const upgradeIds = new Set<string>();
   const categories: UpgradeCategory[] = [
