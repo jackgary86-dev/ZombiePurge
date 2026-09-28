@@ -747,6 +747,21 @@ canvas {
   font-weight: bold;
 }
 
+.credits-section h2 {
+  margin: 0 0 4px;
+  color: #c8402e;
+  font-size: 1rem;
+}
+
+.credits-section ul {
+  margin: 0 0 14px;
+  padding-left: 18px;
+}
+
+.credits-section li {
+  margin-bottom: 2px;
+}
+
 .results-table th {
   color: #c8402e;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);

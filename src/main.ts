@@ -117,10 +117,11 @@ import { CheatConsole } from './ui/CheatConsole';
 import { CoinPopups } from './ui/CoinPopups';
 import { GarageMenu } from './ui/GarageMenu';
 import { Hud } from './ui/Hud';
-import { buildPanel, menuButton, MenuStack, type MenuScreen } from './ui/MenuStack';
+import { MenuStack, type MenuScreen } from './ui/MenuStack';
 import { computeMinimapFrame, Minimap } from './ui/Minimap';
 import {
   createControlsScreen,
+  createCreditsScreen,
   createMainMenu,
   createMapCompleteScreen,
   createPauseMenu,
@@ -489,19 +490,7 @@ async function boot(): Promise<void> {
       menus.reset(storyMapSelectScreen);
     },
   });
-  const credits = simplePanel(
-    'credits',
-    'CREDITS',
-    'ZombiePurge — built by a dad and his son. Made with Three.js, Rapier, TypeScript and Vite. Placeholder art by primitives; real art coming soon.',
-    () => menus.pop()
-  );
-
-  function simplePanel(id: string, title: string, text: string, onBack: () => void): MenuScreen {
-    const { el, body } = buildPanel(id, title, text);
-    body.appendChild(menuButton('Back', onBack));
-    document.body.appendChild(el);
-    return { id, el };
-  }
+  const credits = createCreditsScreen(() => menus.pop());
 
   // ---------- story mode (F2/F3/J3/J5/J9) ----------
   /** Reads a save slot's wallet/story progress without disturbing the live game state. */

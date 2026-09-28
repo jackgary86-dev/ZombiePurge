@@ -28,7 +28,8 @@ export type IconName =
   | 'settings'
   | 'gamepad'
   | 'exit'
-  | 'wrench';
+  | 'wrench'
+  | 'credits';
 
 /**
  * A repeated shape (gear teeth, wheel spokes) rendered once per angle via `transform="rotate"`
@@ -79,6 +80,7 @@ const SHAPES: Record<IconName, string> = {
   gamepad: `<rect x="2.5" y="8.5" width="19" height="9" rx="4.5"/><path d="M7 10.5v5M4.5 13h5" stroke-width="1.8"/><circle cx="16" cy="11.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="18.5" cy="14" r="1.1" fill="currentColor" stroke="none"/>`,
   exit: `<path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M13 8l4 4-4 4M9 12h8"/>`,
   wrench: `<path d="M14.5 3.5a4.5 4.5 0 0 0-5.7 5.4L3.5 14.2a2 2 0 0 0 2.8 2.8l5.3-5.3a4.5 4.5 0 0 0 5.4-5.7l-3 3-2-2z"/>`,
+  credits: `<path d="M12 3.2 14.5 8.5 20.3 9.3 16.1 13.3 17.1 19 12 16.2 6.9 19 7.9 13.3 3.7 9.3 9.5 8.5z"/>`,
 };
 
 /** Renders an icon as a standalone inline `<svg>` string, sized `size`x`size`. */

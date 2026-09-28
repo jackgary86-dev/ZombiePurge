@@ -90,7 +90,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Beating each map's boss and reaching its exit unlocks the next map and shows the Map Complete screen with the new enemies and upgrades
 - [ ] `#map=desertHighway` (and `industrialCity`, `frozenForest`, `quarantineLab`) load directly in Sandbox for a quick look without playing through the story
 
-## M6 – HUD, hit feedback, audio, polish (in progress: G1-G3, H1-H5, I1/I2/I9, I3/I5 partial)
+## M6 – HUD, hit feedback, audio, polish (in progress: G1-G3, H1-H5, I1/I2/I9, J13, I3/I5 partial)
 
 - [ ] The old text HUD is gone: a graphical speed readout, HP/fuel bars (flash red near empty), coins/kills counters that pulse when they change, and a combo badge when chained kills reach x2+
 - [ ] Equip each weapon in turn: the machine gun shows a heat bar that reads OVERHEATED when full, the shotgun/rockets show a magazine count and a reload timer, the flamethrower shows FIRING while held
@@ -107,6 +107,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Drive fast in a straight line: small puffs appear behind the car and fade quickly; their colour matches the current map (tan on Desert Highway, white on Frozen Mountain Forest, grey on the greybox arena) (I9)
 - [ ] Take repeated damage from zombies without repairing: the car body visibly tints darker and picks up dent decals in two stages (dented, then wrecked) as HP drops; repairing in the garage restores the clean look (I3)
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
+- [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
 ### Known quirks (non-blocking)
 

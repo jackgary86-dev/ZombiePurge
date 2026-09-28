@@ -46,7 +46,7 @@ export function createMainMenu(
   const controls = menuButton('', actions.onControls);
   controls.replaceChildren(iconButton('gamepad', 'Controls'));
   const credits = menuButton('', actions.onCredits);
-  credits.replaceChildren(iconButton('combo', 'Credits'));
+  credits.replaceChildren(iconButton('credits', 'Credits'));
   const quit = menuButton('', actions.onQuit);
   quit.replaceChildren(iconButton('exit', 'Quit'));
 
