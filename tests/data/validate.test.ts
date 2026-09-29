@@ -356,6 +356,14 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
         delete c.upgrades.find((u) => u.id === melee.id)!.slot;
       })
     ).toEqual(expect.arrayContaining([expect.stringContaining('is a melee and needs a slot')]));
+    const engineType = cfg().upgrades.find((u) => u.category === 'engineType')!;
+    expect(
+      problems((c) => {
+        delete c.upgrades.find((u) => u.id === engineType.id)!.slot;
+      })
+    ).toEqual(
+      expect.arrayContaining([expect.stringContaining('is a engineType and needs a slot')])
+    );
     expect(problems((c) => (c.upgrades[0].tiers = []))).toEqual(
       expect.arrayContaining([expect.stringContaining('needs at least one tier')])
     );

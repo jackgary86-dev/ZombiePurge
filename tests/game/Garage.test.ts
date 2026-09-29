@@ -204,6 +204,47 @@ describe('D2 Garage purchase & equip logic', () => {
     expect(reloaded.engineTuning).toBe(1);
   });
 
+  it('N2: engine types are a separate slot from the tier ladder, one equipped at a time, stacking with it', () => {
+    const base = getConfig().vehicle;
+    wallet.add(10000);
+    garage.currentMap = 4;
+
+    // Buying the first engine type auto-equips it, like a weapon's first purchase.
+    expect(garage.buy('engine_v8').ok).toBe(true);
+    expect(garage.equippedIn('engine')?.id).toBe('engine_v8');
+    const withV8 = garage.effectiveStats(base);
+    expect(withV8.topSpeed).toBe(base.topSpeed + 10);
+    expect(withV8.acceleration).toBe(base.acceleration + 4);
+    expect(withV8.mass).toBe(base.mass + 200);
+
+    // A second type is owned but not auto-equipped: the slot was already taken.
+    expect(garage.buy('engine_electric').ok).toBe(true);
+    expect(garage.equippedIn('engine')?.id).toBe('engine_v8');
+    expect(garage.effectiveStats(base).mass).toBe(base.mass + 200); // still V8's weight
+
+    // Equipping the owned Electric motor swaps the slot; V8's stats stop applying.
+    expect(garage.equip('engine_electric')).toBe(true);
+    expect(garage.equippedIn('engine')?.id).toBe('engine_electric');
+    const withElectric = garage.effectiveStats(base);
+    expect(withElectric.topSpeed).toBe(base.topSpeed + 4);
+    expect(withElectric.acceleration).toBe(base.acceleration + 9);
+    expect(withElectric.mass).toBe(base.mass - 150); // lighter than stock
+
+    // The tier ladder (D3/N1) stacks on top of whichever type is equipped, unaffected by it.
+    garage.buy('engine'); // tier 1: +6 top speed, +1.5 acceleration
+    const withBoth = garage.effectiveStats(base);
+    expect(withBoth.topSpeed).toBe(base.topSpeed + 4 + 6);
+    expect(withBoth.acceleration).toBe(base.acceleration + 9 + 1.5);
+  });
+
+  it('N2: no engine type owned means stock mass and no type bonus', () => {
+    const base = getConfig().vehicle;
+    const stock = garage.effectiveStats(base);
+    expect(stock.mass).toBe(base.mass);
+    expect(stock.topSpeed).toBe(base.topSpeed);
+    expect(garage.equippedIn('engine')).toBeNull();
+  });
+
   it('persists ownership and loadout, and ignores corrupt saves', () => {
     wallet.add(5000);
     garage.buy('tires');

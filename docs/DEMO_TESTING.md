@@ -109,7 +109,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
-## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1-M5, N1)
+## M7 – Car Customization & Combat Expansion (L1-L8, O1, M1-M5, N1-N2)
 
 - [ ] Garage → Customize tab: a "Paint" section lists 7 colour swatches; Stock Red shows "Equipped" and can't be bought again
 - [ ] Buy a colour you can afford: the button becomes "Equipped", its card gets a gold border, and the car turntable recolours immediately
@@ -149,6 +149,14 @@ Tick items in the PR that closes the milestone.
 - [ ] Adjusting the slider costs no coins and can be changed as many times as you like
 - [ ] DRIVE with the slider tuned toward Top Speed vs. toward Acceleration: the car's actual handling changes to match (noticeably higher top speed, or noticeably snappier off the line)
 - [ ] Leave the Garage and come back (or reload the page): the tuning slider keeps whatever position it was left at
+- [ ] Garage → Engine tab: three more cards appear alongside the tier-ladder Engine card - V8 Engine, Turbo Engine, Electric Motor
+- [ ] Buy V8 Engine: it auto-equips (same as a weapon's first purchase) and the car's exhaust changes from the single stock pipe to a dual chrome pipe at the rear
+- [ ] Buy Turbo Engine too: it's owned but does NOT take over - the V8 stays equipped and its dual exhaust stays showing (the slot was already taken)
+- [ ] Equip Turbo Engine explicitly: the exhaust changes to a single wide pipe, and the V8's stat bonuses stop applying
+- [ ] Buy and equip Electric Motor: the exhaust disappears entirely (no pipe at all)
+- [ ] DRIVE with each engine type equipped in turn: the exhaust in gameplay matches whichever type was equipped in the garage, not just in the garage turntable
+- [ ] Buy/upgrade the regular Engine tier ladder (D3/N1) while an engine type is equipped: both bonuses stack - top speed/acceleration are higher than either one alone
+- [ ] With the V8 equipped, ram a zombie or wall: the car feels heavier/punchier than stock; with Electric equipped, it feels lighter - the `acceleration` stat itself (how fast 0-to-top-speed feels) stays consistent with what the Engine Tuning slider and tier cards show, regardless of which type is equipped
 
 ### Known quirks (non-blocking)
 

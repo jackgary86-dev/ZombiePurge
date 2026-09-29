@@ -116,6 +116,7 @@ const ID_ICON: Partial<Record<string, IconName>> = {
 
 const CATEGORY_ICON: Record<UpgradeCategory, IconName> = {
   engine: 'engine',
+  engineType: 'engine',
   tires: 'tires',
   health: 'health',
   armor: 'armor',

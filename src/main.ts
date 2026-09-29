@@ -598,6 +598,7 @@ async function boot(): Promise<void> {
   /** D2/D3-D7: push the garage's effective stats into the live systems. */
   function applyGarage(): void {
     const s = garage.applyTo(stockVehicle, cfg.vehicle);
+    car.setMass(s.mass);
     carDamage.setPaintColor(garage.selectedCosmetic('paint')?.color ?? 0xc8402e);
     carView.setBumperStyle(garage.selectedCosmetic('bumper')?.id ?? 'bumper_stock');
     carView.setDriverColor(garage.selectedCosmetic('driver')?.color ?? 0x555a60);
@@ -610,6 +611,7 @@ async function boot(): Promise<void> {
     carView.setDoorStyle(garage.selectedCosmetic('door')?.id ?? 'door_stock');
     carView.setDecalStyle(garage.selectedCosmetic('decal')?.id ?? 'decal_none');
     carView.setTireStyle(garage.selectedCosmetic('tire')?.id ?? 'tire_stock');
+    carView.setEngineType(garage.equippedIn('engine')?.id ?? 'engine_stock');
     cfg.vehicle.tires.grip *= map.groundGrip ?? 1; // E7: snow/ice maps corner looser
     effectiveTopSpeed = s.topSpeed;
     effectiveAcceleration = s.acceleration;

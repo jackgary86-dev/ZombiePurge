@@ -149,7 +149,9 @@ describe('J4 GarageMenu DOM', () => {
     const ids = [...menu.el.querySelectorAll<HTMLElement>('.tier-card')].map(
       (c) => c.dataset.upgrade
     );
-    expect(ids).toEqual(['engine']);
+    // N2: the Engine tab also lists the alternative engine types (V8/Turbo/Electric)
+    // alongside the tier ladder.
+    expect(ids).toEqual(['engine', 'engine_v8', 'engine_turbo', 'engine_electric']);
     const repair = menu.el.querySelector<HTMLButtonElement>('.garage-repair')!;
     expect(repair.textContent).toBe('Repair (30)');
     repair.click();

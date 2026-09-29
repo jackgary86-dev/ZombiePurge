@@ -330,6 +330,7 @@ export function collectConfigProblems(config: GameConfig): string[] {
   const upgradeIds = new Set<string>();
   const categories: UpgradeCategory[] = [
     'engine',
+    'engineType',
     'tires',
     'health',
     'armor',
@@ -348,7 +349,10 @@ export function collectConfigProblems(config: GameConfig): string[] {
     upgradeIds.add(u.id);
     if (!categories.includes(u.category))
       problems.push(`${at}.category "${u.category}" is unknown`);
-    if ((u.category === 'weapon' || u.category === 'melee') && !u.slot)
+    if (
+      (u.category === 'weapon' || u.category === 'melee' || u.category === 'engineType') &&
+      !u.slot
+    )
       problems.push(`${at} is a ${u.category} and needs a slot`);
     if (u.tiers.length === 0) problems.push(`${at} needs at least one tier`);
     let lastPrice = 0;

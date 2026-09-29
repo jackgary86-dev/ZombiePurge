@@ -463,6 +463,7 @@ export interface PhysicsConfig {
 
 export type UpgradeCategory =
   | 'engine'
+  | 'engineType'
   | 'tires'
   | 'health'
   | 'armor'
@@ -474,7 +475,7 @@ export type UpgradeCategory =
   | 'radar'
   | 'headlights';
 
-export type WeaponSlot = 'roof' | 'front';
+export type WeaponSlot = 'roof' | 'front' | 'engine';
 
 /** Additive changes to base stats. Multipliers are expressed as fractions (0.1 = +10%). */
 export interface StatModifiers {
@@ -490,6 +491,8 @@ export interface StatModifiers {
   nitroSeconds?: number;
   radarRange?: number;
   headlightRange?: number;
+  /** N2: engine type weight trade-off, added straight onto the vehicle's mass. */
+  mass?: number;
 }
 
 export interface UpgradeTier {
