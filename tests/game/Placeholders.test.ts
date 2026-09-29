@@ -62,4 +62,14 @@ describe('L3/L4 car cosmetics on the placeholder car', () => {
     expect(car.group.children.filter((c) => c.name === 'cosmetic_decal')).toHaveLength(1);
     expect(car.group.getObjectByName('cosmetic_decal')!.children.length).toBeGreaterThan(0);
   });
+
+  it('setTireStyle applies rim/tread trim to every wheel without duplicating it', () => {
+    const car = buildPlaceholderCar(DEFAULT_CONFIG.vehicle);
+    car.setTireStyle('tire_chrome_rim');
+    car.setTireStyle('tire_whitewall');
+    for (const wheel of car.wheels) {
+      expect(wheel.children.filter((c) => c.name === 'tire_trim')).toHaveLength(1);
+      expect(wheel.getObjectByName('tire_trim')!.children.length).toBeGreaterThan(0);
+    }
+  });
 });

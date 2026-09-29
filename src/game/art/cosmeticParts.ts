@@ -5,6 +5,7 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
+  Object3D,
   SphereGeometry,
 } from 'three';
 
@@ -36,6 +37,10 @@ const skullMat = new MeshStandardMaterial({ color: 0xe8e4d8, roughness: 0.5 });
 const skullSocketMat = new MeshStandardMaterial({ color: 0x101010, roughness: 0.8 });
 const numberDiscMat = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
 const numberBarMat = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5 });
+const chromeRimMat = new MeshStandardMaterial({ color: 0xd8d8dc, metalness: 1, roughness: 0.1 });
+const whitewallMat = new MeshStandardMaterial({ color: 0xe8e4d8, roughness: 0.6 });
+const darkRimMat = new MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6 });
+const treadLugMat = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 1 });
 
 function buildBumper(optionId: string, he: { x: number; y: number; z: number }): Group {
   const g = new Group();
@@ -209,4 +214,64 @@ export function syncDecalStyle(
   const old = carGroup.getObjectByName(COSMETIC_PART_NAMES.decal);
   if (old) carGroup.remove(old);
   carGroup.add(buildDecal(optionId, he));
+}
+
+const TIRE_TRIM_NAME = 'tire_trim';
+
+/**
+ * L8: rim/tread trim for one wheel, in the wheel mesh's own local space so it automatically
+ * follows that wheel's steer/spin transform - no separate per-frame sync needed. The wheel
+ * geometry is a cylinder rotated so its round faces point along local X (see
+ * `buildPlaceholderCar`'s wheelGeometry), so every disc here shares that same orientation.
+ */
+function buildTireTrim(optionId: string, radius: number): Group {
+  const g = new Group();
+  g.name = TIRE_TRIM_NAME;
+  switch (optionId) {
+    case 'tire_chrome_rim': {
+      const rim = new Mesh(
+        new CylinderGeometry(radius * 0.5, radius * 0.5, 0.32, 14),
+        chromeRimMat
+      );
+      rim.rotation.z = Math.PI / 2;
+      g.add(rim);
+      break;
+    }
+    case 'tire_whitewall': {
+      const whitewall = new Mesh(
+        new CylinderGeometry(radius * 0.82, radius * 0.82, 0.31, 18),
+        whitewallMat
+      );
+      whitewall.rotation.z = Math.PI / 2;
+      g.add(whitewall);
+      const rim = new Mesh(new CylinderGeometry(radius * 0.5, radius * 0.5, 0.33, 14), darkRimMat);
+      rim.rotation.z = Math.PI / 2;
+      g.add(rim);
+      break;
+    }
+    case 'tire_offroad_tread': {
+      const lugCount = 8;
+      for (let i = 0; i < lugCount; i++) {
+        const angle = (i / lugCount) * Math.PI * 2;
+        const lug = new Mesh(new BoxGeometry(0.3, 0.08, 0.08), treadLugMat);
+        lug.position.set(0, Math.sin(angle) * radius, Math.cos(angle) * radius);
+        lug.rotation.x = angle;
+        lug.castShadow = true;
+        g.add(lug);
+      }
+      break;
+    }
+    default:
+      break; // tire_stock / unknown: no added trim, just the plain tire
+  }
+  return g;
+}
+
+/** Rebuilds every wheel's rim/tread trim to match the selected style. */
+export function syncTireStyle(wheels: Object3D[], optionId: string, radius: number): void {
+  for (const wheel of wheels) {
+    const old = wheel.getObjectByName(TIRE_TRIM_NAME);
+    if (old) wheel.remove(old);
+    wheel.add(buildTireTrim(optionId, radius));
+  }
 }

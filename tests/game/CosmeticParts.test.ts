@@ -5,6 +5,7 @@ import {
   syncBumperStyle,
   syncDecalStyle,
   syncDoorStyle,
+  syncTireStyle,
 } from '../../src/game/art';
 
 const HE = { x: 1, y: 0.5, z: 2 };
@@ -133,5 +134,41 @@ describe('L7 cosmetic decals', () => {
     syncDecalStyle(car, 'decal_flames', HE);
     syncDecalStyle(car, 'decal_number', HE);
     expect(car.children.filter((c) => c.name === COSMETIC_PART_NAMES.decal)).toHaveLength(1);
+  });
+});
+
+describe('L8 cosmetic tire trim', () => {
+  const RADIUS = 0.35;
+
+  it('stock adds no trim - the plain tire is the stock look', () => {
+    const wheels = [new Group(), new Group()];
+    syncTireStyle(wheels, 'tire_stock', RADIUS);
+    for (const w of wheels) expect(w.children[0].children).toHaveLength(0);
+  });
+
+  it('applies the same trim to every wheel passed in', () => {
+    const wheels = [new Group(), new Group(), new Group(), new Group()];
+    syncTireStyle(wheels, 'tire_chrome_rim', RADIUS);
+    for (const w of wheels) expect(w.children[0].children).toHaveLength(1);
+  });
+
+  it('whitewall adds both a whitewall ring and a rim disc', () => {
+    const wheels = [new Group()];
+    syncTireStyle(wheels, 'tire_whitewall', RADIUS);
+    expect(wheels[0].children[0].children).toHaveLength(2);
+  });
+
+  it('off-road tread adds several lugs around the circumference', () => {
+    const wheels = [new Group()];
+    syncTireStyle(wheels, 'tire_offroad_tread', RADIUS);
+    expect(wheels[0].children[0].children.length).toBeGreaterThan(4);
+  });
+
+  it('re-syncing a wheel never duplicates its trim part', () => {
+    const wheels = [new Group()];
+    syncTireStyle(wheels, 'tire_stock', RADIUS);
+    syncTireStyle(wheels, 'tire_chrome_rim', RADIUS);
+    syncTireStyle(wheels, 'tire_whitewall', RADIUS);
+    expect(wheels[0].children).toHaveLength(1);
   });
 });

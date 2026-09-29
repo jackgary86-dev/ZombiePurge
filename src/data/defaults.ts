@@ -490,6 +490,16 @@ export const DEFAULT_CONFIG: GameConfig = {
         { id: 'decal_number', label: 'Number Roundel', price: 150, color: 0xffffff },
       ],
     },
+    {
+      id: 'tire',
+      label: 'Tires',
+      options: [
+        { id: 'tire_stock', label: 'Stock', price: 0, color: 0x2a2a2a },
+        { id: 'tire_chrome_rim', label: 'Chrome Rim', price: 200, color: 0xd8d8dc },
+        { id: 'tire_whitewall', label: 'Whitewall', price: 150, color: 0xe8e4d8 },
+        { id: 'tire_offroad_tread', label: 'Off-Road Tread', price: 250, color: 0x1a1a1a },
+      ],
+    },
   ],
   maps: [
     {

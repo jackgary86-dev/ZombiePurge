@@ -599,6 +599,7 @@ async function boot(): Promise<void> {
     );
     carView.setDoorStyle(garage.selectedCosmetic('door')?.id ?? 'door_stock');
     carView.setDecalStyle(garage.selectedCosmetic('decal')?.id ?? 'decal_none');
+    carView.setTireStyle(garage.selectedCosmetic('tire')?.id ?? 'tire_stock');
     cfg.vehicle.tires.grip *= map.groundGrip ?? 1; // E7: snow/ice maps corner looser
     effectiveTopSpeed = s.topSpeed;
     effectiveAcceleration = s.acceleration;

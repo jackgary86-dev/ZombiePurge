@@ -41,6 +41,11 @@ with from the initial scaffold.
   Number Roundel), each a small mirrored primitive cluster on its own named part
   (`cosmetic_decal`) via a new `syncDecalStyle()`. Lives independently of the body's paint
   material (L2), so paint and a decal can always be combined freely.
+- **L8** A seventh and final Customize category, Tires: 4 rim/tread looks (Stock, Chrome Rim,
+  Whitewall, Off-Road Tread) via a new `syncTireStyle()`. Unlike every other category, the trim
+  is added as a child of each wheel mesh itself (in the wheel's own local space) rather than the
+  car body group, so it automatically follows each wheel's steer/spin transform with no extra
+  per-frame sync code. Independent of the D4 tire-grip stat upgrade. Completes L1-L8.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 
