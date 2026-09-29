@@ -151,6 +151,11 @@ export function collectConfigProblems(config: GameConfig): string[] {
     positive(r.reloadSeconds, `combat.rockets[${i}].reloadSeconds`, problems);
     positive(r.fireInterval, `combat.rockets[${i}].fireInterval`, problems);
   });
+  if (config.combat.spikes.length === 0) problems.push('combat.spikes needs at least one tier');
+  config.combat.spikes.forEach((m, i) => {
+    positive(m.damage, `combat.spikes[${i}].damage`, problems);
+    nonNegative(m.knockback, `combat.spikes[${i}].knockback`, problems);
+  });
   nonNegative(config.combat.runOverMinSpeed, 'combat.runOverMinSpeed', problems);
   positive(config.combat.runOverDamageFactor, 'combat.runOverDamageFactor', problems);
   positive(config.combat.impactFullSpeed, 'combat.impactFullSpeed', problems);
@@ -315,6 +320,7 @@ export function collectConfigProblems(config: GameConfig): string[] {
     'fuel',
     'weapon',
     'ram',
+    'melee',
     'nitro',
     'radar',
     'headlights',
@@ -326,7 +332,8 @@ export function collectConfigProblems(config: GameConfig): string[] {
     upgradeIds.add(u.id);
     if (!categories.includes(u.category))
       problems.push(`${at}.category "${u.category}" is unknown`);
-    if (u.category === 'weapon' && !u.slot) problems.push(`${at} is a weapon and needs a slot`);
+    if ((u.category === 'weapon' || u.category === 'melee') && !u.slot)
+      problems.push(`${at} is a ${u.category} and needs a slot`);
     if (u.tiers.length === 0) problems.push(`${at} needs at least one tier`);
     let lastPrice = 0;
     u.tiers.forEach((t, ti) => {

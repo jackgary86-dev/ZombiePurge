@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Group } from 'three';
 import { getConfig, resetConfig } from '../../src/data/config';
-import { PART_NAMES, syncUpgradeParts } from '../../src/game/art';
+import { PART_NAMES, syncMeleeWeapon, syncUpgradeParts } from '../../src/game/art';
 import { Wallet } from '../../src/game/economy';
 import { Garage } from '../../src/game/shop';
 
@@ -66,5 +66,35 @@ describe('D14 upgrades visible on the car', () => {
     syncUpgradeParts(car, garage, getConfig().vehicle);
     syncUpgradeParts(car, garage, getConfig().vehicle);
     expect(car.children.filter((c) => c.name === PART_NAMES.armor)).toHaveLength(1);
+  });
+});
+
+describe('M1/M2 melee weapon visible on the car', () => {
+  beforeEach(() => resetConfig());
+
+  it('shows nothing when no melee weapon is the equipped front weapon', () => {
+    const car = new Group();
+    syncMeleeWeapon(car, undefined, 0, getConfig().vehicle);
+    expect(car.getObjectByName(PART_NAMES.melee)).toBeUndefined();
+    syncMeleeWeapon(car, 'flamethrower', 1, getConfig().vehicle);
+    expect(car.getObjectByName(PART_NAMES.melee)).toBeUndefined();
+  });
+
+  it('shows a spike cluster that grows with tier once spikes is the equipped front weapon', () => {
+    const car = new Group();
+    syncMeleeWeapon(car, 'spikes', 1, getConfig().vehicle);
+    const tier1Count = car.getObjectByName(PART_NAMES.melee)!.children.length;
+    expect(tier1Count).toBeGreaterThan(0);
+
+    syncMeleeWeapon(car, 'spikes', 3, getConfig().vehicle);
+    const tier3Count = car.getObjectByName(PART_NAMES.melee)!.children.length;
+    expect(tier3Count).toBeGreaterThan(tier1Count);
+  });
+
+  it('re-syncing never duplicates the melee part', () => {
+    const car = new Group();
+    syncMeleeWeapon(car, 'spikes', 1, getConfig().vehicle);
+    syncMeleeWeapon(car, 'spikes', 2, getConfig().vehicle);
+    expect(car.children.filter((c) => c.name === PART_NAMES.melee)).toHaveLength(1);
   });
 });

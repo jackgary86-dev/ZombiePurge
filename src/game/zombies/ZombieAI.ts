@@ -82,6 +82,13 @@ export function updateZombieAI(
     return { damage: 0 };
   }
 
+  // M1: a melee-weapon knockback shove is in progress - let it carry the zombie rather than
+  // immediately overriding its velocity with normal AI movement.
+  if (z.knockbackTimeLeft > 0) {
+    z.knockbackTimeLeft = Math.max(0, z.knockbackTimeLeft - dt);
+    return { damage: 0 };
+  }
+
   const pos = z.getPosition();
   toCar.copy(senses.carPosition).sub(pos);
   toCar.y = 0;

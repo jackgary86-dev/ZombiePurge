@@ -202,6 +202,11 @@ export const DEFAULT_CONFIG: GameConfig = {
         fireInterval: 0.45,
       },
     ],
+    spikes: [
+      { damage: 15, knockback: 4 },
+      { damage: 30, knockback: 6 },
+      { damage: 50, knockback: 9 },
+    ],
     runOverMinSpeed: 3,
     runOverDamageFactor: 0.01,
     impactDamageToCar: {
@@ -380,6 +385,19 @@ export const DEFAULT_CONFIG: GameConfig = {
           modifiers: { ramDamageMultiplier: 1, selfDamageMultiplier: -0.5 },
           label: 'Plough blade',
         },
+      ],
+    },
+    {
+      id: 'spikes',
+      category: 'melee',
+      slot: 'front',
+      name: 'Spike Cluster',
+      description:
+        'A dedicated spike weapon: flat contact damage and a knockback shove, on top of whatever run-over damage speed already deals.',
+      tiers: [
+        { tier: 1, price: 250, unlockMap: 1, modifiers: {}, label: 'Short spikes' },
+        { tier: 2, price: 600, unlockMap: 2, modifiers: {}, label: 'Long spikes' },
+        { tier: 3, price: 1200, unlockMap: 3, modifiers: {}, label: 'Spike ram' },
       ],
     },
     {

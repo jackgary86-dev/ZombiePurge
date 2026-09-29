@@ -44,6 +44,7 @@ export const CATEGORY_TABS: { id: UpgradeCategory | 'all' | 'customize'; label: 
   { id: 'tires', label: 'Tires' },
   { id: 'fuel', label: 'Gas' },
   { id: 'ram', label: 'Ram' },
+  { id: 'melee', label: 'Melee' },
   { id: 'nitro', label: 'Utility' },
   { id: 'customize', label: 'Customize' },
 ];

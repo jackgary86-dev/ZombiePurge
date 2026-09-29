@@ -139,6 +139,15 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     expect(problems((c) => (c.combat.rockets[0].splashRadius = 0))).toContain(
       'combat.rockets[0].splashRadius must be a positive number (got 0)'
     );
+    expect(problems((c) => (c.combat.spikes = []))).toContain(
+      'combat.spikes needs at least one tier'
+    );
+    expect(problems((c) => (c.combat.spikes[0].damage = 0))).toContain(
+      'combat.spikes[0].damage must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.combat.spikes[0].knockback = -1))).toContain(
+      'combat.spikes[0].knockback must be zero or greater (got -1)'
+    );
     expect(problems((c) => (c.combat.runOverDamageFactor = 0))).toContain(
       'combat.runOverDamageFactor must be a positive number (got 0)'
     );
@@ -322,6 +331,12 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
         delete c.upgrades.find((u) => u.id === weapon.id)!.slot;
       })
     ).toEqual(expect.arrayContaining([expect.stringContaining('is a weapon and needs a slot')]));
+    const melee = cfg().upgrades.find((u) => u.category === 'melee')!;
+    expect(
+      problems((c) => {
+        delete c.upgrades.find((u) => u.id === melee.id)!.slot;
+      })
+    ).toEqual(expect.arrayContaining([expect.stringContaining('is a melee and needs a slot')]));
     expect(problems((c) => (c.upgrades[0].tiers = []))).toEqual(
       expect.arrayContaining([expect.stringContaining('needs at least one tier')])
     );

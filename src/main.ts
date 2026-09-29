@@ -38,6 +38,7 @@ import {
   RocketViews,
   ShotTracers,
   SkidMarkView,
+  syncMeleeWeapon,
   syncUpgradeParts,
   TurretView,
   ZombieInstances,
@@ -643,6 +644,15 @@ async function boot(): Promise<void> {
       if (flameView) scene.remove(flameView.mesh);
       flameView = null;
     }
+    if (front === 'spikes') {
+      const tier = tierOf(front, cfg.combat.spikes);
+      combat.meleeDamage = tier.damage;
+      combat.meleeKnockback = tier.knockback;
+    } else {
+      combat.meleeDamage = 0;
+      combat.meleeKnockback = 0;
+    }
+    syncMeleeWeapon(carView.group, front, garage.ownedTier('spikes'), cfg.vehicle);
     syncUpgradeParts(carView.group, garage, cfg.vehicle);
   }
 

@@ -14,6 +14,7 @@ export const PART_NAMES = {
   nitro: 'nitro_bottles',
   radar: 'radar_dish',
   headlights: 'headlight_bar',
+  melee: 'mount_front_melee',
 } as const;
 
 const plate = new MeshStandardMaterial({ color: 0x6b6f75, metalness: 0.6, roughness: 0.5 });
@@ -25,6 +26,7 @@ const lamp = new MeshStandardMaterial({
   emissive: 0xffe08a,
   emissiveIntensity: 0.6,
 });
+const spikeSteel = new MeshStandardMaterial({ color: 0x7a7e84, metalness: 0.7, roughness: 0.4 });
 
 export function syncUpgradeParts(carGroup: Group, garage: Garage, cfg: VehicleConfig): void {
   for (const name of Object.values(PART_NAMES)) {
@@ -140,4 +142,39 @@ export function syncUpgradeParts(carGroup: Group, garage: Garage, cfg: VehicleCo
     g.add(bar);
     carGroup.add(g);
   }
+}
+
+/**
+ * M1/M2: the melee weapon mounted in the front slot, if any (spikes/saw/hammer all share this
+ * slot with the ram and flamethrower - only one front-mounted weapon shows at a time). Unlike
+ * `syncUpgradeParts`'s owned-tier gating, this is gated on `weaponId` already being the one
+ * equipped in 'front' (the caller looks that up), so it never visually overlaps a ram or
+ * flamethrower the player owns but isn't currently using.
+ */
+export function syncMeleeWeapon(
+  carGroup: Group,
+  weaponId: string | undefined,
+  tier: number,
+  cfg: VehicleConfig
+): void {
+  const old = carGroup.getObjectByName(PART_NAMES.melee);
+  if (old) carGroup.remove(old);
+  if (weaponId !== 'spikes' || tier <= 0) return;
+  const he = cfg.chassisHalfExtents;
+  const g = new Group();
+  g.name = PART_NAMES.melee;
+  const spikeCount = 3 + tier * 2;
+  const spikeLength = 0.3 + tier * 0.15;
+  for (let i = 0; i < spikeCount; i++) {
+    const spike = new Mesh(new CylinderGeometry(0.01, 0.05, spikeLength, 6), spikeSteel);
+    spike.rotation.x = Math.PI / 2;
+    spike.position.set(
+      -he.x + ((i + 0.5) * he.x * 2) / spikeCount,
+      -he.y * 0.15,
+      he.z + spikeLength / 2
+    );
+    spike.castShadow = true;
+    g.add(spike);
+  }
+  carGroup.add(g);
 }

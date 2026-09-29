@@ -109,7 +109,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
-## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1)
+## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1/M2)
 
 - [ ] Garage → Customize tab: a "Paint" section lists 7 colour swatches; Stock Red shows "Equipped" and can't be bought again
 - [ ] Buy a colour you can afford: the button becomes "Equipped", its card gets a gold border, and the car turntable recolours immediately
@@ -129,6 +129,9 @@ Tick items in the PR that closes the milestone.
 - [ ] Equip a decal alongside a non-stock paint colour: both show at once - the decal never gets overwritten or hidden by paint (L2)
 - [ ] Garage → Customize tab: a "Tires" section lists Stock/Chrome Rim/Whitewall/Off-Road Tread; equipping a non-stock style visibly changes the wheels (a rim disc, a white ring, or tread lugs)
 - [ ] DRIVE with a non-stock tire style equipped: it's still visible on the wheels in gameplay, not just in the garage, and follows each wheel's steering/spin correctly
+- [ ] Garage → Melee tab: a "Spike Cluster" card lists 3 tiers; buying tier 1 auto-equips it into the front slot (same slot as Ram/Flamethrower) and a spike cluster appears at the front of the car
+- [ ] DRIVE and bump into a zombie with Spikes equipped, at low/no speed: the zombie still takes damage and gets knocked back, unlike a bare run-over which needs real speed to hurt anything
+- [ ] Buy the Front Ram or Flamethrower after owning Spikes: it takes over the front slot and the spike cluster disappears (only one front-mounted weapon shows at a time)
 
 ### Known quirks (non-blocking)
 

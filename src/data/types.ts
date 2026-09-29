@@ -401,12 +401,23 @@ export interface RocketTierStats {
   fireInterval: number;
 }
 
+/** M1: a melee weapon's per-tier stats - flat contact damage plus a knockback push,
+ * both independent of the run-over speed-based damage the Front Ram (D12) scales. */
+export interface MeleeTierStats {
+  /** Flat bonus damage dealt to a zombie on any car-to-zombie contact, regardless of speed. */
+  damage: number;
+  /** Horizontal speed (m/s) imparted to the zombie, away from the car, on contact. */
+  knockback: number;
+}
+
 export interface CombatConfig {
   /** Per-tier stats for the machine gun (index 0 = tier 1). */
   machineGun: GunTierStats[];
   flamethrower: FlamethrowerTierStats[];
   shotgun: ShotgunTierStats[];
   rockets: RocketTierStats[];
+  /** M2: the first melee weapon, front-mounted like the ram/flamethrower. */
+  spikes: MeleeTierStats[];
   /** Below this relative speed (m/s) a collision only pushes the zombie. */
   runOverMinSpeed: number;
   /** Zombie damage = relativeSpeed * carMass * this factor. */
@@ -430,6 +441,7 @@ export type UpgradeCategory =
   | 'fuel'
   | 'weapon'
   | 'ram'
+  | 'melee'
   | 'nitro'
   | 'radar'
   | 'headlights';

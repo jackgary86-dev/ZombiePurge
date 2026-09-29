@@ -94,7 +94,7 @@ assets/            # 3D models, textures, sounds
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                             |
 | **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                              |
 | **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
-| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L8, O1 done - full garage cosmetics; M1–M5 melee weapons, N1–N2 engine tuning/replacement remaining)                              |
+| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L8, O1, M1/M2 done; M3–M5 melee weapons, N1–N2 engine tuning/replacement remaining)                                               |
 
 ## What's Built So Far
 
@@ -152,6 +152,7 @@ assets/            # 3D models, textures, sounds
 - **L6** Door style selection: 3 cosmetic door-trim looks (stock/flush, paneled trim, chrome trim), mirrored on both sides of the body, independent of the door's underlying shape
 - **L7** Decals: 5 body-side decal options (none, flames, racing stripes, skull, number roundel), each a small mirrored primitive cluster on its own named part - stacks independently of paint (L2) since it never touches the body material
 - **L8** Tire cosmetic selection: 4 rim/tread looks (stock, chrome rim, whitewall, off-road tread), applied as trim primitives that ride along inside each wheel mesh's own local space - independent of the D4 tire-grip stat upgrade. Completes the full L1-L8 garage cosmetics set.
+- **M1/M2** A new Melee weapon slot/category (front-mounted, alongside the ram and flamethrower) plus its first weapon, the Spike Cluster: flat contact damage and a knockback shove on every car-zombie touch, independent of the speed-scaled run-over damage the Front Ram (D12) multiplies. A growing spike-cluster model shows on the front once equipped.
 
 ## Development
 

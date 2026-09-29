@@ -46,6 +46,19 @@ with from the initial scaffold.
   is added as a child of each wheel mesh itself (in the wheel's own local space) rather than the
   car body group, so it automatically follows each wheel's steer/spin transform with no extra
   per-frame sync code. Independent of the D4 tire-grip stat upgrade. Completes L1-L8.
+- **M1** A new `melee` upgrade category/slot alongside the existing `weapon`/`ram` categories -
+  melee weapons mount in the front slot (shared with the ram and flamethrower, so only one shows
+  at a time) and deal damage on car-to-zombie contact via a new `MeleeTierStats` shape
+  (`damage`/`knockback`) on `CombatConfig`, distinct from the ram's speed-scaled multiplier.
+  `RunOverSystem` gained `meleeDamage`/`meleeKnockback` fields: melee damage is flat and applies
+  even to a near-stationary car, and knockback sets the zombie's velocity away from the car plus
+  a new `Zombie.knockbackTimeLeft` timer that makes `updateZombieAI` briefly stop overriding its
+  movement, so the shove actually carries it a visible distance.
+- **M2** The first melee weapon, Spike Cluster (3 tiers, config-driven damage/knockback curve). A
+  spike-cluster model grows with tier once it's the equipped front weapon, via a new
+  `syncMeleeWeapon()` gated on equip status (not just ownership) so it never visually overlaps an
+  owned-but-unequipped ram or flamethrower. A new "Melee" Garage tab lists it like any other
+  weapon category.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 
