@@ -16,6 +16,10 @@ export interface ImpactEvent {
 }
 
 const relative = new Vector3();
+const knockbackDir = new Vector3();
+
+/** M1: seconds a zombie ignores its own AI movement after a melee knockback shove. */
+const KNOCKBACK_STUN_SECONDS = 0.35;
 
 /**
  * B4/B5: turns car-zombie contacts into damage. Impact damage to the zombie is
@@ -27,6 +31,11 @@ export class RunOverSystem {
   damageMultiplier = 1;
   /** From the Front Ram upgrade: scales impact damage the car takes. */
   selfDamageMultiplier = 1;
+  /** M1: flat bonus damage from an equipped front-mounted melee weapon (0 = none equipped),
+   *  dealt on every contact regardless of speed - unlike the ram's speed-scaled multiplier. */
+  meleeDamage = 0;
+  /** M1: horizontal knockback speed (m/s) from an equipped melee weapon (0 = none). */
+  meleeKnockback = 0;
 
   constructor(
     private readonly physics: PhysicsWorld,
@@ -76,7 +85,22 @@ export class RunOverSystem {
       damageToZombie =
         relativeSpeed * this.carMass * this.cfg.runOverDamageFactor * this.damageMultiplier;
     }
+    // M1: an equipped melee weapon adds flat damage on every contact, even a near-stationary one.
+    damageToZombie += this.meleeDamage;
     const killed = damageToZombie > 0 ? zombie.takeDamage(damageToZombie) : false;
+
+    if (this.meleeKnockback > 0 && !killed) {
+      knockbackDir.copy(zombie.getPosition()).sub(this.car.getPosition());
+      knockbackDir.y = 0;
+      if (knockbackDir.lengthSq() > 1e-6) {
+        knockbackDir.normalize();
+        zombie.setHorizontalVelocity(
+          knockbackDir.x * this.meleeKnockback,
+          knockbackDir.z * this.meleeKnockback
+        );
+        zombie.knockbackTimeLeft = KNOCKBACK_STUN_SECONDS;
+      }
+    }
 
     const rawCarDamage =
       this.cfg.impactDamageToCar[zombie.rank] *

@@ -121,4 +121,18 @@ describe('Zombie AI', () => {
     run(z, DEFAULT_ZOMBIE_AI.deathLinger);
     expect(canDespawnCorpse(z)).toBe(true);
   });
+
+  it('M1: a melee-weapon knockback shove suppresses AI movement until it counts down', () => {
+    const z = pool.spawn('walker', { x: 0, y: 0, z: 10 })!;
+    run(z, 1); // reach 'chase' so the AI would otherwise be actively steering it
+    expect(z.state).toBe('chase');
+    z.setHorizontalVelocity(0, -6); // simulate the knockback shove already applied
+    z.knockbackTimeLeft = 0.35;
+    const result = updateZombieAI(z, DT, senses);
+    expect(result.damage).toBe(0);
+    expect(z.state).toBe('chase'); // FSM state untouched while staggered
+    expect(z.getSpeed()).toBeGreaterThan(5); // AI hasn't overridden the shove's velocity
+    for (let i = 0; i < 0.35 / DT + 1; i++) updateZombieAI(z, DT, senses);
+    expect(z.knockbackTimeLeft).toBe(0);
+  });
 });

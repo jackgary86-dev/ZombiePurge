@@ -16,6 +16,7 @@ export type IconName =
   | 'tires'
   | 'armor'
   | 'ram'
+  | 'melee'
   | 'nitro'
   | 'radar'
   | 'headlights'
@@ -68,6 +69,7 @@ const SHAPES: Record<IconName, string> = {
   tires: `<circle cx="12" cy="12" r="9" stroke-width="2.6"/><circle cx="12" cy="12" r="2.6"/>${spokes()}`,
   armor: `<path d="M12 2.5 5 5.5v6c0 5.2 3 8.3 7 9.5 4-1.2 7-4.3 7-9.5v-6z"/>`,
   ram: `<path d="M3.5 8 9.5 12 3.5 16M13 8l6 4-6 4"/>`,
+  melee: `<path d="M12 2 14 9 21 12 14 15 12 22 10 15 3 12 10 9z" fill="currentColor" stroke="none"/>`,
   nitro: `<path d="M12 2.5c2.2 4-3.2 5.4-3.2 9.7a3.2 3.2 0 0 0 6.4 0c0-2.1-1.1-3.2-1.1-5.3 2.1 1.1 3.4 4.3 3.4 6.7a5.5 5.5 0 0 1-11 0c0-5.6 3.4-6.7 5.5-11.1z" fill="currentColor" stroke="none"/>`,
   radar: `<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5" stroke-width="1.2"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><path d="M12 12 18.5 7.3" stroke-width="1.6"/>`,
   headlights: `<circle cx="7.5" cy="12" r="3" fill="currentColor" stroke="none"/><path d="M12 9.5 21 6M12 12h9M12 14.5 21 18" stroke-width="2"/>`,
@@ -100,6 +102,7 @@ const ID_ICON: Partial<Record<string, IconName>> = {
   shotgun: 'shotgun',
   rockets: 'rockets',
   flamethrower: 'flamethrower',
+  spikes: 'melee',
 };
 
 const CATEGORY_ICON: Record<UpgradeCategory, IconName> = {
@@ -110,6 +113,7 @@ const CATEGORY_ICON: Record<UpgradeCategory, IconName> = {
   fuel: 'fuel',
   weapon: 'weapon',
   ram: 'ram',
+  melee: 'melee',
   nitro: 'nitro',
   radar: 'radar',
   headlights: 'headlights',

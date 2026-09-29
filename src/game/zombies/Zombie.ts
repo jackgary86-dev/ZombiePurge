@@ -31,6 +31,9 @@ export class Zombie {
   burnDamagePerSecond = 0;
   /** F4: time left before a boss can slam again (see BossSlam.ts); unused without cfg.slam. */
   slamCooldown = 0;
+  /** M1: seconds left of a melee-weapon knockback shove; the AI skips overriding velocity
+   *  while this is > 0, so the shove actually carries the zombie a visible distance. */
+  knockbackTimeLeft = 0;
   /** Set by the AI each update; read by the renderer for facing. */
   readonly facing = new Vector3(0, 0, 1);
   /** Velocity captured just before the last physics step (see RunOverSystem.beforeStep). */
@@ -70,6 +73,7 @@ export class Zombie {
     this.burnTimeLeft = 0;
     this.burnDamagePerSecond = 0;
     this.slamCooldown = cfg.slam ? cfg.slam.cooldown * 0.5 : 0;
+    this.knockbackTimeLeft = 0;
     this.wanderHeading = Math.random() * Math.PI * 2;
     this.active = true;
     this.body.setEnabled(true);

@@ -112,4 +112,42 @@ describe('RunOverSystem (B4 run-over kills, B5 car damage)', () => {
     expect(car.isDestroyed()).toBe(true);
     expect(car.applyDamage(10)).toBe(0);
   });
+
+  describe('M1 melee weapon contact damage', () => {
+    it('deals flat bonus damage on contact even with the car stationary', () => {
+      const z = pool.spawn('walker', { x: 0, y: 0, z: 1 })!;
+      combat.meleeDamage = 15;
+      combat.beforeStep();
+      const event = combat.resolve(z);
+      expect(event.damageToZombie).toBeGreaterThanOrEqual(15);
+      expect(z.hp).toBe(getConfig().zombies.walker.hp - event.damageToZombie);
+    });
+
+    it('does nothing extra when no melee weapon is equipped (the default)', () => {
+      const z = pool.spawn('walker', { x: 0, y: 0, z: 1 })!;
+      combat.beforeStep();
+      const event = combat.resolve(z);
+      expect(event.damageToZombie).toBe(0);
+    });
+
+    it('knocks the zombie back away from the car and staggers its AI briefly', () => {
+      const z = pool.spawn('walker', { x: 0, y: 0, z: 3 })!;
+      combat.meleeKnockback = 5;
+      combat.beforeStep();
+      combat.resolve(z);
+      const v = z.body.linvel();
+      expect(v.z).toBeCloseTo(5, 1); // car sits at z=0, zombie at z=3: pushed further away (+z)
+      expect(z.knockbackTimeLeft).toBeGreaterThan(0);
+    });
+
+    it('a killing melee hit does not also knock the (now dead) zombie back', () => {
+      const z = pool.spawn('walker', { x: 0, y: 0, z: 3 })!;
+      combat.meleeDamage = 9999;
+      combat.meleeKnockback = 5;
+      combat.beforeStep();
+      const event = combat.resolve(z);
+      expect(event.killed).toBe(true);
+      expect(z.knockbackTimeLeft).toBe(0);
+    });
+  });
 });
