@@ -7,6 +7,29 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - K5: PR preview demos
+
+- **K5** Every pull request now gets its own preview link, built and published by a new
+  `.github/workflows/preview.yml` on every push to the PR: `npm run build` with a per-PR
+  `BASE_PATH` (`/ZombiePurge/pr-<number>/`), then published into that subfolder on the
+  `gh-pages` branch by the new `scripts/gh-pages-publish.sh` (also used by `deploy.yml` to
+  mirror main's own build onto that branch's root, so both coexist without clobbering each
+  other). A bot comment on the PR carries the link and updates in place on every push rather
+  than piling up new comments; closing/merging the PR removes its subfolder
+  (`scripts/gh-pages-remove.sh`).
+  This only actually serves anything once the repo's GitHub Pages source is switched from
+  "GitHub Actions" (the current live-demo mechanism, `actions/deploy-pages` - completely
+  unaffected by any of this) to "Deploy from a branch: `gh-pages` / (root)" - a one-time
+  manual step in Settings, not something this change does on its own, so the live main-branch
+  demo can't be affected by anything here landing. See `README.md`'s Development section for
+  that step.
+  The publish/remove scripts' git logic (first-time `gh-pages` bootstrap as an orphan branch,
+  a subfolder publish never touching sibling subfolders or the branch root, idempotent no-ops
+  when content is unchanged, and clean removal) was exercised end-to-end against a local
+  scratch repo before relying on it in CI - it caught a real bug (the root-publish case was
+  `rm -rf`-ing the whole clone, `.git` included, since the target path equalled the clone root)
+  that a code read alone wouldn't have caught.
+
 ## 0.7.0 - M7: Car Customization & Combat Expansion
 
 - **L1** A `carCustomization` data model (`GameConfig.cosmetics`) separate from the tiered stat

@@ -1,0 +1,74 @@
+name: PR preview
+
+# K5: every pull request gets its own preview link so changes can be played before
+# merging. Builds with a per-PR BASE_PATH and publishes into pr-<number>/ on the
+# gh-pages branch (never touching main's own root build there - see deploy.yml),
+# then comments the link on the PR. The link only actually serves anything once
+# this repo's Pages source is switched to "Deploy from a branch: gh-pages / (root)"
+# - see README.md's Development section for that one-time, manual step.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build for the preview subfolder
+        run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
+          BUILD_HASH: ${{ github.event.pull_request.head.sha }}
+          BUILD_NUMBER: pr-${{ github.event.pull_request.number }}
+      - name: Publish to gh-pages/pr-<number>/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          scripts/gh-pages-publish.sh \
+            "pr-${{ github.event.pull_request.number }}" \
+            dist \
+            "Preview for PR #${{ github.event.pull_request.number }} @ ${{ github.event.pull_request.head.sha }}"
+      - name: Comment the preview link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- k5-pr-preview -->';
+            const url = `https://${context.repo.owner}.github.io/${context.repo.repo}/pr-${context.issue.number}/`;
+            const sha = context.payload.pull_request.head.sha.substring(0, 7);
+            const body = `${marker}\n🔍 **Preview:** ${url}\n\nBuilt from \`${sha}\`. Updates automatically on every push to this PR.`;
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+            }
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove pr-<number>/ from gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/gh-pages-remove.sh "pr-${{ github.event.pull_request.number }}"

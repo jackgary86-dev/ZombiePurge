@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -38,6 +38,14 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+      # K5: also mirrors this same build onto the gh-pages branch's root, alongside
+      # any open PRs' pr-<number>/ previews (preview.yml). Purely additive - the live
+      # site above keeps deploying via actions/deploy-pages regardless, so this has
+      # no effect until Pages' source is switched to "Deploy from a branch: gh-pages".
+      - name: Mirror to gh-pages branch root
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/gh-pages-publish.sh "" dist "Mirror main @ ${{ github.sha }}"
 
   deploy:
     needs: build
