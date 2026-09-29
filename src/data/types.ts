@@ -480,6 +480,8 @@ export interface CosmeticOption {
   price: number;
   /** Hex colour; every cosmetic category today (paint) is colour-based. */
   color: number;
+  /** L5: window tint opacity (0-1); omitted for categories that aren't glass-based. */
+  opacity?: number;
 }
 
 /** L1: a car customization category (paint, and more added by L3-L8) - exactly one option

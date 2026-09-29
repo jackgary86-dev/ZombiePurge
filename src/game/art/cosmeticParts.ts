@@ -8,11 +8,14 @@ import { BoxGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial } from
  */
 export const COSMETIC_PART_NAMES = {
   bumper: 'cosmetic_bumper',
+  doors: 'cosmetic_doors',
 } as const;
 
 const rubber = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
 const chrome = new MeshStandardMaterial({ color: 0xd8d8dc, metalness: 1, roughness: 0.1 });
 const guardSteel = new MeshStandardMaterial({ color: 0x4a4a50, metalness: 0.7, roughness: 0.4 });
+const panelTrim = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6 });
+const doorChrome = new MeshStandardMaterial({ color: 0xd8d8dc, metalness: 1, roughness: 0.15 });
 
 function buildBumper(optionId: string, he: { x: number; y: number; z: number }): Group {
   const g = new Group();
@@ -64,4 +67,46 @@ export function syncBumperStyle(
   const old = carGroup.getObjectByName(COSMETIC_PART_NAMES.bumper);
   if (old) carGroup.remove(old);
   carGroup.add(buildBumper(optionId, he));
+}
+
+/**
+ * L6: cosmetic door trim, mirrored on both sides of the body. Stock adds nothing (the body's
+ * own surface is the door); the other styles add a thin trim primitive flush against each side.
+ */
+function buildDoors(optionId: string, he: { x: number; y: number; z: number }): Group {
+  const g = new Group();
+  g.name = COSMETIC_PART_NAMES.doors;
+  let trim: { geometry: BoxGeometry; material: MeshStandardMaterial; y: number } | null = null;
+  switch (optionId) {
+    case 'door_paneled':
+      trim = { geometry: new BoxGeometry(0.03, he.y * 0.9, he.z * 1.1), material: panelTrim, y: 0 };
+      break;
+    case 'door_chrome_trim':
+      trim = {
+        geometry: new BoxGeometry(0.04, 0.1, he.z * 1.3),
+        material: doorChrome,
+        y: -he.y * 0.75,
+      };
+      break;
+    default:
+      return g; // stock: no add-on trim, just the body's own paint
+  }
+  for (const sign of [-1, 1]) {
+    const panel = new Mesh(trim.geometry, trim.material);
+    panel.position.set(sign * (he.x + trim.geometry.parameters.width / 2), trim.y, -he.z * 0.05);
+    panel.castShadow = true;
+    g.add(panel);
+  }
+  return g;
+}
+
+/** Rebuilds the door trim to match the selected style; safe to call every time it changes. */
+export function syncDoorStyle(
+  carGroup: Group,
+  optionId: string,
+  he: { x: number; y: number; z: number }
+): void {
+  const old = carGroup.getObjectByName(COSMETIC_PART_NAMES.doors);
+  if (old) carGroup.remove(old);
+  carGroup.add(buildDoors(optionId, he));
 }

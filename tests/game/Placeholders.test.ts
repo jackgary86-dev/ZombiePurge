@@ -24,4 +24,34 @@ describe('L3/L4 car cosmetics on the placeholder car', () => {
       expect((child as Mesh<never, MeshStandardMaterial>).material.color.getHex()).toBe(0xff0000);
     }
   });
+
+  it('setWindowTint recolours and re-opacifies the cabin glass', () => {
+    const car = buildPlaceholderCar(DEFAULT_CONFIG.vehicle);
+    const cabin = car.group.children.find((c) => c instanceof Mesh && c !== car.body) as Mesh<
+      never,
+      MeshStandardMaterial
+    >;
+    car.setWindowTint('window_dark', 0x0d0d10, 0.85);
+    expect(cabin.material.color.getHex()).toBe(0x0d0d10);
+    expect(cabin.material.opacity).toBeCloseTo(0.85);
+  });
+
+  it('the mirrored window style bumps metalness above the other styles', () => {
+    const car = buildPlaceholderCar(DEFAULT_CONFIG.vehicle);
+    const cabin = car.group.children.find((c) => c instanceof Mesh && c !== car.body) as Mesh<
+      never,
+      MeshStandardMaterial
+    >;
+    car.setWindowTint('window_clear', 0x9fc4d8, 0.25);
+    const clearMetalness = cabin.material.metalness;
+    car.setWindowTint('window_mirror', 0xc8d0d8, 0.65);
+    expect(cabin.material.metalness).toBeGreaterThan(clearMetalness);
+  });
+
+  it('setDoorStyle swaps the door trim without duplicating it', () => {
+    const car = buildPlaceholderCar(DEFAULT_CONFIG.vehicle);
+    car.setDoorStyle('door_paneled');
+    car.setDoorStyle('door_chrome_trim');
+    expect(car.group.children.filter((c) => c.name === 'cosmetic_doors')).toHaveLength(1);
+  });
 });

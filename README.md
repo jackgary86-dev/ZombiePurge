@@ -94,7 +94,7 @@ assets/            # 3D models, textures, sounds
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                             |
 | **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                              |
 | **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
-| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L4, O1 done; L5–L8 garage cosmetics remaining; M1–M5 melee weapons; N1–N2 engine tuning/replacement)                                  |
+| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L6, O1 done; L7-L8 garage cosmetics remaining; M1–M5 melee weapons; N1–N2 engine tuning/replacement)                              |
 
 ## What's Built So Far
 
@@ -148,6 +148,8 @@ assets/            # 3D models, textures, sounds
 - **L3** Bumper style selection: 3 purely cosmetic front-bumper looks (stock rubber bar, chrome bar, brush guard), each a distinct primitive shape mounted close against the body so it never visually collides with an owned D12 ram upgrade
 - **L4** Driver character: a simple placeholder driver figure seated in the cabin, visible through a now semi-transparent windshield, with 5 purchasable outfit colours
 - **O1** Roof-mounted guns (machine gun/shotgun/rockets) now autoshoot the instant the existing auto-aim mount (D8) locks a target in range, instead of also requiring the Fire button held
+- **L5** Window customization: 4 cabin-glass tints/finishes (stock, clear, dark, mirrored), each its own colour/opacity/metalness combination, applied to the same cabin material the L4 driver figure is seen through
+- **L6** Door style selection: 3 cosmetic door-trim looks (stock/flush, paneled trim, chrome trim), mirrored on both sides of the body, independent of the door's underlying shape
 
 ## Development
 

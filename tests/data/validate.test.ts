@@ -379,6 +379,20 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     ).toContain('cosmetics[0] (paint) needs at least one option priced 0 (the stock/default look)');
   });
 
+  it('cosmetics (L5): option opacity, when present, must be between 0 and 1', () => {
+    expect(
+      problems((c) => {
+        c.cosmetics[0].options[0].opacity = 1.5;
+      })
+    ).toEqual(expect.arrayContaining([expect.stringContaining('opacity must be between 0 and 1')]));
+    expect(
+      problems((c) => {
+        c.cosmetics[0].options[0].opacity = -0.1;
+      })
+    ).toEqual(expect.arrayContaining([expect.stringContaining('opacity must be between 0 and 1')]));
+    expect(problems((c) => (c.cosmetics[0].options[0].opacity = 0.5))).toEqual([]);
+  });
+
   it('maps: id, generator, chunk size, density/grip bounds, out-of-bounds geometry', () => {
     expect(problems((c) => (c.maps = []))).toContain('maps must contain at least one map');
     expect(

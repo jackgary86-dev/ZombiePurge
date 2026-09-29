@@ -460,6 +460,25 @@ export const DEFAULT_CONFIG: GameConfig = {
         { id: 'driver_black', label: 'Black Leather', price: 250, color: 0x202020 },
       ],
     },
+    {
+      id: 'window',
+      label: 'Windows',
+      options: [
+        { id: 'window_stock', label: 'Stock Tint', price: 0, color: 0x2b2b30, opacity: 0.55 },
+        { id: 'window_clear', label: 'Clear Glass', price: 150, color: 0x9fc4d8, opacity: 0.25 },
+        { id: 'window_dark', label: 'Dark Tint', price: 200, color: 0x0d0d10, opacity: 0.85 },
+        { id: 'window_mirror', label: 'Mirrored', price: 300, color: 0xc8d0d8, opacity: 0.65 },
+      ],
+    },
+    {
+      id: 'door',
+      label: 'Doors',
+      options: [
+        { id: 'door_stock', label: 'Stock', price: 0, color: 0x1a1a1a },
+        { id: 'door_paneled', label: 'Paneled Trim', price: 150, color: 0x1a1a1a },
+        { id: 'door_chrome_trim', label: 'Chrome Trim', price: 250, color: 0xd8d8dc },
+      ],
+    },
   ],
   maps: [
     {

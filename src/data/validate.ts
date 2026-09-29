@@ -365,6 +365,9 @@ export function collectConfigProblems(config: GameConfig): string[] {
       cosmeticOptionIds.add(opt.id);
       nonNegative(opt.price, `${at}.price`, problems);
       if (opt.price === 0) hasFreeOption = true;
+      if (opt.opacity !== undefined && (opt.opacity < 0 || opt.opacity > 1)) {
+        problems.push(`${at}.opacity must be between 0 and 1 (got ${opt.opacity})`);
+      }
     });
     if (category.options.length > 0 && !hasFreeOption) {
       problems.push(`${cat} needs at least one option priced 0 (the stock/default look)`);
