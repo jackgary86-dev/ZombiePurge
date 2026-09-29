@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Mesh, MeshStandardMaterial } from 'three';
-import { buildPlaceholderCar, HammerView, SawView } from '../../src/game/art';
+import { Mesh, MeshStandardMaterial, Vector3 } from 'three';
+import { buildPlaceholderCar, HammerView, SawView, TurretView } from '../../src/game/art';
 import { DEFAULT_CONFIG } from '../../src/data/defaults';
 
 describe('L3/L4 car cosmetics on the placeholder car', () => {
@@ -116,5 +116,32 @@ describe('M4 HammerView', () => {
     expect(arm.rotation.x).not.toBeCloseTo(restRotation);
     hammer.update(1, true); // long past the swing's duration
     expect(arm.rotation.x).toBeCloseTo(restRotation); // settled back to rest
+  });
+});
+
+describe('M5 TurretView', () => {
+  it('starts hidden with a machine-gun barrel and rebuilds only when the kind changes', () => {
+    const turret = new TurretView(new Vector3(0, 0.8, 0.2));
+    expect(turret.group.visible).toBe(false);
+    const barrels = turret.group.children[1];
+    expect(barrels.children).toHaveLength(1); // machine gun: one long barrel
+
+    const sameMesh = barrels.children[0];
+    turret.setKind('machinegun'); // no-op: already this kind
+    expect(barrels.children[0]).toBe(sameMesh);
+  });
+
+  it('gives shotgun a stubby double barrel and rockets a 2x2 tube cluster', () => {
+    const turret = new TurretView(new Vector3(0, 0.8, 0.2));
+    const barrels = turret.group.children[1];
+
+    turret.setKind('shotgun');
+    expect(barrels.children).toHaveLength(2);
+
+    turret.setKind('rockets');
+    expect(barrels.children).toHaveLength(4);
+
+    turret.setKind('machinegun');
+    expect(barrels.children).toHaveLength(1);
   });
 });
