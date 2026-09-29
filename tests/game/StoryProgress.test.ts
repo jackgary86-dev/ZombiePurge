@@ -39,6 +39,9 @@ describe('F2 ObjectiveTracker', () => {
     t.updatePosition(95, -48);
     expect(t.isComplete()).toBe(true);
     expect(t.exitTarget()).toEqual({ x: 100, z: -50 });
+    // Once reached, further position updates (even back outside the radius) are a no-op.
+    t.updatePosition(0, 0);
+    expect(t.isComplete()).toBe(true);
   });
 
   it('only completes once every objective is done', () => {

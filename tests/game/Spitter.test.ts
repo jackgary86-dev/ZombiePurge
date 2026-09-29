@@ -59,6 +59,19 @@ describe('B6 Spitter ranged attack', () => {
     expect(shots).toBeLessThanOrEqual(Math.ceil(6 / ranged.cooldown) + 1);
   });
 
+  it('falls back to chasing if the car retreats well beyond spitting range mid-attack', () => {
+    const spitter = pool.spawn('spitter', { x: 0, y: 0, z: 20 })!;
+    const ranged = getConfig().zombies.spitter.rangedAttack!;
+    for (let i = 0; i < 60 * 2; i++) {
+      updateZombieAI(spitter, DT, senses);
+      physics.step();
+    }
+    expect(spitter.state).toBe('attack');
+    senses.carPosition.set(0, 0.8, ranged.range * 3); // well past the 1.3x give-up threshold
+    updateZombieAI(spitter, DT, senses);
+    expect(spitter.state).toBe('chase');
+  });
+
   it('a walker still bites at melee range', () => {
     const walker = pool.spawn('walker', { x: 0, y: 0, z: 1.5 })!;
     walker.setState('chase');
@@ -110,5 +123,32 @@ describe('B6 Spitter ranged attack', () => {
       damage += system.update(DT, car, 1.2).reduce((n, h) => n + h.damage, 0);
     expect(damage).toBe(5);
     expect(system.activeCount).toBe(0);
+  });
+
+  it('refuses to fire once every slot in the pool is already active', () => {
+    const system = new ProjectileSystem(2);
+    const shot = {
+      origin: new Vector3(0, 1.2, 0),
+      target: new Vector3(40, 0, 40),
+      speed: 5, // slow enough that neither globs lands or expires before the assertion
+      damage: 5,
+      hitRadius: 1.6,
+    };
+    expect(system.fire(shot)).not.toBeNull();
+    expect(system.fire(shot)).not.toBeNull();
+    expect(system.activeCount).toBe(2);
+    expect(system.fire(shot)).toBeNull(); // pool exhausted
+    expect(system.activeCount).toBe(2);
+  });
+
+  it('ballistic aim falls back to a 45 degree lob when the target is out of reach at the given speed', () => {
+    const origin = new Vector3(0, 0, 0);
+    const target = new Vector3(1000, 0, 0); // far beyond what a slow shot can reach
+    const v = aimBallistic(origin, target, 5, new Vector3());
+    expect(Number.isFinite(v.x)).toBe(true);
+    expect(Number.isFinite(v.y)).toBe(true);
+    expect(Number.isFinite(v.z)).toBe(true);
+    // A 45 degree launch splits speed evenly between the horizontal and vertical components.
+    expect(v.y).toBeCloseTo(v.x, 5);
   });
 });

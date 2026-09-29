@@ -65,6 +65,16 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     );
   });
 
+  it('vehicle: N1 engine tuning swing factor must stay in [0, 1]', () => {
+    expect(problems((c) => (c.vehicle.engineTuning.swingFactor = -0.1))).toContain(
+      'vehicle.engineTuning.swingFactor must be in [0, 1] (got -0.1)'
+    );
+    expect(problems((c) => (c.vehicle.engineTuning.swingFactor = 1.1))).toContain(
+      'vehicle.engineTuning.swingFactor must be in [0, 1] (got 1.1)'
+    );
+    expect(problems((c) => (c.vehicle.engineTuning.swingFactor = 1))).toEqual([]);
+  });
+
   it('camera', () => {
     expect(problems((c) => (c.camera.distance = 0))).toContain(
       'camera.distance must be a positive number (got 0)'

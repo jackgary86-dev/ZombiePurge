@@ -204,5 +204,38 @@ describe('RunOverSystem (B4 run-over kills, B5 car damage)', () => {
       // further call doesn't error or report it again.
       expect(combat.applySawDamage(DT)).toHaveLength(0);
     });
+
+    it('stops dealing damage once the zombie leaves contact, and resumes if it touches again', () => {
+      combat.sawDamagePerSecond = 40;
+      const z = settleCarThenTouchZombie();
+      combat.beforeStep();
+      physics.step();
+      combat.collectImpacts();
+      combat.applySawDamage(DT);
+      const hpAfterTouching = z.hp;
+
+      // Teleport the zombie far away: the collider separation fires a "stop" collision event,
+      // which must clear it from the internal touching set (not just leave it stuck there).
+      z.body.setTranslation({ x: 500, y: 0, z: 500 }, true);
+      for (let i = 0; i < 5; i++) {
+        combat.beforeStep();
+        physics.step();
+        combat.collectImpacts();
+        combat.applySawDamage(DT);
+      }
+      expect(z.hp).toBe(hpAfterTouching); // no more damage once separated
+
+      // Bring it back into contact: damage should resume, proving the set correctly forgot it
+      // rather than treating the re-touch as still "already touching" from before.
+      const he = getConfig().vehicle.chassisHalfExtents;
+      z.body.setTranslation({ x: 0, y: 0, z: he.z + 0.15 }, true);
+      for (let i = 0; i < 5; i++) {
+        combat.beforeStep();
+        physics.step();
+        combat.collectImpacts();
+        combat.applySawDamage(DT);
+      }
+      expect(z.hp).toBeLessThan(hpAfterTouching);
+    });
   });
 });
