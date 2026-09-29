@@ -747,6 +747,10 @@ canvas {
   font-weight: bold;
 }
 
+.credits-section {
+  text-align: left;
+}
+
 .credits-section h2 {
   margin: 0 0 4px;
   color: #c8402e;
