@@ -440,6 +440,26 @@ export const DEFAULT_CONFIG: GameConfig = {
         { id: 'paint_purple', label: 'Neon Purple', price: 400, color: 0x7a2fb5 },
       ],
     },
+    {
+      id: 'bumper',
+      label: 'Bumper',
+      options: [
+        { id: 'bumper_stock', label: 'Stock', price: 0, color: 0x1a1a1a },
+        { id: 'bumper_chrome', label: 'Chrome Bar', price: 250, color: 0xd8d8dc },
+        { id: 'bumper_guard', label: 'Brush Guard', price: 350, color: 0x4a4a50 },
+      ],
+    },
+    {
+      id: 'driver',
+      label: 'Driver',
+      options: [
+        { id: 'driver_stock', label: 'Grey Jumpsuit', price: 0, color: 0x555a60 },
+        { id: 'driver_red', label: 'Red Racer', price: 150, color: 0xb03030 },
+        { id: 'driver_blue', label: 'Blue Racer', price: 150, color: 0x30508a },
+        { id: 'driver_hazmat', label: 'Hazmat Yellow', price: 250, color: 0xd8c020 },
+        { id: 'driver_black', label: 'Black Leather', price: 250, color: 0x202020 },
+      ],
+    },
   ],
   maps: [
     {

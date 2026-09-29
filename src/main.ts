@@ -589,6 +589,8 @@ async function boot(): Promise<void> {
   function applyGarage(): void {
     const s = garage.applyTo(stockVehicle, cfg.vehicle);
     carDamage.setPaintColor(garage.selectedCosmetic('paint')?.color ?? 0xc8402e);
+    carView.setBumperStyle(garage.selectedCosmetic('bumper')?.id ?? 'bumper_stock');
+    carView.setDriverColor(garage.selectedCosmetic('driver')?.color ?? 0x555a60);
     cfg.vehicle.tires.grip *= map.groundGrip ?? 1; // E7: snow/ice maps corner looser
     effectiveTopSpeed = s.topSpeed;
     effectiveAcceleration = s.acceleration;

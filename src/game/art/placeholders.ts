@@ -20,6 +20,7 @@ import type { VehicleConfig, ZombieMotionConfig, ZombieRank } from '../../data/t
 import type { Vehicle } from '../vehicle/Vehicle';
 import type { Zombie } from '../zombies/Zombie';
 import { ZOMBIE_CAPSULE } from '../zombies/Zombie';
+import { syncBumperStyle } from './cosmeticParts';
 
 /** I12 placeholder art: primitives that match the physics shapes until real models land (I3, I5). */
 
@@ -27,7 +28,13 @@ export interface CarView {
   group: Group;
   body: Mesh;
   wheels: Mesh[];
+  /** L4: the placeholder driver figure, seated in the cabin. */
+  driver: Group;
   sync(car: Vehicle): void;
+  /** L3: swaps the cosmetic front bumper's primitive shape to match the selected style. */
+  setBumperStyle(optionId: string): void;
+  /** L4: recolours the driver figure's outfit. */
+  setDriverColor(color: number): void;
 }
 
 export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
@@ -44,11 +51,31 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
 
   const cabin = new Mesh(
     new BoxGeometry(he.x * 1.6, he.y * 1.2, he.z * 0.9),
-    new MeshStandardMaterial({ color: 0x2b2b30, roughness: 0.3, metalness: 0.4 })
+    // L4: tinted-glass look (transparent) rather than solid metal, so the driver figure
+    // seated inside reads as visible through the windshield instead of fully hidden.
+    new MeshStandardMaterial({
+      color: 0x2b2b30,
+      roughness: 0.3,
+      metalness: 0.4,
+      transparent: true,
+      opacity: 0.55,
+    })
   );
   cabin.position.set(0, he.y * 1.4, -he.z * 0.15);
   cabin.castShadow = true;
   group.add(cabin);
+
+  const driverMaterial = new MeshStandardMaterial({ color: 0x555a60, roughness: 0.6 });
+  const driver = new Group();
+  driver.name = 'driver';
+  const torso = new Mesh(new CapsuleGeometry(0.16, 0.32, 4, 8), driverMaterial);
+  const head = new Mesh(new SphereGeometry(0.12, 8, 6), driverMaterial);
+  head.position.y = 0.32;
+  driver.add(torso, head);
+  driver.position.copy(cabin.position).add(new Vector3(0, -he.y * 0.2, he.z * 0.1));
+  group.add(driver);
+
+  syncBumperStyle(group, 'bumper_stock', he);
 
   const wheelGeometry = new CylinderGeometry(cfg.wheels.radius, cfg.wheels.radius, 0.3, 18);
   wheelGeometry.rotateZ(Math.PI / 2);
@@ -66,6 +93,7 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
     group,
     body,
     wheels,
+    driver,
     sync(car: Vehicle) {
       car.getPosition(group.position);
       car.getQuaternion(group.quaternion);
@@ -76,6 +104,12 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
         yawQ.setFromAxisAngle(up, -state.steerAngle);
         wheel.quaternion.copy(scratchQ.copy(group.quaternion).multiply(yawQ));
       });
+    },
+    setBumperStyle(optionId: string) {
+      syncBumperStyle(group, optionId, he);
+    },
+    setDriverColor(color: number) {
+      driverMaterial.color.set(color);
     },
   };
 }
