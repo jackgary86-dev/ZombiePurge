@@ -76,6 +76,56 @@ describe('CheatConsole DOM', () => {
     expect(input.value).toBe('');
   });
 
+  it('recalls submitted commands with Up/Down, newest first', () => {
+    const t = fakeTarget();
+    console_ = new CheatConsole(t, { target: new EventTarget() });
+    const input = console_.el.querySelector('input')!;
+    const submit = (line: string) => {
+      input.value = line;
+      input.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }));
+    };
+    submit('heal');
+    submit('coins 50');
+    input.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' }));
+    expect(input.value).toBe('coins 50'); // most recent first
+    input.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' }));
+    expect(input.value).toBe('heal');
+    input.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowUp' }));
+    expect(input.value).toBe('heal'); // stops at the oldest, doesn't wrap/underflow
+    input.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowDown' }));
+    expect(input.value).toBe('coins 50');
+    input.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowDown' }));
+    expect(input.value).toBe(''); // past the newest: back to a blank line
+  });
+
+  it('Escape, or the toggle key while typing, closes the console without submitting', () => {
+    const t = fakeTarget();
+    console_ = new CheatConsole(t, { target: new EventTarget() });
+    console_.toggle(true);
+    const input = console_.el.querySelector('input')!;
+    input.value = 'heal';
+    input.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' }));
+    expect(console_.visible).toBe(false);
+    expect(t.calls).toEqual([]); // never submitted
+
+    console_.toggle(true);
+    input.dispatchEvent(new KeyboardEvent('keydown', { code: 'Backquote' }));
+    expect(console_.visible).toBe(false);
+  });
+
+  it('keeps only the most recent 40 log lines', () => {
+    const t = fakeTarget();
+    console_ = new CheatConsole(t, { target: new EventTarget() });
+    const input = console_.el.querySelector('input')!;
+    for (let i = 0; i < 25; i++) {
+      input.value = 'heal';
+      input.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter' }));
+    }
+    const log = console_.el.querySelector('.console-log')!;
+    expect(log.childElementCount).toBe(40); // each submit prints 2 lines (echo + result)
+    expect(log.textContent).not.toContain('commands:'); // the original startup help line scrolled off
+  });
+
   it('does not leak typed keys to the game', () => {
     const t = fakeTarget();
     const gameListener = vi.fn();

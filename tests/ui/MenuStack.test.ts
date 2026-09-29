@@ -99,6 +99,101 @@ describe('J1 MenuStack', () => {
     expect(s.clicks).toEqual(['Go']);
   });
 
+  it('gamepad B backs out, and stick axes navigate the same as the D-pad', () => {
+    let pad: Gamepad | null = null;
+    stack = new MenuStack({ target: new EventTarget(), getGamepads: () => [pad] });
+    const main = screen('main', ['One', 'Two']);
+    const settings = screen('settings', ['Back']);
+    stack.push(main);
+    stack.push(settings);
+    const make = (buttons: number[], axes: number[] = [0, 0]) =>
+      ({
+        axes,
+        buttons: Array.from({ length: 16 }, (_, i) => ({
+          pressed: buttons.includes(i),
+          value: 0,
+          touched: false,
+        })),
+      }) as unknown as Gamepad;
+
+    pad = make([1]); // B
+    stack.pollGamepad();
+    expect(stack.top?.id).toBe('main'); // backed out of settings
+    expect(document.activeElement?.textContent).toBe('One');
+
+    pad = make([], [0, 0.9]); // stick pushed down, no button
+    stack.pollGamepad();
+    expect(document.activeElement?.textContent).toBe('Two');
+    pad = make([], [0, 0]);
+    stack.pollGamepad(); // release so the next push edge-triggers again
+    pad = make([], [0, -0.9]); // stick pushed up
+    stack.pollGamepad();
+    expect(document.activeElement?.textContent).toBe('One');
+  });
+
+  it('arrow keys nudge a focused range input but not while typing in a text field', () => {
+    // Listen on `window` (MenuStack's real default) so a real DOM-bubbled event's `e.target`
+    // is the actual focused element, matching how a browser really dispatches a keydown -
+    // the "typing" guard reads e.target, not just document.activeElement.
+    stack = new MenuStack({ getGamepads: () => [] });
+    stack.attach();
+    const s = screen('sandbox', []);
+    const range = document.createElement('input');
+    range.type = 'range';
+    range.min = '0';
+    range.max = '10';
+    range.step = '2';
+    range.value = '4';
+    s.el.querySelector('.menu-body')!.appendChild(range);
+    const text = document.createElement('input');
+    text.type = 'text';
+    s.el.querySelector('.menu-body')!.appendChild(text);
+    stack.push(s);
+
+    range.focus();
+    range.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowRight', bubbles: true }));
+    expect(range.value).toBe('6');
+    range.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowLeft', bubbles: true }));
+    expect(range.value).toBe('4');
+
+    text.focus();
+    text.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowRight', bubbles: true }));
+    expect(document.activeElement).toBe(text); // typing suppresses the nudge/focus-move entirely
+  });
+
+  it('Enter/Space on an already-focused button does not double-activate it', () => {
+    // Listen on `window` (MenuStack's real default) so a real DOM-bubbled event's `e.target`
+    // is the actual focused button, matching how a browser really dispatches a keydown.
+    stack = new MenuStack({ getGamepads: () => [] });
+    stack.attach();
+    const s = screen('main', ['Go']);
+    stack.push(s);
+    // A real 'Enter' on a focused <button> already fires a native click on its own; the
+    // handler must skip calling activate() here or the click would be double-counted.
+    (document.activeElement as HTMLElement).dispatchEvent(
+      new KeyboardEvent('keydown', { code: 'Enter', bubbles: true })
+    );
+    expect(s.clicks).toEqual([]);
+  });
+
+  it('Shift+Tab moves focus backward, and isOpen finds a screen anywhere in the stack', () => {
+    const target = new EventTarget();
+    stack = new MenuStack({ target, getGamepads: () => [] });
+    stack.attach();
+    const main = screen('main', ['One', 'Two', 'Three']);
+    stack.push(main);
+    target.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab' }));
+    expect(document.activeElement?.textContent).toBe('Two');
+    target.dispatchEvent(new KeyboardEvent('keydown', { code: 'Tab', shiftKey: true }));
+    expect(document.activeElement?.textContent).toBe('One'); // back the way it came
+
+    expect(stack.isOpen('main')).toBe(true);
+    expect(stack.isOpen('settings')).toBe(false);
+    const settings = screen('settings', ['Back']);
+    stack.push(settings);
+    expect(stack.isOpen('main')).toBe(true); // still in the stack, just covered
+  });
+
   it('onBack can veto and reset() replaces the stack', () => {
     stack = new MenuStack({ target: new EventTarget(), getGamepads: () => [] });
     const a = screen('a', ['x']);
