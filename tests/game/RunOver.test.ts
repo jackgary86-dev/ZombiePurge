@@ -150,4 +150,59 @@ describe('RunOverSystem (B4 run-over kills, B5 car damage)', () => {
       expect(z.knockbackTimeLeft).toBe(0);
     });
   });
+
+  describe('M3 saw continuous contact damage', () => {
+    function settleCarThenTouchZombie() {
+      for (let i = 0; i < 60; i++) {
+        car.update(NEUTRAL_INPUT, DT);
+        physics.step();
+        physics.drainCollisions(() => {});
+      }
+      const he = getConfig().vehicle.chassisHalfExtents;
+      return pool.spawn('walker', { x: 0, y: 0, z: he.z + 0.15 })!;
+    }
+
+    it('keeps dealing damage tick after tick while touching, not just once', () => {
+      combat.sawDamagePerSecond = 40;
+      const z = settleCarThenTouchZombie();
+      combat.beforeStep();
+      physics.step();
+      combat.collectImpacts();
+      combat.applySawDamage(DT);
+      const hpAfterOneTick = z.hp;
+      for (let i = 0; i < 19; i++) {
+        combat.beforeStep();
+        physics.step();
+        combat.collectImpacts();
+        combat.applySawDamage(DT);
+      }
+      expect(z.hp).toBeLessThan(hpAfterOneTick);
+    });
+
+    it('does nothing when no saw is equipped (the default), even while touching', () => {
+      const z = settleCarThenTouchZombie();
+      const startHp = z.hp;
+      for (let i = 0; i < 10; i++) {
+        combat.beforeStep();
+        physics.step();
+        combat.collectImpacts();
+        combat.applySawDamage(DT);
+      }
+      expect(z.hp).toBe(startHp);
+    });
+
+    it('reports a kill once continuous damage finishes the zombie off, then self-heals', () => {
+      combat.sawDamagePerSecond = 9999;
+      const z = settleCarThenTouchZombie();
+      combat.beforeStep();
+      physics.step();
+      combat.collectImpacts();
+      const kills = combat.applySawDamage(DT);
+      expect(kills).toHaveLength(1);
+      expect(kills[0].zombie).toBe(z);
+      // The dead zombie is still in the touching set (no stop event fired yet); make sure a
+      // further call doesn't error or report it again.
+      expect(combat.applySawDamage(DT)).toHaveLength(0);
+    });
+  });
 });

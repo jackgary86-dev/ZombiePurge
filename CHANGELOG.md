@@ -59,6 +59,13 @@ with from the initial scaffold.
   `syncMeleeWeapon()` gated on equip status (not just ownership) so it never visually overlaps an
   owned-but-unequipped ram or flamethrower. A new "Melee" Garage tab lists it like any other
   weapon category.
+- **M3** The second melee weapon, Circular Saw (3 tiers, config-driven `damagePerSecond`).
+  Distinct mechanic from the spike cluster's one-shot-per-contact model: `RunOverSystem` now
+  tracks currently-touching zombies across Rapier collision start/stop events and a new
+  `applySawDamage()` deals damage every tick contact holds, not just on the first touch. A
+  `SawView` shows a spinning blade at the front whenever the saw is equipped (always spinning,
+  independent of contact) via a new `AudioSystem.setSaw()` grinding loop and a spark flash
+  (reusing the existing muzzle-flash view) specifically while the blade is touching something.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 

@@ -36,6 +36,7 @@ import {
   PickupViews,
   ProjectileViews,
   RocketViews,
+  SawView,
   ShotTracers,
   SkidMarkView,
   syncMeleeWeapon,
@@ -238,6 +239,8 @@ async function boot(): Promise<void> {
   carView.group.add(turret.group);
   const headlights = createHeadlights(30);
   for (const l of headlights.lights) carView.group.add(l, l.target);
+  const sawView = new SawView(cfg.vehicle.chassisHalfExtents);
+  carView.group.add(sawView.group);
   scene.add(carView.group);
   lights.sun.target = carView.group;
 
@@ -355,6 +358,7 @@ async function boot(): Promise<void> {
   const senses = { carPosition: new Vector3(), carSpeed: 0, noise: 0 };
   const view = { carPosition: senses.carPosition, viewForward: new Vector3(0, 0, 1) };
   const camForward = new Vector3();
+  const sawSparkPos = new Vector3();
   const baseOrbitSensitivity = cfg.camera.orbitSensitivity;
   let invertY = false;
   let showFps = true;
@@ -652,6 +656,7 @@ async function boot(): Promise<void> {
       combat.meleeDamage = 0;
       combat.meleeKnockback = 0;
     }
+    combat.sawDamagePerSecond = front === 'saw' ? tierOf(front, cfg.combat.saw).damagePerSecond : 0;
     syncMeleeWeapon(carView.group, front, garage.ownedTier('spikes'), cfg.vehicle);
     syncUpgradeParts(carView.group, garage, cfg.vehicle);
   }
@@ -941,6 +946,12 @@ async function boot(): Promise<void> {
       audio.setFlame(flamethrower.firing);
     }
     for (const k of updateBurning(pool, deltaTime)) rewardKill(k.zombie, k.position);
+    sawView.update(deltaTime, combat.sawDamagePerSecond > 0);
+    audio.setSaw(combat.sawActive);
+    if (combat.sawActive) {
+      sawView.group.getWorldPosition(sawSparkPos);
+      muzzleFlash.trigger(sawSparkPos);
+    }
     senses.noise = firing ? 0.5 : 0;
 
     let attackDamage = 0;
@@ -991,6 +1002,10 @@ async function boot(): Promise<void> {
         rewardKill(impact.zombie, impact.position);
         blood.addKill(settings.get().lowGore);
       }
+    }
+    for (const k of combat.applySawDamage(deltaTime)) {
+      rewardKill(k.zombie, k.position);
+      blood.addKill(settings.get().lowGore);
     }
     stats.trackPosition(senses.carPosition, deltaTime);
     slowMo.trigger(killsThisTick);

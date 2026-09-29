@@ -207,6 +207,7 @@ export const DEFAULT_CONFIG: GameConfig = {
       { damage: 30, knockback: 6 },
       { damage: 50, knockback: 9 },
     ],
+    saw: [{ damagePerSecond: 30 }, { damagePerSecond: 55 }, { damagePerSecond: 90 }],
     runOverMinSpeed: 3,
     runOverDamageFactor: 0.01,
     impactDamageToCar: {
@@ -398,6 +399,19 @@ export const DEFAULT_CONFIG: GameConfig = {
         { tier: 1, price: 250, unlockMap: 1, modifiers: {}, label: 'Short spikes' },
         { tier: 2, price: 600, unlockMap: 2, modifiers: {}, label: 'Long spikes' },
         { tier: 3, price: 1200, unlockMap: 3, modifiers: {}, label: 'Spike ram' },
+      ],
+    },
+    {
+      id: 'saw',
+      category: 'melee',
+      slot: 'front',
+      name: 'Circular Saw',
+      description:
+        'A spinning blade that keeps cutting for as long as it stays touching a zombie, instead of one hit per contact.',
+      tiers: [
+        { tier: 1, price: 350, unlockMap: 1, modifiers: {}, label: 'Bench blade' },
+        { tier: 2, price: 800, unlockMap: 2, modifiers: {}, label: 'Reinforced blade' },
+        { tier: 3, price: 1500, unlockMap: 4, modifiers: {}, label: 'Carbide blade' },
       ],
     },
     {

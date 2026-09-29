@@ -156,6 +156,10 @@ export function collectConfigProblems(config: GameConfig): string[] {
     positive(m.damage, `combat.spikes[${i}].damage`, problems);
     nonNegative(m.knockback, `combat.spikes[${i}].knockback`, problems);
   });
+  if (config.combat.saw.length === 0) problems.push('combat.saw needs at least one tier');
+  config.combat.saw.forEach((s, i) => {
+    positive(s.damagePerSecond, `combat.saw[${i}].damagePerSecond`, problems);
+  });
   nonNegative(config.combat.runOverMinSpeed, 'combat.runOverMinSpeed', problems);
   positive(config.combat.runOverDamageFactor, 'combat.runOverDamageFactor', problems);
   positive(config.combat.impactFullSpeed, 'combat.impactFullSpeed', problems);

@@ -518,3 +518,42 @@ export class FlameView {
     this.mesh.rotation.z += Math.random() * 0.5;
   }
 }
+
+const sawSteel = new MeshStandardMaterial({ color: 0x9a9ea4, metalness: 0.8, roughness: 0.3 });
+const sawTeeth = new MeshStandardMaterial({ color: 0x6a6e74, metalness: 0.7, roughness: 0.4 });
+
+/**
+ * M3: the Circular Saw's front-mounted blade. `group` holds the fixed forward-facing mount
+ * position/orientation; `blade` (its only child) spins around its own local Y axis each frame,
+ * so the static "where it's mounted" and the animated "it's spinning" transforms never mix.
+ */
+export class SawView {
+  readonly group = new Group();
+  private readonly blade = new Group();
+
+  constructor(he: { x: number; y: number; z: number }) {
+    this.group.visible = false;
+    this.group.position.set(0, -he.y * 0.1, he.z + 0.15);
+    this.group.rotation.z = Math.PI / 2;
+    this.group.add(this.blade);
+
+    const disc = new Mesh(new CylinderGeometry(0.35, 0.35, 0.05, 20), sawSteel);
+    disc.castShadow = true;
+    this.blade.add(disc);
+
+    const teethCount = 10;
+    for (let i = 0; i < teethCount; i++) {
+      const angle = (i / teethCount) * Math.PI * 2;
+      const tooth = new Mesh(new BoxGeometry(0.05, 0.08, 0.02), sawTeeth);
+      tooth.position.set(Math.cos(angle) * 0.35, 0, Math.sin(angle) * 0.35);
+      this.blade.add(tooth);
+    }
+  }
+
+  /** Call once per Playing tick. Spins continuously while `active` (equipped), independent of
+   *  whether it's currently touching anything - a saw stays spinning once it's powered on. */
+  update(dt: number, active: boolean): void {
+    this.group.visible = active;
+    if (active) this.blade.rotation.y += dt * 12;
+  }
+}
