@@ -344,9 +344,55 @@ export class GarageMenu {
       }
       return;
     }
+    if (this.category === 'engine' && this.garage.ownedTier('engine') > 0) {
+      this.cards.appendChild(this.renderEngineTuning());
+    }
     for (const card of buildShopCards(this.garage, this.base, this.category)) {
       this.cards.appendChild(this.renderCard(card));
     }
+  }
+
+  /** N1: a slider trading the owned engine tier's own top speed bonus against its acceleration
+   *  bonus, free to change at any time once the engine upgrade is owned. `input` (fired
+   *  continuously while dragging) applies the value live and updates the readout in place, but
+   *  deliberately doesn't rebuild the card list - that would tear down this very slider element
+   *  mid-drag. `change` (fired once, on release) does the full re-render so the engine card's
+   *  own stat preview picks up the new tuning. */
+  private renderEngineTuning(): HTMLDivElement {
+    const el = document.createElement('div');
+    el.className = 'engine-tuning';
+
+    const label = document.createElement('h3');
+    label.textContent = 'Engine Tuning';
+    const hint = document.createElement('p');
+    hint.textContent = 'Free to adjust at any time. Favor acceleration or top speed.';
+
+    const row = document.createElement('div');
+    row.className = 'engine-tuning-row';
+    const accelLabel = document.createElement('span');
+    accelLabel.textContent = 'Acceleration';
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = '-1';
+    slider.max = '1';
+    slider.step = '0.1';
+    slider.value = String(this.garage.engineTuning);
+    slider.className = 'engine-tuning-slider';
+    const topSpeedLabel = document.createElement('span');
+    topSpeedLabel.textContent = 'Top Speed';
+    const readout = document.createElement('span');
+    readout.className = 'engine-tuning-readout';
+    readout.textContent = tuningReadout(this.garage.engineTuning);
+    slider.addEventListener('input', () => {
+      this.garage.setEngineTuning(Number(slider.value));
+      readout.textContent = tuningReadout(this.garage.engineTuning);
+      this.options.onChange?.();
+    });
+    slider.addEventListener('change', () => this.render());
+    row.append(accelLabel, slider, topSpeedLabel);
+
+    el.append(label, hint, row, readout);
+    return el;
   }
 
   private renderCosmeticCard(card: CosmeticCard): HTMLDivElement {
@@ -449,4 +495,11 @@ export class GarageMenu {
 
 function fmt(v: number): string {
   return Number.isInteger(v) ? String(v) : v.toFixed(2);
+}
+
+/** N1: a short label for the current tuning slider position. */
+function tuningReadout(tuning: number): string {
+  if (Math.abs(tuning) < 0.05) return 'Balanced';
+  const pct = Math.round(Math.abs(tuning) * 100);
+  return tuning > 0 ? `${pct}% toward Top Speed` : `${pct}% toward Acceleration`;
 }

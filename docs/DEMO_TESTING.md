@@ -109,7 +109,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
-## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1-M5)
+## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1-M5, N1)
 
 - [ ] Garage → Customize tab: a "Paint" section lists 7 colour swatches; Stock Red shows "Equipped" and can't be bought again
 - [ ] Buy a colour you can afford: the button becomes "Equipped", its card gets a gold border, and the car turntable recolours immediately
@@ -142,6 +142,13 @@ Tick items in the PR that closes the milestone.
 - [ ] Switch to Shotgun: the roof turret's barrel changes to a short, stubby double barrel, not the machine gun's single barrel
 - [ ] Switch to Rockets: the roof turret's barrel changes to a 2x2 cluster of launch tubes
 - [ ] DRIVE with each roof weapon equipped in turn: the turret's shape in gameplay matches whichever one was equipped in the garage, not just in the garage turntable
+- [ ] Garage → Engine tab, before owning the Engine upgrade: no tuning slider is shown
+- [ ] Buy Engine tier 1: an "Engine Tuning" slider appears above the Engine card, starting "Balanced" in the middle
+- [ ] Drag the slider toward "Top Speed": a live readout updates (e.g. "60% toward Top Speed"); releasing it updates the Engine card's own top speed/acceleration preview - top speed goes up, acceleration goes down from the balanced values
+- [ ] Drag the slider toward "Acceleration" instead: the opposite trade - acceleration goes up, top speed goes down
+- [ ] Adjusting the slider costs no coins and can be changed as many times as you like
+- [ ] DRIVE with the slider tuned toward Top Speed vs. toward Acceleration: the car's actual handling changes to match (noticeably higher top speed, or noticeably snappier off the line)
+- [ ] Leave the Garage and come back (or reload the page): the tuning slider keeps whatever position it was left at
 
 ### Known quirks (non-blocking)
 

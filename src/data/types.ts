@@ -52,6 +52,13 @@ export interface VehicleConfig {
   };
   hp: number;
   armor: number;
+  /** N1: engine tuning (a slider between top speed and acceleration, free once the engine
+   *  upgrade is owned). */
+  engineTuning: {
+    /** Fraction of the owned engine tier's own topSpeed/acceleration bonus that a full slider
+     *  swing (tuning = ±1) shifts from one stat to the other, e.g. 0.5 = up to a 50% swing. */
+    swingFactor: number;
+  };
 }
 
 export interface RangedAttackConfig {

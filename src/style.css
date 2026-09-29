@@ -497,6 +497,46 @@ canvas {
   font-size: 12px;
 }
 
+#garage-menu .engine-tuning {
+  grid-column: 1 / -1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+#garage-menu .engine-tuning h3 {
+  font-size: 15px;
+  margin: 0 0 4px;
+}
+
+#garage-menu .engine-tuning p {
+  opacity: 0.8;
+  font-size: 12px;
+  margin: 0 0 10px;
+}
+
+#garage-menu .engine-tuning-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+}
+
+#garage-menu .engine-tuning-slider {
+  width: 100%;
+  accent-color: #ffd84a;
+}
+
+#garage-menu .engine-tuning-readout {
+  display: block;
+  margin-top: 8px;
+  color: #ffd84a;
+  font-size: 12px;
+  text-align: center;
+}
+
 #garage-menu .stat-bar {
   position: relative;
   height: 8px;

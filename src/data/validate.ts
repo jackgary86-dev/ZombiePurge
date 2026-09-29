@@ -70,6 +70,11 @@ export function collectConfigProblems(config: GameConfig): string[] {
   positive(v.handbrake.brakingMultiplier, 'vehicle.handbrake.brakingMultiplier', problems);
   positive(v.hp, 'vehicle.hp', problems);
   nonNegative(v.armor, 'vehicle.armor', problems);
+  if (v.engineTuning.swingFactor < 0 || v.engineTuning.swingFactor > 1) {
+    problems.push(
+      `vehicle.engineTuning.swingFactor must be in [0, 1] (got ${String(v.engineTuning.swingFactor)})`
+    );
+  }
 
   const c = config.camera;
   positive(c.distance, 'camera.distance', problems);

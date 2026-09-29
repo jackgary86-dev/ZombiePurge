@@ -47,6 +47,9 @@ export const DEFAULT_CONFIG: GameConfig = {
     },
     hp: 100,
     armor: 0,
+    engineTuning: {
+      swingFactor: 0.5,
+    },
   },
   camera: {
     distance: 8,
