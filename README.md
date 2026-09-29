@@ -85,15 +85,16 @@ assets/            # 3D models, textures, sounds
 
 ## Milestones
 
-| #      | Goal                                          | Status                                                                                                                                               |
-| ------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **M0** | Foundation (scaffold, car, camera)            | ✅ Done (A1–A7)                                                                                                                                      |
-| **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work)                                                           |
-| **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                                                                                    |
-| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                                                                               |
-| **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                             |
-| **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                              |
-| **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
+| #      | Goal                                          | Status                                                                                                                                                           |
+| ------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **M0** | Foundation (scaffold, car, camera)            | ✅ Done (A1–A7)                                                                                                                                                  |
+| **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work)                                                                       |
+| **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                                                                                                |
+| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                                                                                           |
+| **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                                         |
+| **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                                          |
+| **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2)             |
+| **M7** | Car Customization & Combat Expansion          | ⬜ Planned (L1–L8 garage customization: paint/bumper/driver/windows/doors/decals/tires; M1–M5 melee weapons: spikes/saw/hammer; N1–N2 engine tuning/replacement) |
 
 ## What's Built So Far
 
