@@ -18,6 +18,9 @@ with from the initial scaffold.
   200-400 coins). Selecting one recolours the car body immediately - in the garage turntable and
   in live gameplay - via a new `CarDamageView.setPaintColor()` that keeps the existing I3 damage
   tinting layered correctly on top of whatever colour is currently equipped.
+- **O1** Roof-mounted guns (machine gun/shotgun/rockets) now autoshoot the instant the
+  auto-aim mount (D8) locks a target in range - no more holding Fire. The flamethrower is
+  unchanged (camera-aimed, still needs the trigger held).
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 

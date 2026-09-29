@@ -882,7 +882,8 @@ async function boot(): Promise<void> {
       const cone = gun ? gun.stats.autoAimCone : Math.PI / 5;
       const range = gun ? gun.stats.range : shotgun ? shotgun.stats.range : 120;
       mount.update(pool, camForward, cone, range);
-      const trigger = AUTOPLAY ? mount.target !== null : input.isDown('fire');
+      // O1: roof guns autoshoot the moment the mount's auto-aim locks a target - no fire button needed.
+      const trigger = mount.target !== null;
       if (gun) {
         for (const shot of gun.update(deltaTime, trigger, mount)) {
           firing = true;

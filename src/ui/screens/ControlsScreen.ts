@@ -12,7 +12,7 @@ export function createControlsScreen(
     ['Drive / reverse', 'W / S or ↑ / ↓', 'Right / left trigger'],
     ['Steer', 'A / D or ← / →', 'Left stick'],
     ['Handbrake', 'Space', 'A'],
-    ['Fire', 'F or left click', 'Right bumper'],
+    ['Fire (flamethrower only — other guns autoshoot)', 'F or left click', 'Right bumper'],
     ['Nitro', 'Shift', 'X'],
     ['Flip reset', 'R', 'Y'],
     ['Orbit camera', 'Click, then move the mouse', 'Right stick'],

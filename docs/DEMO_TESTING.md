@@ -109,7 +109,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
-## M7 – Car Customization & Combat Expansion (in progress: L1/L2)
+## M7 – Car Customization & Combat Expansion (in progress: L1/L2, O1)
 
 - [ ] Garage → Customize tab: a "Paint" section lists 7 colour swatches; Stock Red shows "Equipped" and can't be bought again
 - [ ] Buy a colour you can afford: the button becomes "Equipped", its card gets a gold border, and the car turntable recolours immediately
@@ -117,6 +117,8 @@ Tick items in the PR that closes the milestone.
 - [ ] After owning two or more colours, switching between them (via their "Select" button) recolours the car without spending more coins
 - [ ] DRIVE with a purchased colour equipped: the car is the new colour in gameplay too, not just in the garage
 - [ ] Take damage with a custom colour equipped: the body still tints darker through dented/wrecked (I3) on top of the new paint, and repairing restores the _painted_ colour, not the original stock red
+- [ ] DRIVE toward a zombie with a roof gun equipped and never touch Fire: the gun opens up on its own once the zombie is in range/cone, exactly as if Fire were held
+- [ ] The flamethrower still requires holding Fire - it doesn't autoshoot
 
 ### Known quirks (non-blocking)
 
