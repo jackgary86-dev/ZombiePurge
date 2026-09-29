@@ -152,6 +152,21 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     expect(problems((c) => (c.combat.saw[0].damagePerSecond = 0))).toContain(
       'combat.saw[0].damagePerSecond must be a positive number (got 0)'
     );
+    expect(problems((c) => (c.combat.hammer = []))).toContain(
+      'combat.hammer needs at least one tier'
+    );
+    expect(problems((c) => (c.combat.hammer[0].damage = 0))).toContain(
+      'combat.hammer[0].damage must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.combat.hammer[0].knockback = -1))).toContain(
+      'combat.hammer[0].knockback must be zero or greater (got -1)'
+    );
+    expect(problems((c) => (c.combat.hammer[0].radius = 0))).toContain(
+      'combat.hammer[0].radius must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.combat.hammer[0].cooldownSeconds = 0))).toContain(
+      'combat.hammer[0].cooldownSeconds must be a positive number (got 0)'
+    );
     expect(problems((c) => (c.combat.runOverDamageFactor = 0))).toContain(
       'combat.runOverDamageFactor must be a positive number (got 0)'
     );

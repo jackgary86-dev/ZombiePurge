@@ -416,6 +416,17 @@ export interface SawTierStats {
   damagePerSecond: number;
 }
 
+/** M4: the hammer/flail's per-tier stats - a periodic AOE burst on its own cooldown, unlike
+ * the spike cluster (every contact) or the saw (continuous while touching). Doesn't require
+ * physical contact at all: anything within `radius` of the car when the cooldown expires
+ * takes `damage` and a knockback push. */
+export interface HammerTierStats {
+  damage: number;
+  knockback: number;
+  radius: number;
+  cooldownSeconds: number;
+}
+
 export interface CombatConfig {
   /** Per-tier stats for the machine gun (index 0 = tier 1). */
   machineGun: GunTierStats[];
@@ -426,6 +437,8 @@ export interface CombatConfig {
   spikes: MeleeTierStats[];
   /** M3: the second melee weapon, also front-mounted. */
   saw: SawTierStats[];
+  /** M4: the third melee weapon, also front-mounted. */
+  hammer: HammerTierStats[];
   /** Below this relative speed (m/s) a collision only pushes the zombie. */
   runOverMinSpeed: number;
   /** Zombie damage = relativeSpeed * carMass * this factor. */

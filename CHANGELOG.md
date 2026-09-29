@@ -66,6 +66,13 @@ with from the initial scaffold.
   `SawView` shows a spinning blade at the front whenever the saw is equipped (always spinning,
   independent of contact) via a new `AudioSystem.setSaw()` grinding loop and a spark flash
   (reusing the existing muzzle-flash view) specifically while the blade is touching something.
+- **M4** The third melee weapon, Swinging Hammer (3 tiers, config-driven
+  damage/knockback/radius/cooldown). A third distinct mechanic again: a new `HammerSwing` class
+  needs no physical contact at all - on its own cooldown it deals damage plus a knockback shove
+  to everything within `radius` of the car, reusing the same `Zombie.knockbackTimeLeft` stagger
+  the spike cluster (M2) introduced. A new `HammerView` plays a one-shot swing arc (not a
+  continuous loop like the saw's blade) each time it fires, and a muzzle-flash/thump plays when
+  the swing actually connects.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 

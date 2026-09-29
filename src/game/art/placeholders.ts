@@ -557,3 +557,55 @@ export class SawView {
     if (active) this.blade.rotation.y += dt * 12;
   }
 }
+
+const hammerSteel = new MeshStandardMaterial({ color: 0x5a5e64, metalness: 0.6, roughness: 0.5 });
+const hammerWood = new MeshStandardMaterial({ color: 0x6b4a2f, roughness: 0.8 });
+const HAMMER_SWING_SECONDS = 0.3;
+const HAMMER_REST_ANGLE = -0.4;
+
+/**
+ * M4: the Swinging Hammer's front-mounted arm. Rests at a fixed angle most of the time; each
+ * `triggerSwing()` plays a quick one-shot arc (out and back) rather than looping continuously
+ * like the saw's blade, matching the weapon's own periodic-burst cooldown rather than a
+ * continuous animation.
+ */
+export class HammerView {
+  readonly group = new Group();
+  private readonly arm = new Group();
+  private swingTime = Infinity;
+
+  constructor(he: { x: number; y: number; z: number }) {
+    this.group.visible = false;
+    this.group.position.set(0, he.y * 0.5, he.z + 0.1);
+    this.group.add(this.arm);
+    this.arm.rotation.x = HAMMER_REST_ANGLE;
+
+    const handle = new Mesh(new CylinderGeometry(0.04, 0.04, 0.6, 8), hammerWood);
+    handle.position.set(0, 0, 0.3);
+    handle.rotation.x = Math.PI / 2;
+    this.arm.add(handle);
+
+    const head = new Mesh(new BoxGeometry(0.22, 0.22, 0.32), hammerSteel);
+    head.position.set(0, 0, 0.65);
+    head.castShadow = true;
+    this.arm.add(head);
+  }
+
+  /** Starts a one-shot swing arc; safe to call again mid-swing (restarts it). */
+  triggerSwing(): void {
+    this.swingTime = 0;
+  }
+
+  /** Call once per Playing tick. */
+  update(dt: number, active: boolean): void {
+    this.group.visible = active;
+    if (!active) return;
+    if (this.swingTime < HAMMER_SWING_SECONDS) {
+      this.swingTime += dt;
+      const t = Math.min(1, this.swingTime / HAMMER_SWING_SECONDS);
+      this.arm.rotation.x = HAMMER_REST_ANGLE + Math.sin(t * Math.PI) * 1.3;
+    } else {
+      this.arm.rotation.x = HAMMER_REST_ANGLE;
+    }
+  }
+}

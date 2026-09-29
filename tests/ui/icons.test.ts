@@ -15,6 +15,7 @@ const ALL_ICONS: IconName[] = [
   'ram',
   'melee',
   'saw',
+  'hammer',
   'nitro',
   'radar',
   'headlights',
@@ -86,6 +87,7 @@ describe('I10 icon set', () => {
     expect(iconForUpgrade('flamethrower', 'weapon')).toContain('icon-flamethrower');
     expect(iconForUpgrade('spikes', 'melee')).toContain('icon-melee');
     expect(iconForUpgrade('saw', 'melee')).toContain('icon-saw');
+    expect(iconForUpgrade('hammer', 'melee')).toContain('icon-hammer');
     expect(iconForUpgrade('engine', 'engine')).toContain('icon-engine');
     expect(iconForUpgrade('unknown-id', 'nitro')).toContain('icon-nitro');
   });

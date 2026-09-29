@@ -160,6 +160,13 @@ export function collectConfigProblems(config: GameConfig): string[] {
   config.combat.saw.forEach((s, i) => {
     positive(s.damagePerSecond, `combat.saw[${i}].damagePerSecond`, problems);
   });
+  if (config.combat.hammer.length === 0) problems.push('combat.hammer needs at least one tier');
+  config.combat.hammer.forEach((h, i) => {
+    positive(h.damage, `combat.hammer[${i}].damage`, problems);
+    nonNegative(h.knockback, `combat.hammer[${i}].knockback`, problems);
+    positive(h.radius, `combat.hammer[${i}].radius`, problems);
+    positive(h.cooldownSeconds, `combat.hammer[${i}].cooldownSeconds`, problems);
+  });
   nonNegative(config.combat.runOverMinSpeed, 'combat.runOverMinSpeed', problems);
   positive(config.combat.runOverDamageFactor, 'combat.runOverDamageFactor', problems);
   positive(config.combat.impactFullSpeed, 'combat.impactFullSpeed', problems);

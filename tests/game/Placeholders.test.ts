@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Mesh, MeshStandardMaterial } from 'three';
-import { buildPlaceholderCar, SawView } from '../../src/game/art';
+import { buildPlaceholderCar, HammerView, SawView } from '../../src/game/art';
 import { DEFAULT_CONFIG } from '../../src/data/defaults';
 
 describe('L3/L4 car cosmetics on the placeholder car', () => {
@@ -93,5 +93,28 @@ describe('M3 SawView', () => {
     expect(spunRotation).not.toBeCloseTo(startRotation);
     saw.update(0.5, false);
     expect(blade.rotation.y).toBeCloseTo(spunRotation); // no further spin once inactive
+  });
+});
+
+describe('M4 HammerView', () => {
+  it('is hidden until activated and rests without swinging', () => {
+    const hammer = new HammerView(DEFAULT_CONFIG.vehicle.chassisHalfExtents);
+    expect(hammer.group.visible).toBe(false);
+    const arm = hammer.group.children[0];
+    const restRotation = arm.rotation.x;
+    hammer.update(1 / 60, true);
+    expect(hammer.group.visible).toBe(true);
+    expect(arm.rotation.x).toBeCloseTo(restRotation); // no swing triggered yet
+  });
+
+  it('plays a one-shot swing arc that returns to rest, not a continuous loop', () => {
+    const hammer = new HammerView(DEFAULT_CONFIG.vehicle.chassisHalfExtents);
+    const arm = hammer.group.children[0];
+    const restRotation = arm.rotation.x;
+    hammer.triggerSwing();
+    hammer.update(0.1, true); // partway through the swing
+    expect(arm.rotation.x).not.toBeCloseTo(restRotation);
+    hammer.update(1, true); // long past the swing's duration
+    expect(arm.rotation.x).toBeCloseTo(restRotation); // settled back to rest
   });
 });

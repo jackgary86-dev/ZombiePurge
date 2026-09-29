@@ -2,6 +2,7 @@ import { Quaternion, Vector3 } from 'three';
 import type {
   FlamethrowerTierStats,
   GunTierStats,
+  HammerTierStats,
   RocketTierStats,
   ShotgunTierStats,
 } from '../../data/types';
@@ -443,5 +444,66 @@ export class RocketLauncher {
       }
     }
     return { position: at, radius, kills };
+  }
+}
+
+/** M4: seconds a zombie ignores its own AI movement after a hammer knockback shove. */
+const HAMMER_STUN_SECONDS = 0.35;
+
+export interface SwingResult {
+  /** True the step the cooldown expired and the hammer actually swung (whether or not it hit). */
+  swung: boolean;
+  hits: number;
+  kills: KillReport[];
+}
+
+const hammerKnockbackDir = new Vector3();
+
+/**
+ * M4: a periodic AOE burst on its own cooldown - unlike the spike cluster (every physical
+ * contact) or the saw (continuous while touching), the hammer needs no contact at all. Anything
+ * within `radius` of the car when the cooldown expires takes damage and a knockback shove.
+ */
+export class HammerSwing {
+  cooldownLeft = 0;
+
+  constructor(
+    private readonly pool: ZombiePool,
+    public stats: HammerTierStats
+  ) {}
+
+  /** Call once per Playing tick with the car's current world position. */
+  update(dt: number, carPosition: Vector3): SwingResult {
+    this.cooldownLeft = Math.max(0, this.cooldownLeft - dt);
+    if (this.cooldownLeft > 0) return { swung: false, hits: 0, kills: [] };
+    this.cooldownLeft = this.stats.cooldownSeconds;
+
+    const kills: KillReport[] = [];
+    let hits = 0;
+    for (const z of this.pool.active()) {
+      if (!z.isAlive()) continue;
+      const d = z.getPosition().distanceTo(carPosition);
+      if (d > this.stats.radius) continue;
+      hits++;
+      const killed = z.takeDamage(this.stats.damage);
+      if (killed) {
+        const p = z.getPosition();
+        kills.push({ zombie: z, position: { x: p.x, y: p.y, z: p.z } });
+        continue;
+      }
+      if (this.stats.knockback > 0) {
+        hammerKnockbackDir.copy(z.getPosition()).sub(carPosition);
+        hammerKnockbackDir.y = 0;
+        if (hammerKnockbackDir.lengthSq() > 1e-6) {
+          hammerKnockbackDir.normalize();
+          z.setHorizontalVelocity(
+            hammerKnockbackDir.x * this.stats.knockback,
+            hammerKnockbackDir.z * this.stats.knockback
+          );
+          z.knockbackTimeLeft = HAMMER_STUN_SECONDS;
+        }
+      }
+    }
+    return { swung: true, hits, kills };
   }
 }

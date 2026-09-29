@@ -18,6 +18,7 @@ export type IconName =
   | 'ram'
   | 'melee'
   | 'saw'
+  | 'hammer'
   | 'nitro'
   | 'radar'
   | 'headlights'
@@ -75,6 +76,7 @@ const SHAPES: Record<IconName, string> = {
     (a) => `<line x1="12" y1="4" x2="12" y2="1.5" transform="rotate(${a} 12 12)"/>`,
     [0, 45, 90, 135, 180, 225, 270, 315]
   )}`,
+  hammer: `<path d="M5 19 13 11" stroke-width="2.6"/><rect x="10.5" y="4" width="9" height="6" rx="1" transform="rotate(45 15 7)"/>`,
   nitro: `<path d="M12 2.5c2.2 4-3.2 5.4-3.2 9.7a3.2 3.2 0 0 0 6.4 0c0-2.1-1.1-3.2-1.1-5.3 2.1 1.1 3.4 4.3 3.4 6.7a5.5 5.5 0 0 1-11 0c0-5.6 3.4-6.7 5.5-11.1z" fill="currentColor" stroke="none"/>`,
   radar: `<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5" stroke-width="1.2"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><path d="M12 12 18.5 7.3" stroke-width="1.6"/>`,
   headlights: `<circle cx="7.5" cy="12" r="3" fill="currentColor" stroke="none"/><path d="M12 9.5 21 6M12 12h9M12 14.5 21 18" stroke-width="2"/>`,
@@ -109,6 +111,7 @@ const ID_ICON: Partial<Record<string, IconName>> = {
   flamethrower: 'flamethrower',
   spikes: 'melee',
   saw: 'saw',
+  hammer: 'hammer',
 };
 
 const CATEGORY_ICON: Record<UpgradeCategory, IconName> = {
