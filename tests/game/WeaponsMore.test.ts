@@ -159,6 +159,31 @@ describe('D10 flamethrower and D11 shotgun / rockets', () => {
     expect(launcher.state.rounds).toBe(stats.magazine - 1);
   });
 
+  it('rocket launcher reloads once its magazine empties, then can fire again', () => {
+    const stats = getConfig().combat.rockets[0];
+    const launcher = new RocketLauncher(physics, car, pool, stats);
+    const mount = new WeaponMount(car, ROOF_MOUNT);
+    mount.aimMode = 'camera';
+    cameraDir.set(0, 0, 1);
+
+    // Empty the magazine straight up, well away from any ground/zombie collision, so every
+    // pull of the trigger fires a fresh rocket rather than waiting on `interval` between shots.
+    for (let shot = 0; shot < stats.magazine; shot++) {
+      mount.update(pool, cameraDir, 0, 100);
+      launcher.update(DT, true, mount);
+      for (let i = 0; i < Math.ceil(stats.fireInterval / DT) + 1; i++) {
+        launcher.update(DT, false, mount);
+        physics.step();
+      }
+    }
+    expect(launcher.state.rounds).toBe(0);
+    expect(launcher.state.reloading).toBe(true);
+
+    for (let i = 0; i < stats.reloadSeconds / DT + 2; i++) launcher.update(DT, false, mount);
+    expect(launcher.state.reloading).toBe(false);
+    expect(launcher.state.rounds).toBe(stats.magazine);
+  });
+
   describe('M4 hammer swing', () => {
     it('swings immediately, hits everything in radius, knocks back survivors, ignores the rest', () => {
       const stats = getConfig().combat.hammer[0];

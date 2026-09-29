@@ -57,6 +57,15 @@ describe('Zombie AI', () => {
     expect(z.state).toBe('idle');
   });
 
+  it('gets alerted mid-wander when the car closes inside detection range, not just from idle', () => {
+    const z = pool.spawn('walker', { x: 200, y: 0, z: 200 })!;
+    run(z, 3); // idle time with rng 0.5 = 2.75 s
+    expect(z.state).toBe('wander');
+    senses.carPosition.copy(z.getPosition()); // right on top of it: well inside detection
+    updateZombieAI(z, DT, senses, DEFAULT_ZOMBIE_AI, () => 0.5);
+    expect(z.state).toBe('alerted');
+  });
+
   it('does not notice a car beyond its detection radius but the player can see it', () => {
     const walker = getConfig().zombies.walker;
     const z = pool.spawn('walker', { x: 0, y: 0, z: walker.detectionRadius + 5 })!;

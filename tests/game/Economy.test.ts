@@ -105,6 +105,22 @@ describe('RunStats (C1 coins per kill, C2 distance bonus, C4 summary)', () => {
     expect(off.coinsFromKills).toBe(10);
   });
 
+  it('addBonus grants coins outside kills/distance, floored to whole coins', () => {
+    stats.addBonus(4.9);
+    stats.addBonus(2.2);
+    expect(stats.coinsTotal).toBe(6); // floor(4.9) + floor(2.2)
+  });
+
+  it('comboTimeLeft counts down within the window and is 0 outside a chain', () => {
+    const at = { x: 0, y: 0, z: 0 };
+    const pos = new Vector3();
+    expect(stats.comboTimeLeft).toBe(0); // no chain yet
+    stats.recordKill('walker', at);
+    expect(stats.comboTimeLeft).toBeCloseTo(getConfig().rewards.combo.windowSeconds, 5);
+    stats.trackPosition(pos, 1);
+    expect(stats.comboTimeLeft).toBeCloseTo(getConfig().rewards.combo.windowSeconds - 1, 5);
+  });
+
   it('summarises kills, distance and coin sources', () => {
     stats.recordKill('walker', { x: 0, y: 0, z: 0 });
     stats.recordKill('tank', { x: 0, y: 0, z: 0 });

@@ -10,6 +10,15 @@ describe('D13 nitro', () => {
     expect(n.boosting).toBe(false);
     expect(n.accelerationMultiplier).toBe(1);
     expect(n.topSpeedBonus).toBe(0);
+    expect(n.fraction).toBe(0); // no capacity to divide by, not NaN/Infinity
+  });
+
+  it('a first purchase starts full rather than inheriting a 0/0 fill fraction', () => {
+    const n = new Nitro(0);
+    n.setCapacity(8);
+    expect(n.capacitySeconds).toBe(8);
+    expect(n.charge).toBe(8);
+    expect(n.fraction).toBe(1);
   });
 
   it('boosts while held, drains the charge, and stops when empty', () => {

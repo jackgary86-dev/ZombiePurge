@@ -138,6 +138,25 @@ describe('Vehicle', () => {
     expect(car.body.mass()).toBeCloseTo(startMass - 150, 1);
   });
 
+  it('handbrake sheds speed faster than coasting, without reversing past a standstill', () => {
+    run(physics, car, 1);
+    run(physics, car, 3, { throttle: 1 });
+    const before = car.getForwardSpeed();
+    expect(before).toBeGreaterThan(5);
+    run(physics, car, 1, { handbrake: true });
+    const withHandbrake = car.getForwardSpeed();
+
+    const { physics: physics2, car: coastCar } = makeWorld();
+    run(physics2, coastCar, 1);
+    run(physics2, coastCar, 3, { throttle: 1 });
+    run(physics2, coastCar, 1); // coast, no input at all
+    const coasting = coastCar.getForwardSpeed();
+    physics2.dispose();
+
+    expect(withHandbrake).toBeLessThan(coasting); // handbrake sheds more speed than rolling resistance alone
+    expect(withHandbrake).toBeGreaterThanOrEqual(0); // never yanks it into reverse
+  });
+
   it("N2: a heavier or lighter mass doesn't change the achieved acceleration - drive force scales with mass to compensate", () => {
     run(physics, car, 1);
     run(physics, car, 3, { throttle: 1 });

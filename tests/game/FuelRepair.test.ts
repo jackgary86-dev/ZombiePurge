@@ -35,6 +35,15 @@ describe('D6 fuel tank', () => {
     expect(tank.capacity).toBe(120);
     expect(tank.fraction).toBeCloseTo((60 - 0.63) / 60, 3);
   });
+
+  it('fill() tops the tank off instantly, ignoring the current level', () => {
+    const tank = new FuelTank(60);
+    for (let i = 0; i < 60 * 10; i++) tank.update(1 / 60, 1, 1);
+    expect(tank.level).toBeLessThan(60);
+    tank.fill();
+    expect(tank.level).toBe(60);
+    expect(tank.isEmpty()).toBe(false);
+  });
 });
 
 describe('D7 repair', () => {
