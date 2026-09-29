@@ -134,7 +134,17 @@ with from the initial scaffold.
 - **I2** Asset pipeline: the `assets/models/{category}/` folder convention, `GameConfig.assetBudget`
   (real validated config, not just docs) for per-category triangle/texture budgets, and
   `AssetLoader.loadModel()` (GLTFLoader, resolves to `null` on any failure so placeholder art
-  keeps rendering until real `.glb`s land).
+  keeps rendering until real `.glb`s land). Follow-up: `getLoader()` now always wires in
+  `DRACOLoader` (geometry compression) and `MeshoptDecoder` - neither needs a renderer, and
+  three's own loaders resolve their decoder libraries to their own bundled URLs by default
+  (`import.meta.url`-relative, which Vite turns into fingerprinted build assets with no manual
+  `public/` copy - confirmed via a real `vite build`). KTX2 (Basis Universal) texture decoding
+  needs to know which compressed formats the GPU supports, so it's wired in separately via the
+  new `configureKTX2(renderer)`, meant to be called once at boot after the renderer exists (not
+  called yet - nothing under `assets/` uses KTX2 textures in this session). None of this was
+  "verified in-game" against a real compressed asset, since none exists in the repo yet; verified
+  instead via `_sharedLoaderForTests()` unit tests confirming the loaders are actually attached,
+  plus a real production build and a clean headless boot with the new code paths compiled in.
 - **I3** Car damage-state visuals: the body tints and grows dent decals through clean → dented →
   wrecked as HP drops (`carDamage` config thresholds) - a placeholder-art extension; real
   modeled damage states still need a 3D art pass.
