@@ -326,28 +326,67 @@ export class ProjectileViews {
   }
 }
 
-/** Roof turret stand-in: a base block and a barrel that yaw toward the mount's aim. */
+/** M5: which roof weapon's silhouette the turret mount currently shows. */
+export type TurretKind = 'machinegun' | 'shotgun' | 'rockets';
+
+const BARREL_MATERIAL = new MeshStandardMaterial({ color: 0x202024, metalness: 0.5 });
+
+/** Roof turret stand-in: a base block plus a barrel arrangement that yaws toward the
+ * mount's aim. M5: the barrel arrangement is swapped per `TurretKind` so machine gun,
+ * shotgun and rockets read as different weapons instead of one generic turret. */
 export class TurretView {
   readonly group = new Group();
+  private readonly barrels = new Group();
+  private kind: TurretKind = 'machinegun';
 
   constructor(localOffset: Vector3) {
     const base = new Mesh(
       new BoxGeometry(0.5, 0.25, 0.5),
       new MeshStandardMaterial({ color: 0x3a3a40, roughness: 0.6 })
     );
-    const barrel = new Mesh(
-      new BoxGeometry(0.12, 0.12, 1.1),
-      new MeshStandardMaterial({ color: 0x202024, metalness: 0.5 })
-    );
-    barrel.position.set(0, 0.2, 0.45);
     base.castShadow = true;
-    this.group.add(base, barrel);
+    this.group.add(base, this.barrels);
     this.group.position.copy(localOffset).add(new Vector3(0, -0.15, 0));
     this.group.visible = false;
+    this.buildBarrels();
   }
 
   set visible(v: boolean) {
     this.group.visible = v;
+  }
+
+  /** Swaps the barrel silhouette; a no-op when it already matches. */
+  setKind(kind: TurretKind): void {
+    if (kind === this.kind) return;
+    this.kind = kind;
+    this.buildBarrels();
+  }
+
+  private buildBarrels(): void {
+    while (this.barrels.children.length > 0) this.barrels.remove(this.barrels.children[0]);
+    if (this.kind === 'shotgun') {
+      // A short, stubby double barrel.
+      for (const side of [-1, 1]) {
+        const barrel = new Mesh(new BoxGeometry(0.1, 0.1, 0.7), BARREL_MATERIAL);
+        barrel.position.set(side * 0.09, 0.2, 0.4);
+        this.barrels.add(barrel);
+      }
+    } else if (this.kind === 'rockets') {
+      // A 2x2 cluster of launch tubes.
+      for (const x of [-0.09, 0.09]) {
+        for (const y of [0.1, 0.3]) {
+          const tube = new Mesh(new CylinderGeometry(0.09, 0.09, 0.9, 8), BARREL_MATERIAL);
+          tube.rotation.x = Math.PI / 2;
+          tube.position.set(x, y, 0.45);
+          this.barrels.add(tube);
+        }
+      }
+    } else {
+      // Machine gun: a single long barrel.
+      const barrel = new Mesh(new BoxGeometry(0.12, 0.12, 1.1), BARREL_MATERIAL);
+      barrel.position.set(0, 0.2, 0.45);
+      this.barrels.add(barrel);
+    }
   }
 
   /** `yaw` is relative to the car (0 = straight ahead). */

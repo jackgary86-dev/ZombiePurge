@@ -94,7 +94,7 @@ assets/            # 3D models, textures, sounds
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                             |
 | **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                              |
 | **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
-| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L8, O1, M1-M4 done; M5 weapon visual selection, N1–N2 engine tuning/replacement remaining)                                        |
+| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L8, O1, M1-M5 done; N1–N2 engine tuning/replacement remaining)                                                                    |
 
 ## What's Built So Far
 
@@ -155,6 +155,7 @@ assets/            # 3D models, textures, sounds
 - **M1/M2** A new Melee weapon slot/category (front-mounted, alongside the ram and flamethrower) plus its first weapon, the Spike Cluster: flat contact damage and a knockback shove on every car-zombie touch, independent of the speed-scaled run-over damage the Front Ram (D12) multiplies. A growing spike-cluster model shows on the front once equipped.
 - **M3** The second melee weapon, Circular Saw: continuous damage every tick a zombie stays touching the car (not one hit per contact like the spikes), tracked across Rapier collision start/stop events. A spinning blade shows at the front whenever it's equipped, with a grinding sound and a spark flash specifically while it's touching something.
 - **M4** The third melee weapon, Swinging Hammer: a third distinct mechanic again - a periodic AOE burst on its own cooldown that needs no physical contact at all, hitting everything within a radius of the car with damage and a knockback shove. A one-shot swing animation plays on the front mount each time it fires, with a flash/thump on any hit.
+- **M5** The roof turret's shape now reflects whichever weapon is actually equipped, instead of always showing the same generic base-and-barrel silhouette: Machine Gun keeps the single long barrel, Shotgun gets a short stubby double barrel, and Rockets gets a 2x2 cluster of launch tubes. The front-mounted weapons (Flamethrower, Spike Cluster, Circular Saw, Swinging Hammer) already had distinct equipped visuals as of M1-M4, so this closes the same gap for the roof slot.
 
 ## Development
 
