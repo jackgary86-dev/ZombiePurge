@@ -73,6 +73,15 @@ with from the initial scaffold.
   the spike cluster (M2) introduced. A new `HammerView` plays a one-shot swing arc (not a
   continuous loop like the saw's blade) each time it fires, and a muzzle-flash/thump plays when
   the swing actually connects.
+- **N1** Engine tuning: `VehicleConfig.engineTuning.swingFactor` (0.5 by default) plus a new
+  `Garage.engineTuning` slider (-1..+1, 0 = balanced) that redistributes the _owned engine
+  tier's own_ topSpeed/acceleration modifiers - `topSpeed * (1 + tuning * swingFactor)` and
+  `acceleration * (1 - tuning * swingFactor)` - inside `totalModifiers()`, rather than adding a
+  new upgrade tier ladder. A balanced slider (the default) reproduces the exact pre-N1 stats
+  bit-for-bit. Free to change at any time, persists across reloads, and has no effect before the
+  engine upgrade is owned. A new "Engine Tuning" slider appears in the Garage's Engine tab once
+  owned; dragging it applies live (an `input` listener) without tearing down the slider mid-drag,
+  and releasing it (`change`) refreshes the tier cards' own stat previews.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 

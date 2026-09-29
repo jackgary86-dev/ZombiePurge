@@ -162,6 +162,48 @@ describe('D2 Garage purchase & equip logic', () => {
     expect(base.topSpeed).toBe(50); // base untouched
   });
 
+  it("N1: engine tuning redistributes the owned engine tier's own top speed/acceleration bonus", () => {
+    const base = getConfig().vehicle;
+    expect(garage.engineTuning).toBe(0); // balanced by default
+
+    wallet.add(10000);
+    garage.currentMap = 3;
+    garage.buy('engine'); // tier 1: +6 top speed, +1.5 acceleration
+    const balanced = garage.effectiveStats(base);
+    expect(balanced.topSpeed).toBe(base.topSpeed + 6);
+    expect(balanced.acceleration).toBe(base.acceleration + 1.5);
+
+    const swing = base.engineTuning.swingFactor; // 0.5 by default
+    garage.setEngineTuning(1); // full top speed
+    const maxSpeed = garage.effectiveStats(base);
+    expect(maxSpeed.topSpeed).toBeCloseTo(base.topSpeed + 6 * (1 + swing));
+    expect(maxSpeed.acceleration).toBeCloseTo(base.acceleration + 1.5 * (1 - swing));
+
+    garage.setEngineTuning(-1); // full acceleration
+    const maxAccel = garage.effectiveStats(base);
+    expect(maxAccel.topSpeed).toBeCloseTo(base.topSpeed + 6 * (1 - swing));
+    expect(maxAccel.acceleration).toBeCloseTo(base.acceleration + 1.5 * (1 + swing));
+
+    // Out-of-range values clamp rather than distort the swing further.
+    garage.setEngineTuning(5);
+    expect(garage.engineTuning).toBe(1);
+    garage.setEngineTuning(-5);
+    expect(garage.engineTuning).toBe(-1);
+
+    // Other stats are untouched by tuning.
+    garage.buy('armor');
+    expect(garage.effectiveStats(base).armor).toBe(base.armor + 15);
+  });
+
+  it('N1: tuning has no effect before the engine is owned, and persists across reload', () => {
+    const base = getConfig().vehicle;
+    garage.setEngineTuning(1);
+    expect(garage.effectiveStats(base).topSpeed).toBe(base.topSpeed); // no engine owned yet
+
+    const reloaded = new Garage(getConfig().upgrades, wallet, 1, storage);
+    expect(reloaded.engineTuning).toBe(1);
+  });
+
   it('persists ownership and loadout, and ignores corrupt saves', () => {
     wallet.add(5000);
     garage.buy('tires');

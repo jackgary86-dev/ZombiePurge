@@ -191,4 +191,42 @@ describe('J4 GarageMenu DOM', () => {
     expect(garage.selectedCosmetic('paint')?.id).toBe('paint_stock');
     expect(changes).toBe(2);
   });
+
+  it('N1: the engine tuning slider only appears once the engine is owned, and drives Garage', () => {
+    resetConfig();
+    const wallet = new Wallet(getConfig().rewards, new MemoryStorage());
+    wallet.add(1000);
+    const garage = new Garage(getConfig().upgrades, wallet, 1, new MemoryStorage());
+    let changes = 0;
+    menu = new GarageMenu(garage, getConfig().vehicle, wallet, { onChange: () => changes++ });
+    menu.open();
+    menu.el.querySelector<HTMLButtonElement>('[data-category="engine"]')!.click();
+    expect(menu.el.querySelector('.engine-tuning')).toBeNull();
+
+    menu.el.querySelector<HTMLElement>('[data-upgrade="engine"] button.buy')!.click();
+    expect(changes).toBe(1);
+    const slider = menu.el.querySelector<HTMLInputElement>('.engine-tuning-slider')!;
+    expect(slider).not.toBeNull();
+    expect(slider.value).toBe('0');
+
+    slider.value = '1';
+    slider.dispatchEvent(new Event('input'));
+    expect(garage.engineTuning).toBe(1);
+    expect(changes).toBe(2);
+    expect(menu.el.querySelector('.engine-tuning-readout')!.textContent).toBe(
+      '100% toward Top Speed'
+    );
+    // `input` alone deliberately doesn't rebuild the card list (that would tear down the
+    // slider mid-drag), so the engine card's own stat preview hasn't picked up tuning yet.
+    const beforeRelease = menu.el.querySelector(
+      '.tier-card[data-upgrade="engine"] .stat-row'
+    )!.textContent!;
+    expect(beforeRelease).toContain('56');
+
+    slider.dispatchEvent(new Event('change'));
+    const afterRelease = menu.el.querySelector(
+      '.tier-card[data-upgrade="engine"] .stat-row'
+    )!.textContent!;
+    expect(afterRelease).toContain('59'); // 50 + 6 * (1 + 0.5 swingFactor)
+  });
 });

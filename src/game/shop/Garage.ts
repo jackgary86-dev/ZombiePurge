@@ -50,6 +50,8 @@ interface GarageSave {
   cosmeticsOwned?: string[];
   /** L1: the selected option id per cosmetic category id. */
   cosmeticsSelected?: Record<string, string>;
+  /** N1: engine tuning slider, -1 (max acceleration) to +1 (max top speed), 0 = balanced. */
+  engineTuning?: number;
 }
 
 /** Combined effect of every owned upgrade (highest owned tier of each counts). */
@@ -90,6 +92,9 @@ export class Garage {
   private ownedCosmetics = new Set<string>();
   private selectedCosmetics = new Map<string, string>();
   private readonly cosmeticById = new Map<string, { categoryId: string; option: CosmeticOption }>();
+  /** N1: -1 (max acceleration) to +1 (max top speed), 0 = balanced. Only has an effect once the
+   *  engine upgrade is owned - see totalModifiers(). */
+  private tuning = 0;
 
   constructor(
     readonly upgrades: UpgradeDef[],
@@ -223,8 +228,22 @@ export class Garage {
     return true;
   }
 
-  /** Highest owned tier of each upgrade, folded into one set of stat modifiers. */
-  totalModifiers(): Required<StatModifiers> {
+  /** N1: -1 (max acceleration) to +1 (max top speed), 0 = balanced. */
+  get engineTuning(): number {
+    return this.tuning;
+  }
+
+  /** Clamped to [-1, 1]. Free to change at any time - only has an effect once the engine
+   *  upgrade is owned (its own tier's modifiers are what gets redistributed). */
+  setEngineTuning(value: number): void {
+    this.tuning = Math.max(-1, Math.min(1, value));
+    this.save();
+  }
+
+  /** Highest owned tier of each upgrade, folded into one set of stat modifiers. N1: the
+   *  engine's own topSpeed/acceleration bonus is redistributed by the tuning slider, scaled by
+   *  `swingFactor` (0 = balanced, matching every other upgrade's plain sum). */
+  totalModifiers(swingFactor = 0): Required<StatModifiers> {
     const total: Required<StatModifiers> = {
       topSpeed: 0,
       acceleration: 0,
@@ -239,6 +258,7 @@ export class Garage {
       radarRange: 0,
       headlightRange: 0,
     };
+    const swing = this.tuning * swingFactor;
     for (const [id, tierNo] of this.owned) {
       const def = this.byId.get(id);
       const tier = def?.tiers[tierNo - 1];
@@ -246,14 +266,16 @@ export class Garage {
       // Weapons contribute stats only while mounted; passive upgrades always do.
       if (def!.slot && def!.category === 'weapon' && !this.isEquipped(id)) continue;
       for (const [k, v] of Object.entries(tier.modifiers) as [keyof StatModifiers, number][]) {
-        total[k] += v;
+        if (id === 'engine' && k === 'topSpeed') total[k] += v * (1 + swing);
+        else if (id === 'engine' && k === 'acceleration') total[k] += v * (1 - swing);
+        else total[k] += v;
       }
     }
     return total;
   }
 
   effectiveStats(base: VehicleConfig): EffectiveStats {
-    const m = this.totalModifiers();
+    const m = this.totalModifiers(base.engineTuning.swingFactor);
     return {
       topSpeed: base.topSpeed + m.topSpeed,
       acceleration: base.acceleration + m.acceleration,
@@ -293,6 +315,7 @@ export class Garage {
     this.equipped.clear();
     this.ownedCosmetics.clear();
     this.selectedCosmetics.clear();
+    this.tuning = 0;
     this.save();
   }
 
@@ -322,6 +345,13 @@ export class Garage {
           this.selectedCosmetics.set(categoryId, id);
         }
       }
+      if (
+        typeof saved.engineTuning === 'number' &&
+        saved.engineTuning >= -1 &&
+        saved.engineTuning <= 1
+      ) {
+        this.tuning = saved.engineTuning;
+      }
     } catch {
       // Corrupt save: start with a stock car rather than crash.
     }
@@ -334,6 +364,7 @@ export class Garage {
       equipped: Object.fromEntries(this.equipped),
       cosmeticsOwned: [...this.ownedCosmetics],
       cosmeticsSelected: Object.fromEntries(this.selectedCosmetics),
+      engineTuning: this.tuning,
     };
     this.storage?.setItem(GARAGE_STORAGE_KEY, JSON.stringify(save));
   }

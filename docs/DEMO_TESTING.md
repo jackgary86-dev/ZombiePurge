@@ -109,7 +109,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
-## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1-M4)
+## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1-M4, N1)
 
 - [ ] Garage → Customize tab: a "Paint" section lists 7 colour swatches; Stock Red shows "Equipped" and can't be bought again
 - [ ] Buy a colour you can afford: the button becomes "Equipped", its card gets a gold border, and the car turntable recolours immediately
@@ -138,6 +138,13 @@ Tick items in the PR that closes the milestone.
 - [ ] Garage → Melee tab: a "Swinging Hammer" card lists 3 tiers; buying it equips it into the front slot and a hammer arm appears at the front, at rest
 - [ ] DRIVE near a horde with the Hammer equipped and just wait (no need to touch a zombie): it periodically swings on its own cooldown, damaging and knocking back everything within its radius, with the arm playing a one-shot swing animation and a flash/thump when it connects
 - [ ] Only one of Ram/Flamethrower/Spikes/Saw/Hammer shows or works at a time - buying a new one always takes over the front slot from whichever was equipped before
+- [ ] Garage → Engine tab, before owning the Engine upgrade: no tuning slider is shown
+- [ ] Buy Engine tier 1: an "Engine Tuning" slider appears above the Engine card, starting "Balanced" in the middle
+- [ ] Drag the slider toward "Top Speed": a live readout updates (e.g. "60% toward Top Speed"); releasing it updates the Engine card's own top speed/acceleration preview - top speed goes up, acceleration goes down from the balanced values
+- [ ] Drag the slider toward "Acceleration" instead: the opposite trade - acceleration goes up, top speed goes down
+- [ ] Adjusting the slider costs no coins and can be changed as many times as you like
+- [ ] DRIVE with the slider tuned toward Top Speed vs. toward Acceleration: the car's actual handling changes to match (noticeably higher top speed, or noticeably snappier off the line)
+- [ ] Leave the Garage and come back (or reload the page): the tuning slider keeps whatever position it was left at
 
 ### Known quirks (non-blocking)
 
