@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Mesh, MeshStandardMaterial } from 'three';
-import { buildPlaceholderCar } from '../../src/game/art';
+import { buildPlaceholderCar, SawView } from '../../src/game/art';
 import { DEFAULT_CONFIG } from '../../src/data/defaults';
 
 describe('L3/L4 car cosmetics on the placeholder car', () => {
@@ -71,5 +71,27 @@ describe('L3/L4 car cosmetics on the placeholder car', () => {
       expect(wheel.children.filter((c) => c.name === 'tire_trim')).toHaveLength(1);
       expect(wheel.getObjectByName('tire_trim')!.children.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('M3 SawView', () => {
+  it('is hidden until activated', () => {
+    const saw = new SawView(DEFAULT_CONFIG.vehicle.chassisHalfExtents);
+    expect(saw.group.visible).toBe(false);
+    saw.update(1 / 60, true);
+    expect(saw.group.visible).toBe(true);
+    saw.update(1 / 60, false);
+    expect(saw.group.visible).toBe(false);
+  });
+
+  it('spins continuously while active and stops accumulating spin while inactive', () => {
+    const saw = new SawView(DEFAULT_CONFIG.vehicle.chassisHalfExtents);
+    const blade = saw.group.children[0];
+    const startRotation = blade.rotation.y;
+    saw.update(0.5, true);
+    const spunRotation = blade.rotation.y;
+    expect(spunRotation).not.toBeCloseTo(startRotation);
+    saw.update(0.5, false);
+    expect(blade.rotation.y).toBeCloseTo(spunRotation); // no further spin once inactive
   });
 });

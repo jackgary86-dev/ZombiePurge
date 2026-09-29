@@ -40,6 +40,8 @@ export class AudioSystem {
   private skidGain: GainNode | null = null;
   private flameSource: AudioBufferSourceNode | null = null;
   private flameGain: GainNode | null = null;
+  private sawSource: AudioBufferSourceNode | null = null;
+  private sawGain: GainNode | null = null;
   private groanVoices: { osc: OscillatorNode; gain: GainNode }[] = [];
   private readonly groanScratch: { distance: number }[] = [];
   private musicOscA: OscillatorNode | null = null;
@@ -119,6 +121,19 @@ export class AudioSystem {
     this.flameSource.connect(flameFilter).connect(this.flameGain).connect(this.sfxBus!);
     this.flameSource.start();
 
+    const sawBuffer = noiseBuffer(ctx, 1);
+    this.sawSource = ctx.createBufferSource();
+    this.sawSource.buffer = sawBuffer;
+    this.sawSource.loop = true;
+    this.sawGain = ctx.createGain();
+    this.sawGain.gain.value = 0;
+    const sawFilter = ctx.createBiquadFilter();
+    sawFilter.type = 'bandpass';
+    sawFilter.frequency.value = 2200;
+    sawFilter.Q.value = 4;
+    this.sawSource.connect(sawFilter).connect(this.sawGain).connect(this.sfxBus!);
+    this.sawSource.start();
+
     for (let i = 0; i < this.cfg.zombieGroan.maxVoices; i++) {
       const osc = ctx.createOscillator();
       osc.type = 'sine';
@@ -155,6 +170,13 @@ export class AudioSystem {
   setFlame(active: boolean): void {
     if (!this.ctx || !this.flameGain) return;
     this.flameGain.gain.setTargetAtTime(active ? 0.25 : 0, this.ctx.currentTime, 0.05);
+  }
+
+  /** M3: the Circular Saw's grinding sound, on only while the blade is actually touching a
+   *  zombie (not merely equipped) - the spinning animation itself has no sound of its own. */
+  setSaw(active: boolean): void {
+    if (!this.ctx || !this.sawGain) return;
+    this.sawGain.gain.setTargetAtTime(active ? 0.2 : 0, this.ctx.currentTime, 0.03);
   }
 
   /** A thump scaled 0..1 by hit strength: a zombie attack landing, or the car ramming one. */

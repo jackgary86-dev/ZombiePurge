@@ -4,6 +4,7 @@ import type { PhysicsWorld } from '../physics/PhysicsWorld';
 import type { Vehicle } from '../vehicle/Vehicle';
 import type { Zombie } from '../zombies/Zombie';
 import type { ZombiePool } from '../zombies/ZombiePool';
+import type { KillReport } from './Weapons';
 
 export interface ImpactEvent {
   zombie: Zombie;
@@ -36,6 +37,17 @@ export class RunOverSystem {
   meleeDamage = 0;
   /** M1: horizontal knockback speed (m/s) from an equipped melee weapon (0 = none). */
   meleeKnockback = 0;
+  /** M3: damage per second from an equipped Circular Saw, applied every tick a zombie stays
+   *  in contact - distinct from the spike cluster's one-shot-per-contact-event damage. */
+  sawDamagePerSecond = 0;
+  /** Collider handles of zombies currently touching the car, tracked across steps so
+   *  applySawDamage() can deal continuous damage rather than only reacting to new contacts. */
+  private readonly touching = new Set<number>();
+
+  /** M3: whether an equipped saw is actually grinding into something right now - for sound. */
+  get sawActive(): boolean {
+    return this.sawDamagePerSecond > 0 && this.touching.size > 0;
+  }
 
   constructor(
     private readonly physics: PhysicsWorld,
@@ -64,14 +76,41 @@ export class RunOverSystem {
     const events: ImpactEvent[] = [];
     const carHandle = this.car.collider.handle;
     this.physics.drainCollisions((h1, h2, started) => {
-      if (!started) return;
       const other = h1 === carHandle ? h2 : h2 === carHandle ? h1 : -1;
       if (other < 0) return;
+      if (!started) {
+        this.touching.delete(other);
+        return;
+      }
+      this.touching.add(other);
       const zombie = this.pool.fromColliderHandle(other);
       if (!zombie || !zombie.isAlive()) return;
       events.push(this.resolve(zombie));
     });
     return events;
+  }
+
+  /**
+   * M3: the Circular Saw's continuous damage, dealt every tick to every zombie still touching
+   * the car (tracked via collectImpacts()'s start/stop events) rather than only on new contact.
+   * Call once per Playing tick, after collectImpacts(). Self-heals stale handles (a despawned
+   * zombie whose contact-stop event was missed) by dropping anything no longer alive.
+   */
+  applySawDamage(dt: number): KillReport[] {
+    const kills: KillReport[] = [];
+    if (this.sawDamagePerSecond <= 0 || this.touching.size === 0) return kills;
+    for (const handle of this.touching) {
+      const zombie = this.pool.fromColliderHandle(handle);
+      if (!zombie || !zombie.isAlive()) {
+        this.touching.delete(handle);
+        continue;
+      }
+      if (zombie.takeDamage(this.sawDamagePerSecond * dt)) {
+        const p = zombie.getPosition();
+        kills.push({ zombie, position: { x: p.x, y: p.y, z: p.z } });
+      }
+    }
+    return kills;
   }
 
   resolve(zombie: Zombie): ImpactEvent {

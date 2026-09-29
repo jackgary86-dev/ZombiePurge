@@ -410,6 +410,12 @@ export interface MeleeTierStats {
   knockback: number;
 }
 
+/** M3: the circular saw's per-tier stats - continuous damage dealt every second the blade
+ * stays in contact with a zombie, unlike the spike cluster's one-shot-per-contact damage. */
+export interface SawTierStats {
+  damagePerSecond: number;
+}
+
 export interface CombatConfig {
   /** Per-tier stats for the machine gun (index 0 = tier 1). */
   machineGun: GunTierStats[];
@@ -418,6 +424,8 @@ export interface CombatConfig {
   rockets: RocketTierStats[];
   /** M2: the first melee weapon, front-mounted like the ram/flamethrower. */
   spikes: MeleeTierStats[];
+  /** M3: the second melee weapon, also front-mounted. */
+  saw: SawTierStats[];
   /** Below this relative speed (m/s) a collision only pushes the zombie. */
   runOverMinSpeed: number;
   /** Zombie damage = relativeSpeed * carMass * this factor. */

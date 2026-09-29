@@ -109,7 +109,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
-## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1/M2)
+## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1-M3)
 
 - [ ] Garage → Customize tab: a "Paint" section lists 7 colour swatches; Stock Red shows "Equipped" and can't be bought again
 - [ ] Buy a colour you can afford: the button becomes "Equipped", its card gets a gold border, and the car turntable recolours immediately
@@ -132,6 +132,9 @@ Tick items in the PR that closes the milestone.
 - [ ] Garage → Melee tab: a "Spike Cluster" card lists 3 tiers; buying tier 1 auto-equips it into the front slot (same slot as Ram/Flamethrower) and a spike cluster appears at the front of the car
 - [ ] DRIVE and bump into a zombie with Spikes equipped, at low/no speed: the zombie still takes damage and gets knocked back, unlike a bare run-over which needs real speed to hurt anything
 - [ ] Buy the Front Ram or Flamethrower after owning Spikes: it takes over the front slot and the spike cluster disappears (only one front-mounted weapon shows at a time)
+- [ ] Garage → Melee tab: a "Circular Saw" card lists 3 tiers; buying it equips it into the front slot and a spinning blade appears at the front of the car, spinning continuously
+- [ ] DRIVE and stay in contact with a zombie with the Saw equipped (nudge it and hold position): it keeps taking damage the whole time it's touching, not just once, with a grinding sound and a spark flash while it's actually touching
+- [ ] Back off from the zombie with the Saw still equipped: the grinding sound stops but the blade keeps spinning (it's still equipped, just not touching anything)
 
 ### Known quirks (non-blocking)
 
