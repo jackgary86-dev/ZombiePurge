@@ -1,5 +1,10 @@
 import type { StatModifiers, UpgradeCategory, UpgradeDef, VehicleConfig } from '../data/types';
-import { Garage, type EffectiveStats, type PurchaseResult } from '../game/shop/Garage';
+import {
+  Garage,
+  type CosmeticPurchaseResult,
+  type EffectiveStats,
+  type PurchaseResult,
+} from '../game/shop/Garage';
 import { icon, iconForCategory, iconForUpgrade } from './icons';
 
 export interface StatDelta {
@@ -31,7 +36,7 @@ export interface TierCard {
   canEquip: boolean;
 }
 
-export const CATEGORY_TABS: { id: UpgradeCategory | 'all'; label: string }[] = [
+export const CATEGORY_TABS: { id: UpgradeCategory | 'all' | 'customize'; label: string }[] = [
   { id: 'weapon', label: 'Weapons' },
   { id: 'health', label: 'Health' },
   { id: 'armor', label: 'Armor' },
@@ -40,6 +45,7 @@ export const CATEGORY_TABS: { id: UpgradeCategory | 'all'; label: string }[] = [
   { id: 'fuel', label: 'Gas' },
   { id: 'ram', label: 'Ram' },
   { id: 'nitro', label: 'Utility' },
+  { id: 'customize', label: 'Customize' },
 ];
 
 const UTILITY: UpgradeCategory[] = ['nitro', 'radar', 'headlights'];
@@ -160,6 +166,59 @@ export function buildShopCards(
     });
 }
 
+export interface CosmeticCard {
+  optionId: string;
+  categoryId: string;
+  categoryLabel: string;
+  label: string;
+  price: number;
+  color: number;
+  owned: boolean;
+  selected: boolean;
+  status: 'select' | 'buy' | 'coins';
+  statusText: string;
+}
+
+function cosmeticStatusOf(
+  check: CosmeticPurchaseResult,
+  price: number
+): { status: CosmeticCard['status']; text: string } {
+  if (check.ok) return { status: 'buy', text: `Buy for ${price}` };
+  if (check.reason === 'coins')
+    return { status: 'coins', text: `Need ${check.shortBy} more coins` };
+  return { status: 'select', text: 'Select' };
+}
+
+/** L1: pure view-model for the Customize tab, one card per option across every category. */
+export function buildCosmeticCards(garage: Garage): CosmeticCard[] {
+  const cards: CosmeticCard[] = [];
+  for (const category of garage.cosmetics) {
+    const selected = garage.selectedCosmetic(category.id);
+    for (const option of category.options) {
+      const owned = garage.ownsCosmetic(option.id);
+      const isSelected = selected?.id === option.id;
+      const { status, text } = isSelected
+        ? { status: 'select' as const, text: 'Equipped' }
+        : owned
+          ? { status: 'select' as const, text: 'Select' }
+          : cosmeticStatusOf(garage.canBuyCosmetic(option.id), option.price);
+      cards.push({
+        optionId: option.id,
+        categoryId: category.id,
+        categoryLabel: category.label,
+        label: option.label,
+        price: option.price,
+        color: option.color,
+        owned,
+        selected: isSelected,
+        status,
+        statusText: text,
+      });
+    }
+  }
+  return cards;
+}
+
 export interface GarageMenuOptions {
   parent?: HTMLElement;
   onChange?: () => void;
@@ -171,7 +230,7 @@ export interface GarageMenuOptions {
 /** J4: the Garage / Shop screen. Rebuilds its cards from the view-model after every action. */
 export class GarageMenu {
   readonly el: HTMLDivElement;
-  private category: UpgradeCategory | 'all' = 'weapon';
+  private category: UpgradeCategory | 'all' | 'customize' = 'weapon';
   private readonly cards: HTMLDivElement;
   private readonly balance: HTMLSpanElement;
   private readonly tabs: HTMLDivElement;
@@ -218,7 +277,10 @@ export class GarageMenu {
     for (const tab of CATEGORY_TABS) {
       const b = document.createElement('button');
       b.type = 'button';
-      b.innerHTML = `${iconForCategory(tab.id === 'all' ? 'weapon' : tab.id, 15)} ${tab.label}`;
+      b.innerHTML =
+        tab.id === 'customize'
+          ? `${icon('customize', 15)} ${tab.label}`
+          : `${iconForCategory(tab.id === 'all' ? 'weapon' : tab.id, 15)} ${tab.label}`;
       b.dataset.category = tab.id;
       b.addEventListener('click', () => {
         this.category = tab.id;
@@ -267,9 +329,53 @@ export class GarageMenu {
       b.classList.toggle('active', b.dataset.category === this.category);
     }
     this.cards.replaceChildren();
+    if (this.category === 'customize') {
+      let lastCategory = '';
+      for (const card of buildCosmeticCards(this.garage)) {
+        if (card.categoryId !== lastCategory) {
+          const heading = document.createElement('h2');
+          heading.className = 'cosmetic-category-heading';
+          heading.textContent = card.categoryLabel;
+          this.cards.appendChild(heading);
+          lastCategory = card.categoryId;
+        }
+        this.cards.appendChild(this.renderCosmeticCard(card));
+      }
+      return;
+    }
     for (const card of buildShopCards(this.garage, this.base, this.category)) {
       this.cards.appendChild(this.renderCard(card));
     }
+  }
+
+  private renderCosmeticCard(card: CosmeticCard): HTMLDivElement {
+    const el = document.createElement('div');
+    el.className = `cosmetic-card${card.selected ? ' equipped' : ''}`;
+    el.dataset.cosmetic = card.optionId;
+
+    const swatch = document.createElement('div');
+    swatch.className = 'cosmetic-swatch';
+    swatch.style.background = `#${card.color.toString(16).padStart(6, '0')}`;
+    const name = document.createElement('h3');
+    name.textContent = card.label;
+    el.append(swatch, name);
+
+    const action = document.createElement('button');
+    action.type = 'button';
+    action.className = card.status === 'buy' ? 'buy' : 'equip';
+    action.textContent = card.statusText;
+    action.disabled = card.status === 'coins' || card.selected;
+    action.addEventListener('click', () => {
+      const ok = card.owned
+        ? this.garage.selectCosmetic(card.optionId)
+        : this.garage.buyCosmetic(card.optionId).ok;
+      if (ok) {
+        this.render();
+        this.options.onChange?.();
+      }
+    });
+    el.appendChild(action);
+    return el;
   }
 
   private renderCard(card: TierCard): HTMLDivElement {

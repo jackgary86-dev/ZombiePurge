@@ -27,6 +27,7 @@ const ALL_ICONS: IconName[] = [
   'exit',
   'wrench',
   'credits',
+  'customize',
 ];
 
 const ALL_CATEGORIES: UpgradeCategory[] = [

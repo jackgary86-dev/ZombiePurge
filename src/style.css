@@ -546,6 +546,49 @@ canvas {
   background: rgba(200, 64, 46, 0.35);
 }
 
+#garage-menu .cosmetic-category-heading {
+  grid-column: 1 / -1;
+  color: #c8402e;
+  font-size: 1rem;
+  margin: 6px 0 0;
+}
+
+#garage-menu .cosmetic-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+#garage-menu .cosmetic-card.equipped {
+  border-color: #ffd84a;
+}
+
+#garage-menu .cosmetic-swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+#garage-menu .cosmetic-card h3 {
+  font-size: 14px;
+  margin: 0;
+}
+
+#garage-menu .cosmetic-card button {
+  width: 100%;
+}
+
+#garage-menu .cosmetic-card .buy {
+  background: #2f8f5b;
+  color: #fff;
+}
+
 #minimap {
   position: fixed;
   left: 12px;

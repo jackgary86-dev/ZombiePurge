@@ -83,4 +83,32 @@ describe('CarDamageView (I3)', () => {
     view.setHpFraction(0.45); // still "dented"
     expect(view.dentCount).toBe(countAfterFirst);
   });
+
+  it('setPaintColor (L2) recolours the body immediately', () => {
+    const body = bodyMesh();
+    const view = new CarDamageView(body, CFG, VEHICLE);
+    view.setPaintColor(0x2f5d8a);
+    expect((body.material as MeshStandardMaterial).color.getHex()).toBe(0x2f5d8a);
+  });
+
+  it('setPaintColor becomes the new base that reset() restores to', () => {
+    const body = bodyMesh();
+    const view = new CarDamageView(body, CFG, VEHICLE);
+    view.setPaintColor(0x2f5d8a);
+    view.setHpFraction(0.1); // wrecked, tints on top of the new paint
+    expect((body.material as MeshStandardMaterial).color.getHex()).not.toBe(0x2f5d8a);
+    view.reset();
+    expect((body.material as MeshStandardMaterial).color.getHex()).toBe(0x2f5d8a);
+  });
+
+  it('a repaint keeps the current damage tint applied on top', () => {
+    const body = bodyMesh();
+    const view = new CarDamageView(body, CFG, VEHICLE);
+    view.setHpFraction(0.1); // wrecked
+    const wreckedStockHex = (body.material as MeshStandardMaterial).color.getHex();
+    view.setPaintColor(0x2f5d8a);
+    const wreckedPaintedHex = (body.material as MeshStandardMaterial).color.getHex();
+    expect(wreckedPaintedHex).not.toBe(wreckedStockHex);
+    expect(wreckedPaintedHex).not.toBe(0x2f5d8a); // still tinted, not the raw paint colour
+  });
 });

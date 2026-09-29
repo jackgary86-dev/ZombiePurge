@@ -206,3 +206,73 @@ describe('D2 Garage purchase & equip logic', () => {
     expect(reloaded.equippedIn('roof')).toBeNull();
   });
 });
+
+describe('L1 cosmetic customization', () => {
+  let wallet: Wallet;
+  let storage: MemoryStorage;
+  let garage: Garage;
+
+  beforeEach(() => {
+    resetConfig();
+    wallet = new Wallet(getConfig().rewards, new MemoryStorage());
+    storage = new MemoryStorage();
+    garage = new Garage(getConfig().upgrades, wallet, 1, storage, getConfig().cosmetics);
+  });
+
+  it('the stock (price 0) option is always owned and selected by default', () => {
+    expect(garage.ownsCosmetic('paint_stock')).toBe(true);
+    expect(garage.selectedCosmetic('paint')?.id).toBe('paint_stock');
+  });
+
+  it('a priced option is not owned until bought, and buying also selects it', () => {
+    expect(garage.ownsCosmetic('paint_black')).toBe(false);
+    expect(garage.canBuyCosmetic('paint_black').ok).toBe(false);
+    expect(garage.canBuyCosmetic('paint_black').reason).toBe('coins');
+
+    wallet.add(1000);
+    expect(garage.canBuyCosmetic('paint_black').ok).toBe(true);
+    expect(garage.buyCosmetic('paint_black').ok).toBe(true);
+    expect(garage.ownsCosmetic('paint_black')).toBe(true);
+    expect(garage.selectedCosmetic('paint')?.id).toBe('paint_black');
+  });
+
+  it('buying an already-owned option fails with reason "owned"', () => {
+    const result = garage.buyCosmetic('paint_stock'); // price 0, always owned
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe('owned');
+  });
+
+  it('an unknown cosmetic id fails with reason "unknown"', () => {
+    expect(garage.canBuyCosmetic('nope').reason).toBe('unknown');
+    expect(garage.buyCosmetic('nope').reason).toBe('unknown');
+  });
+
+  it('selectCosmetic switches between owned options, refusing an unowned one', () => {
+    wallet.add(1000);
+    garage.buyCosmetic('paint_black');
+    garage.buyCosmetic('paint_blue');
+    expect(garage.selectedCosmetic('paint')?.id).toBe('paint_blue');
+
+    expect(garage.selectCosmetic('paint_black')).toBe(true);
+    expect(garage.selectedCosmetic('paint')?.id).toBe('paint_black');
+
+    expect(garage.selectCosmetic('paint_green')).toBe(false); // never bought
+    expect(garage.selectedCosmetic('paint')?.id).toBe('paint_black');
+  });
+
+  it('persists ownership and selection across reloads', () => {
+    wallet.add(1000);
+    garage.buyCosmetic('paint_black');
+    const reloaded = new Garage(getConfig().upgrades, wallet, 1, storage, getConfig().cosmetics);
+    expect(reloaded.ownsCosmetic('paint_black')).toBe(true);
+    expect(reloaded.selectedCosmetic('paint')?.id).toBe('paint_black');
+  });
+
+  it('reset() also clears owned/selected cosmetics back to stock', () => {
+    wallet.add(1000);
+    garage.buyCosmetic('paint_black');
+    garage.reset();
+    expect(garage.ownsCosmetic('paint_black')).toBe(false);
+    expect(garage.selectedCosmetic('paint')?.id).toBe('paint_stock');
+  });
+});

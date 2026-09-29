@@ -348,6 +348,29 @@ export function collectConfigProblems(config: GameConfig): string[] {
     });
   });
 
+  const cosmeticCategoryIds = new Set<string>();
+  const cosmeticOptionIds = new Set<string>();
+  config.cosmetics.forEach((category, ci) => {
+    const cat = `cosmetics[${ci}] (${category.id || '?'})`;
+    if (!category.id) problems.push(`${cat}.id is required`);
+    if (cosmeticCategoryIds.has(category.id))
+      problems.push(`${cat}.id "${category.id}" is duplicated`);
+    cosmeticCategoryIds.add(category.id);
+    if (category.options.length === 0) problems.push(`${cat} needs at least one option`);
+    let hasFreeOption = false;
+    category.options.forEach((opt, oi) => {
+      const at = `${cat}.options[${oi}] (${opt.id || '?'})`;
+      if (!opt.id) problems.push(`${at}.id is required`);
+      if (cosmeticOptionIds.has(opt.id)) problems.push(`${at}.id "${opt.id}" is duplicated`);
+      cosmeticOptionIds.add(opt.id);
+      nonNegative(opt.price, `${at}.price`, problems);
+      if (opt.price === 0) hasFreeOption = true;
+    });
+    if (category.options.length > 0 && !hasFreeOption) {
+      problems.push(`${cat} needs at least one option priced 0 (the stock/default look)`);
+    }
+  });
+
   if (config.maps.length === 0) problems.push('maps must contain at least one map');
   const ids = new Set<string>();
   config.maps.forEach((map, i) => {

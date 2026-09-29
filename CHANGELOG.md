@@ -7,6 +7,18 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## 0.7.0 - M7: Car Customization & Combat Expansion (in progress)
+
+- **L1** A `carCustomization` data model (`GameConfig.cosmetics`) separate from the tiered stat
+  upgrades: one selected option per category, each independently purchasable. A new "Customize"
+  tab in the Garage lists every category's options as swatch cards (buy/select/equipped states),
+  built on a `Garage` extension (`buyCosmetic`/`selectCosmetic`/`ownsCosmetic`) that persists
+  alongside the existing upgrade save data.
+- **L2** The first category, Paint: 7 colours (one free stock colour, six purchasable at
+  200-400 coins). Selecting one recolours the car body immediately - in the garage turntable and
+  in live gameplay - via a new `CarDamageView.setPaintColor()` that keeps the existing I3 damage
+  tinting layered correctly on top of whatever colour is currently equipped.
+
 ## 0.6.0 - M6: Polish & Release (in progress)
 
 - **G1** Real graphical HUD (speed, HP/fuel/nitro bars, weapon ammo/heat, coins/kills/combo,

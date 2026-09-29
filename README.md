@@ -85,16 +85,16 @@ assets/            # 3D models, textures, sounds
 
 ## Milestones
 
-| #      | Goal                                          | Status                                                                                                                                                           |
-| ------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **M0** | Foundation (scaffold, car, camera)            | ✅ Done (A1–A7)                                                                                                                                                  |
-| **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work)                                                                       |
-| **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                                                                                                |
-| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                                                                                           |
-| **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                                         |
-| **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                                          |
-| **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2)             |
-| **M7** | Car Customization & Combat Expansion          | ⬜ Planned (L1–L8 garage customization: paint/bumper/driver/windows/doors/decals/tires; M1–M5 melee weapons: spikes/saw/hammer; N1–N2 engine tuning/replacement) |
+| #      | Goal                                          | Status                                                                                                                                               |
+| ------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **M0** | Foundation (scaffold, car, camera)            | ✅ Done (A1–A7)                                                                                                                                      |
+| **M1** | Zombie Smash Prototype (zombies, coins, demo) | ✅ Done (B1–B7, C1–C5, I12, K1–K4, K6; K5 PR previews deferred until Actions runners work)                                                           |
+| **M2** | Shop & Upgrades                               | ✅ Done (D1–D14, J4; K5 deferred)                                                                                                                    |
+| **M3** | Sandbox Mode (first playable)                 | ✅ Done (E1–E3, F1, I8, I10, I11, J1/J2/J6–J8/J10–J12)                                                                                               |
+| **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                             |
+| **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                              |
+| **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
+| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1/L2 done; L3–L8 garage cosmetics remaining; M1–M5 melee weapons; N1–N2 engine tuning/replacement)                                  |
 
 ## What's Built So Far
 
@@ -144,6 +144,7 @@ assets/            # 3D models, textures, sounds
 - **I5** Zombie rank variants + simple motion: per-instance colour jitter so a horde of one rank isn't visually identical clones, plus a procedural walk-bob and attack lunge/scale-pulse in lieu of real animation clips — a placeholder-art extension; real rigged/animated models still need a 3D art pass
 - **I9** VFX art gaps: a muzzle flash at the weapon mount on every shot, tyre-skid decals behind the rear wheels while sliding, and dust/snow drive-trail puffs coloured per map's own palette
 - **J13** A real Credits screen (team, tools, asset licenses) off the main menu, replacing the old one-line placeholder panel
+- **L1/L2** Car customization: a new Garage "Customize" tab lists purchasable/selectable cosmetic options by category; the first category, Paint, offers 7 colours (one free stock colour, six purchasable) applied live to the car body — in the garage turntable, in gameplay, and correctly layered under the existing damage-state tinting (I3)
 
 ## Development
 

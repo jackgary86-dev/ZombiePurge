@@ -1,4 +1,6 @@
 import type {
+  CosmeticCategoryConfig,
+  CosmeticOption,
   StatModifiers,
   UpgradeDef,
   UpgradeTier,
@@ -31,10 +33,23 @@ export interface PurchaseResult {
   tier?: UpgradeTier;
 }
 
+export type CosmeticPurchaseFailure = 'unknown' | 'owned' | 'coins';
+
+export interface CosmeticPurchaseResult {
+  ok: boolean;
+  reason?: CosmeticPurchaseFailure;
+  /** For 'coins': how many more coins are needed. */
+  shortBy?: number;
+}
+
 interface GarageSave {
   version: number;
   owned: Record<string, number>;
   equipped: Partial<Record<WeaponSlot, string>>;
+  /** L1: cosmetic option ids the player has bought (price-0 stock options are always owned). */
+  cosmeticsOwned?: string[];
+  /** L1: the selected option id per cosmetic category id. */
+  cosmeticsSelected?: Record<string, string>;
 }
 
 /** Combined effect of every owned upgrade (highest owned tier of each counts). */
@@ -72,15 +87,26 @@ export class Garage {
   private owned = new Map<string, number>();
   private equipped = new Map<WeaponSlot, string>();
   private readonly byId = new Map<string, UpgradeDef>();
+  private ownedCosmetics = new Set<string>();
+  private selectedCosmetics = new Map<string, string>();
+  private readonly cosmeticById = new Map<string, { categoryId: string; option: CosmeticOption }>();
 
   constructor(
     readonly upgrades: UpgradeDef[],
     private readonly coins: CoinSource,
     /** Highest story map reached (1-5); gates unlocks. */
     public currentMap = 1,
-    private readonly storage: GarageStorage | null = defaultStorage()
+    private readonly storage: GarageStorage | null = defaultStorage(),
+    /** L1: cosmetic categories (paint, and more added by L3-L8); optional so existing call
+     *  sites/tests that don't care about cosmetics keep working unchanged. */
+    readonly cosmetics: CosmeticCategoryConfig[] = []
   ) {
     for (const u of upgrades) this.byId.set(u.id, u);
+    for (const category of cosmetics) {
+      for (const option of category.options) {
+        this.cosmeticById.set(option.id, { categoryId: category.id, option });
+      }
+    }
     this.load();
   }
 
@@ -146,6 +172,55 @@ export class Garage {
 
   isEquipped(id: string): boolean {
     return [...this.equipped.values()].includes(id);
+  }
+
+  /** L1: true once bought, or always for a price-0 (stock) option. */
+  ownsCosmetic(id: string): boolean {
+    const entry = this.cosmeticById.get(id);
+    if (!entry) return false;
+    return entry.option.price === 0 || this.ownedCosmetics.has(id);
+  }
+
+  /** L1: the option currently selected in a category, falling back to that category's first
+   *  (stock) option when nothing has been explicitly selected yet. */
+  selectedCosmetic(categoryId: string): CosmeticOption | null {
+    const selectedId = this.selectedCosmetics.get(categoryId);
+    if (selectedId) {
+      const entry = this.cosmeticById.get(selectedId);
+      if (entry) return entry.option;
+    }
+    return this.cosmetics.find((c) => c.id === categoryId)?.options[0] ?? null;
+  }
+
+  canBuyCosmetic(id: string): CosmeticPurchaseResult {
+    const entry = this.cosmeticById.get(id);
+    if (!entry) return { ok: false, reason: 'unknown' };
+    if (this.ownsCosmetic(id)) return { ok: false, reason: 'owned' };
+    if (this.coins.balance < entry.option.price) {
+      return { ok: false, reason: 'coins', shortBy: entry.option.price - this.coins.balance };
+    }
+    return { ok: true };
+  }
+
+  /** Buying a cosmetic also selects it immediately, like a weapon's first purchase mounting it. */
+  buyCosmetic(id: string): CosmeticPurchaseResult {
+    const check = this.canBuyCosmetic(id);
+    if (!check.ok) return check;
+    const entry = this.cosmeticById.get(id)!;
+    if (!this.coins.spend(entry.option.price)) return { ok: false, reason: 'coins', shortBy: 0 };
+    this.ownedCosmetics.add(id);
+    this.selectedCosmetics.set(entry.categoryId, id);
+    this.save();
+    return { ok: true };
+  }
+
+  /** Switches to an already-owned option in its category. */
+  selectCosmetic(id: string): boolean {
+    const entry = this.cosmeticById.get(id);
+    if (!entry || !this.ownsCosmetic(id)) return false;
+    this.selectedCosmetics.set(entry.categoryId, id);
+    this.save();
+    return true;
   }
 
   /** Highest owned tier of each upgrade, folded into one set of stat modifiers. */
@@ -216,6 +291,8 @@ export class Garage {
   reset(): void {
     this.owned.clear();
     this.equipped.clear();
+    this.ownedCosmetics.clear();
+    this.selectedCosmetics.clear();
     this.save();
   }
 
@@ -236,6 +313,15 @@ export class Garage {
         if (def && def.slot === slot && this.owned.has(id!))
           this.equipped.set(slot as WeaponSlot, id!);
       }
+      for (const id of saved.cosmeticsOwned ?? []) {
+        if (this.cosmeticById.has(id)) this.ownedCosmetics.add(id);
+      }
+      for (const [categoryId, id] of Object.entries(saved.cosmeticsSelected ?? {})) {
+        const entry = this.cosmeticById.get(id);
+        if (entry && entry.categoryId === categoryId && this.ownsCosmetic(id)) {
+          this.selectedCosmetics.set(categoryId, id);
+        }
+      }
     } catch {
       // Corrupt save: start with a stock car rather than crash.
     }
@@ -246,6 +332,8 @@ export class Garage {
       version: GARAGE_VERSION,
       owned: Object.fromEntries(this.owned),
       equipped: Object.fromEntries(this.equipped),
+      cosmeticsOwned: [...this.ownedCosmetics],
+      cosmeticsSelected: Object.fromEntries(this.selectedCosmetics),
     };
     this.storage?.setItem(GARAGE_STORAGE_KEY, JSON.stringify(save));
   }
