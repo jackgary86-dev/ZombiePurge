@@ -94,7 +94,7 @@ assets/            # 3D models, textures, sounds
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                             |
 | **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                              |
 | **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
-| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L8, O1, M1-M5, N1 done; N2 engine replacement remaining)                                                                          |
+| **M7** | Car Customization & Combat Expansion          | ✅ Done (L1-L8, O1, M1-M5, N1-N2)                                                                                                                    |
 
 ## What's Built So Far
 
@@ -157,6 +157,7 @@ assets/            # 3D models, textures, sounds
 - **M4** The third melee weapon, Swinging Hammer: a third distinct mechanic again - a periodic AOE burst on its own cooldown that needs no physical contact at all, hitting everything within a radius of the car with damage and a knockback shove. A one-shot swing animation plays on the front mount each time it fires, with a flash/thump on any hit.
 - **M5** The roof turret's shape now reflects whichever weapon is actually equipped, instead of always showing the same generic base-and-barrel silhouette: Machine Gun keeps the single long barrel, Shotgun gets a short stubby double barrel, and Rockets gets a 2x2 cluster of launch tubes. The front-mounted weapons (Flamethrower, Spike Cluster, Circular Saw, Swinging Hammer) already had distinct equipped visuals as of M1-M4, so this closes the same gap for the roof slot.
 - **N1** Engine tuning: a free, always-adjustable slider (Garage → Engine tab, once the engine upgrade is owned) that trades the owned engine tier's own top speed bonus against its acceleration bonus, rather than one fixed stat pair per tier. Config-driven via `vehicle.engineTuning.swingFactor` (0.5 by default - up to a 50% swing either way); a balanced slider (0) reproduces the exact pre-N1 stats.
+- **N2** Engine replacement: three alternative engine types (V8, Turbo, Electric), each its own top speed/acceleration/weight trade-off, occupying a new `'engine'` mount slot alongside the existing tier ladder (D3/N1) rather than replacing it - only one type is equipped at a time, and swapping is a separate purchase/equip action. Weight actually matters: `Vehicle.setMass()` re-applies the physics body's real simulated mass (not just the config number) whenever it changes, so a heavier V8 or lighter Electric motor is felt in collisions without throwing off the `acceleration` stat's own meaning. The equipped type's own visual cue is the exhaust - stock gets a single small pipe, V8 a chrome dual pipe, Turbo one wide pipe, and Electric none at all.
 
 ## Development
 

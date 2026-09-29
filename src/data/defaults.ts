@@ -259,6 +259,59 @@ export const DEFAULT_CONFIG: GameConfig = {
         },
       ],
     },
+    // N2: alternative engine types, each its own top speed/acceleration/weight trade-off,
+    // stacking on top of the Engine tier ladder above rather than replacing it. Only one can
+    // be equipped at a time (slot: 'engine'); swapping is a separate action from tier upgrades.
+    {
+      id: 'engine_v8',
+      category: 'engineType',
+      name: 'V8 Engine',
+      slot: 'engine',
+      description: 'Raw power: a big boost to both top speed and acceleration. Heavier.',
+      tiers: [
+        {
+          tier: 1,
+          price: 900,
+          unlockMap: 2,
+          modifiers: { topSpeed: 10, acceleration: 4, mass: 200 },
+          label: 'V8',
+        },
+      ],
+    },
+    {
+      id: 'engine_turbo',
+      category: 'engineType',
+      name: 'Turbo Engine',
+      slot: 'engine',
+      description:
+        'Forced induction: strong acceleration, a smaller top speed gain, modest weight.',
+      tiers: [
+        {
+          tier: 1,
+          price: 1300,
+          unlockMap: 3,
+          modifiers: { topSpeed: 6, acceleration: 7, mass: 50 },
+          label: 'Turbo',
+        },
+      ],
+    },
+    {
+      id: 'engine_electric',
+      category: 'engineType',
+      name: 'Electric Motor',
+      slot: 'engine',
+      description:
+        'Instant torque and no exhaust: the strongest acceleration, modest top speed, much lighter.',
+      tiers: [
+        {
+          tier: 1,
+          price: 2200,
+          unlockMap: 4,
+          modifiers: { topSpeed: 4, acceleration: 9, mass: -150 },
+          label: 'Electric',
+        },
+      ],
+    },
     {
       id: 'tires',
       category: 'tires',

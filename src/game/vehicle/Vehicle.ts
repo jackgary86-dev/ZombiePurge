@@ -97,18 +97,7 @@ export class Vehicle {
       this.body
     );
     this.hp = cfg.hp;
-    this.body.setAdditionalMassProperties(
-      cfg.mass,
-      { x: 0, y: -he.y * 0.5, z: 0 },
-      // Box inertia, scaled down a little so the car feels responsive.
-      {
-        x: (cfg.mass / 12) * (4 * he.y * he.y + 4 * he.z * he.z) * 0.8,
-        y: (cfg.mass / 12) * (4 * he.x * he.x + 4 * he.z * he.z) * 0.8,
-        z: (cfg.mass / 12) * (4 * he.x * he.x + 4 * he.y * he.y) * 0.8,
-      },
-      { x: 0, y: 0, z: 0, w: 1 },
-      true
-    );
+    this.applyMassProperties(cfg.mass);
 
     const w = cfg.wheels;
     this.wheels = [
@@ -139,6 +128,35 @@ export class Vehicle {
       steerAngle: 0,
       worldPosition: new Vector3(),
     }));
+  }
+
+  /** N2: re-applies mass and matching inertia to the physics body. Rapier only reads these at
+   *  the point this is called, not on every step, so a garage-driven mass change (an engine
+   *  type swap) needs an explicit call via `setMass()` - the constructor's own call only covers
+   *  the car's starting mass. */
+  private applyMassProperties(mass: number): void {
+    const he = this.cfg.chassisHalfExtents;
+    this.body.setAdditionalMassProperties(
+      mass,
+      { x: 0, y: -he.y * 0.5, z: 0 },
+      // Box inertia, scaled down a little so the car feels responsive.
+      {
+        x: (mass / 12) * (4 * he.y * he.y + 4 * he.z * he.z) * 0.8,
+        y: (mass / 12) * (4 * he.x * he.x + 4 * he.z * he.z) * 0.8,
+        z: (mass / 12) * (4 * he.x * he.x + 4 * he.y * he.y) * 0.8,
+      },
+      { x: 0, y: 0, z: 0, w: 1 },
+      true
+    );
+  }
+
+  /** N2: changes the car's simulated mass (e.g. after an engine type swap). `cfg.mass` (and so
+   *  `perWheelMass` in `update()`) and the physics body's actual simulated mass are kept in
+   *  sync, so the configured `acceleration` stat keeps meaning the same thing regardless of
+   *  mass - only momentum-driven physics (collisions, ram impacts) actually feel the weight. */
+  setMass(mass: number): void {
+    this.cfg.mass = mass;
+    this.applyMassProperties(mass);
   }
 
   /** Apply one fixed step of driver input. Call before physics.step(). */

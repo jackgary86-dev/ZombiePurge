@@ -65,12 +65,14 @@ const STAT_LABELS: Partial<
   nitroSeconds: { label: 'Nitro', max: 8, unit: 's' },
   radarRange: { label: 'Radar range', max: 300, unit: 'm' },
   headlightRange: { label: 'Headlights', max: 100, unit: 'm' },
+  mass: { label: 'Weight', max: 2000, unit: 'kg' },
 };
 
 const MODIFIER_TO_STAT: Record<keyof StatModifiers, keyof EffectiveStats | null> = {
   topSpeed: 'topSpeed',
   acceleration: 'acceleration',
   grip: 'grip',
+  mass: 'mass',
   offRoadGrip: null,
   maxHp: 'maxHp',
   armor: 'armor',
@@ -111,7 +113,9 @@ export function buildShopCards(
       (u) =>
         category === 'all' ||
         u.category === category ||
-        (category === 'nitro' && UTILITY.includes(u.category))
+        (category === 'nitro' && UTILITY.includes(u.category)) ||
+        // N2: engine types (V8/Turbo/Electric) live in the same Engine tab as the tier ladder.
+        (category === 'engine' && u.category === 'engineType')
     )
     .map((def) => {
       const owned = garage.ownedTier(def.id);

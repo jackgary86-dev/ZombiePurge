@@ -67,6 +67,8 @@ export interface EffectiveStats {
   nitroSeconds: number;
   radarRange: number;
   headlightRange: number;
+  /** N2: base vehicle mass plus the equipped engine type's own weight trade-off. */
+  mass: number;
 }
 
 export const BASE_FUEL_CAPACITY = 60;
@@ -257,14 +259,21 @@ export class Garage {
       nitroSeconds: 0,
       radarRange: 0,
       headlightRange: 0,
+      mass: 0,
     };
     const swing = this.tuning * swingFactor;
     for (const [id, tierNo] of this.owned) {
       const def = this.byId.get(id);
       const tier = def?.tiers[tierNo - 1];
       if (!tier) continue;
-      // Weapons contribute stats only while mounted; passive upgrades always do.
-      if (def!.slot && def!.category === 'weapon' && !this.isEquipped(id)) continue;
+      // Weapons and N2 engine types contribute stats only while mounted; passive upgrades
+      // always do.
+      if (
+        def!.slot &&
+        (def!.category === 'weapon' || def!.category === 'engineType') &&
+        !this.isEquipped(id)
+      )
+        continue;
       for (const [k, v] of Object.entries(tier.modifiers) as [keyof StatModifiers, number][]) {
         if (id === 'engine' && k === 'topSpeed') total[k] += v * (1 + swing);
         else if (id === 'engine' && k === 'acceleration') total[k] += v * (1 - swing);
@@ -288,12 +297,14 @@ export class Garage {
       nitroSeconds: m.nitroSeconds,
       radarRange: BASE_RADAR_RANGE + m.radarRange,
       headlightRange: m.headlightRange,
+      mass: Math.max(1, base.mass + m.mass),
     };
   }
 
   /** Writes the effective stats into a vehicle config so the physics picks them up. */
   applyTo(base: VehicleConfig, target: VehicleConfig): EffectiveStats {
     const s = this.effectiveStats(base);
+    target.mass = s.mass;
     target.topSpeed = s.topSpeed;
     target.acceleration = s.acceleration;
     target.tires.grip = s.grip;

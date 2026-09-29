@@ -7,7 +7,7 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
-## 0.7.0 - M7: Car Customization & Combat Expansion (in progress)
+## 0.7.0 - M7: Car Customization & Combat Expansion
 
 - **L1** A `carCustomization` data model (`GameConfig.cosmetics`) separate from the tiered stat
   upgrades: one selected option per category, each independently purchasable. A new "Customize"
@@ -91,6 +91,24 @@ with from the initial scaffold.
   engine upgrade is owned. A new "Engine Tuning" slider appears in the Garage's Engine tab once
   owned; dragging it applies live (an `input` listener) without tearing down the slider mid-drag,
   and releasing it (`change`) refreshes the tier cards' own stat previews.
+- **N2** Engine replacement: three new `UpgradeDef`s (`engine_v8`, `engine_turbo`,
+  `engine_electric`, category `'engineType'`) occupy a new `'engine'` `WeaponSlot`, reusing the
+  existing buy/equip machinery (first purchase auto-equips into the free slot; only one type is
+  equipped at a time) rather than adding a second tier ladder. Each has its own
+  topSpeed/acceleration/`mass` profile that stacks additively with the Engine tier ladder
+  (D3/N1) rather than replacing it - `Garage.totalModifiers()`'s equip-gating (previously only
+  `category === 'weapon'`) now also covers `'engineType'`, so an owned-but-unequipped type
+  contributes nothing. `StatModifiers` gained `mass`; `EffectiveStats.mass` and
+  `Garage.applyTo()` carry it through to `VehicleConfig.mass`. Since Rapier only reads a rigid
+  body's simulated mass at the point `setAdditionalMassProperties` is called (not on every
+  step), a bare config-field mutation would have been a silent no-op: `Vehicle` gained
+  `setMass()` (refactored out of the constructor's own mass setup) and `applyGarage()` now calls
+  `car.setMass(s.mass)`, so an engine swap's weight is actually felt in collisions/momentum
+  without changing what the `acceleration` stat means (drive force still scales with mass to
+  compensate, confirmed by a same-achieved-speed-regardless-of-mass test). The equipped type's
+  visual cue is the exhaust (`syncEngineType`/`CarView.setEngineType`): a single small pipe with
+  nothing equipped, a chrome dual pipe for V8, one wide pipe for Turbo, and no pipe at all for
+  Electric.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 

@@ -72,6 +72,21 @@ describe('L3/L4 car cosmetics on the placeholder car', () => {
       expect(wheel.getObjectByName('tire_trim')!.children.length).toBeGreaterThan(0);
     }
   });
+
+  it('N2: ships with a single stock exhaust pipe, and setEngineType swaps it without duplicating it', () => {
+    const car = buildPlaceholderCar(DEFAULT_CONFIG.vehicle);
+    expect(car.group.getObjectByName('cosmetic_exhaust')!.children.length).toBe(1); // stock pipe
+
+    car.setEngineType('engine_v8');
+    expect(car.group.children.filter((c) => c.name === 'cosmetic_exhaust')).toHaveLength(1);
+    expect(car.group.getObjectByName('cosmetic_exhaust')!.children.length).toBe(2); // dual pipes
+
+    car.setEngineType('engine_turbo');
+    expect(car.group.getObjectByName('cosmetic_exhaust')!.children.length).toBe(1);
+
+    car.setEngineType('engine_electric');
+    expect(car.group.getObjectByName('cosmetic_exhaust')!.children.length).toBe(0); // no exhaust
+  });
 });
 
 describe('M3 SawView', () => {

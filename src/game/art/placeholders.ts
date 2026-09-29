@@ -20,7 +20,13 @@ import type { VehicleConfig, ZombieMotionConfig, ZombieRank } from '../../data/t
 import type { Vehicle } from '../vehicle/Vehicle';
 import type { Zombie } from '../zombies/Zombie';
 import { ZOMBIE_CAPSULE } from '../zombies/Zombie';
-import { syncBumperStyle, syncDecalStyle, syncDoorStyle, syncTireStyle } from './cosmeticParts';
+import {
+  syncBumperStyle,
+  syncDecalStyle,
+  syncDoorStyle,
+  syncEngineType,
+  syncTireStyle,
+} from './cosmeticParts';
 
 /** I12 placeholder art: primitives that match the physics shapes until real models land (I3, I5). */
 
@@ -43,6 +49,8 @@ export interface CarView {
   setDecalStyle(optionId: string): void;
   /** L8: swaps every wheel's rim/tread trim to match the selected tire style. */
   setTireStyle(optionId: string): void;
+  /** N2: swaps the exhaust to match the equipped engine type ('engine_stock' for none equipped). */
+  setEngineType(optionId: string): void;
 }
 
 export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
@@ -85,6 +93,7 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
   syncBumperStyle(group, 'bumper_stock', he);
   syncDoorStyle(group, 'door_stock', he);
   syncDecalStyle(group, 'decal_none', he);
+  syncEngineType(group, 'engine_stock', he);
 
   const wheelGeometry = new CylinderGeometry(cfg.wheels.radius, cfg.wheels.radius, 0.3, 18);
   wheelGeometry.rotateZ(Math.PI / 2);
@@ -134,6 +143,9 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
     },
     setTireStyle(optionId: string) {
       syncTireStyle(wheels, optionId, cfg.wheels.radius);
+    },
+    setEngineType(optionId: string) {
+      syncEngineType(group, optionId, he);
     },
   };
 }

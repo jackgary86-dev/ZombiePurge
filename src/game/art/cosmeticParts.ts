@@ -19,6 +19,7 @@ export const COSMETIC_PART_NAMES = {
   bumper: 'cosmetic_bumper',
   doors: 'cosmetic_doors',
   decal: 'cosmetic_decal',
+  exhaust: 'cosmetic_exhaust',
 } as const;
 
 const rubber = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
@@ -41,6 +42,8 @@ const chromeRimMat = new MeshStandardMaterial({ color: 0xd8d8dc, metalness: 1, r
 const whitewallMat = new MeshStandardMaterial({ color: 0xe8e4d8, roughness: 0.6 });
 const darkRimMat = new MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6 });
 const treadLugMat = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 1 });
+const exhaustSteel = new MeshStandardMaterial({ color: 0x3a3a3e, metalness: 0.6, roughness: 0.4 });
+const exhaustChrome = new MeshStandardMaterial({ color: 0xd8d8dc, metalness: 1, roughness: 0.1 });
 
 function buildBumper(optionId: string, he: { x: number; y: number; z: number }): Group {
   const g = new Group();
@@ -274,4 +277,58 @@ export function syncTireStyle(wheels: Object3D[], optionId: string, radius: numb
     if (old) wheel.remove(old);
     wheel.add(buildTireTrim(optionId, radius));
   }
+}
+
+/**
+ * N2: the exhaust, mounted low at the rear (unlike the front-facing bumper/decal parts) -
+ * the one visible cue for which engine type is equipped, matching the "own visual cue
+ * (exhaust/engine bay)" from the ticket. Stock (nothing equipped) gets a single small pipe as
+ * a baseline; Electric loses the pipe entirely since EVs have no exhaust.
+ */
+function buildExhaust(optionId: string, he: { x: number; y: number; z: number }): Group {
+  const g = new Group();
+  g.name = COSMETIC_PART_NAMES.exhaust;
+  switch (optionId) {
+    case 'engine_v8': {
+      for (const sign of [-1, 1]) {
+        const pipe = new Mesh(new CylinderGeometry(0.07, 0.07, 0.3, 10), exhaustChrome);
+        pipe.rotation.x = Math.PI / 2;
+        pipe.position.set(sign * he.x * 0.5, -he.y * 0.75, -he.z - 0.1);
+        pipe.castShadow = true;
+        g.add(pipe);
+      }
+      break;
+    }
+    case 'engine_turbo': {
+      const pipe = new Mesh(new CylinderGeometry(0.1, 0.1, 0.35, 10), exhaustSteel);
+      pipe.rotation.x = Math.PI / 2;
+      pipe.position.set(0, -he.y * 0.75, -he.z - 0.12);
+      pipe.castShadow = true;
+      g.add(pipe);
+      break;
+    }
+    case 'engine_electric':
+      break; // EVs have no exhaust: an empty group
+    default: {
+      // No engine type equipped yet: a single small stock pipe as a visible baseline.
+      const pipe = new Mesh(new CylinderGeometry(0.05, 0.05, 0.22, 8), exhaustSteel);
+      pipe.rotation.x = Math.PI / 2;
+      pipe.position.set(he.x * 0.4, -he.y * 0.75, -he.z - 0.08);
+      pipe.castShadow = true;
+      g.add(pipe);
+    }
+  }
+  return g;
+}
+
+/** Rebuilds the exhaust to match the equipped engine type (or the stock baseline when none is
+ *  equipped yet); safe to call every time it changes. */
+export function syncEngineType(
+  carGroup: Group,
+  optionId: string,
+  he: { x: number; y: number; z: number }
+): void {
+  const old = carGroup.getObjectByName(COSMETIC_PART_NAMES.exhaust);
+  if (old) carGroup.remove(old);
+  carGroup.add(buildExhaust(optionId, he));
 }

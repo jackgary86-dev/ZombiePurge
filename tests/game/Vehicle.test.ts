@@ -125,4 +125,29 @@ describe('Vehicle', () => {
     physics.step();
     expect(car.getPosition().y).toBeCloseTo(before.y, 1);
   });
+
+  it("N2: setMass updates the physics body's real simulated mass, not just cfg.mass", () => {
+    const startMass = getConfig().vehicle.mass;
+    physics.step(); // Rapier only totals the body's mass once a step has run
+    expect(car.body.mass()).toBeCloseTo(startMass, 1);
+    car.setMass(startMass + 200); // e.g. equipping the V8 engine type
+    physics.step();
+    expect(car.body.mass()).toBeCloseTo(startMass + 200, 1);
+    car.setMass(startMass - 150); // e.g. equipping the Electric motor instead
+    physics.step();
+    expect(car.body.mass()).toBeCloseTo(startMass - 150, 1);
+  });
+
+  it("N2: a heavier or lighter mass doesn't change the achieved acceleration - drive force scales with mass to compensate", () => {
+    run(physics, car, 1);
+    run(physics, car, 3, { throttle: 1 });
+    const stockSpeed = car.getForwardSpeed();
+
+    const { physics: physics2, car: heavyCar } = makeWorld();
+    heavyCar.setMass(getConfig().vehicle.mass + 200); // V8: +200 kg, same acceleration stat
+    run(physics2, heavyCar, 1);
+    run(physics2, heavyCar, 3, { throttle: 1 });
+    expect(heavyCar.getForwardSpeed()).toBeCloseTo(stockSpeed, 0);
+    physics2.dispose();
+  });
 });
