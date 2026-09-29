@@ -29,6 +29,14 @@ with from the initial scaffold.
   cabin. The cabin box is now semi-transparent (a tinted-glass look) so the figure reads as
   visible through the windshield instead of hidden inside solid geometry. 5 purchasable outfit
   colours, applied via a new `CarView.setDriverColor()`.
+- **L5** A fourth Customize category, Windows: 4 cabin-glass finishes (Stock Tint, Clear Glass,
+  Dark Tint, Mirrored), each its own colour/opacity combination applied to the same cabin
+  material the L4 driver figure is seen through, via a new `CarView.setWindowTint()`. The
+  mirrored finish also bumps material metalness. `CosmeticOption` gained an optional `opacity`
+  field (validated 0-1) for this - every other category leaves it unset.
+- **L6** A fifth Customize category, Doors: 3 cosmetic door-trim styles (stock/flush, paneled
+  trim, chrome trim), mirrored on both sides of the body via a new `syncDoorStyle()` following
+  the same rebuild-on-change pattern as L3's bumper.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 

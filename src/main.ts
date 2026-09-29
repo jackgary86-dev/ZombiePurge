@@ -591,6 +591,13 @@ async function boot(): Promise<void> {
     carDamage.setPaintColor(garage.selectedCosmetic('paint')?.color ?? 0xc8402e);
     carView.setBumperStyle(garage.selectedCosmetic('bumper')?.id ?? 'bumper_stock');
     carView.setDriverColor(garage.selectedCosmetic('driver')?.color ?? 0x555a60);
+    const glass = garage.selectedCosmetic('window');
+    carView.setWindowTint(
+      glass?.id ?? 'window_stock',
+      glass?.color ?? 0x2b2b30,
+      glass?.opacity ?? 0.55
+    );
+    carView.setDoorStyle(garage.selectedCosmetic('door')?.id ?? 'door_stock');
     cfg.vehicle.tires.grip *= map.groundGrip ?? 1; // E7: snow/ice maps corner looser
     effectiveTopSpeed = s.topSpeed;
     effectiveAcceleration = s.acceleration;

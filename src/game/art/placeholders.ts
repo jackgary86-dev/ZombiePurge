@@ -20,7 +20,7 @@ import type { VehicleConfig, ZombieMotionConfig, ZombieRank } from '../../data/t
 import type { Vehicle } from '../vehicle/Vehicle';
 import type { Zombie } from '../zombies/Zombie';
 import { ZOMBIE_CAPSULE } from '../zombies/Zombie';
-import { syncBumperStyle } from './cosmeticParts';
+import { syncBumperStyle, syncDoorStyle } from './cosmeticParts';
 
 /** I12 placeholder art: primitives that match the physics shapes until real models land (I3, I5). */
 
@@ -35,6 +35,10 @@ export interface CarView {
   setBumperStyle(optionId: string): void;
   /** L4: recolours the driver figure's outfit. */
   setDriverColor(color: number): void;
+  /** L5: recolours/re-opacifies the cabin glass; `optionId` picks a mirrored-metal finish. */
+  setWindowTint(optionId: string, color: number, opacity: number): void;
+  /** L6: swaps the cosmetic door trim to match the selected style. */
+  setDoorStyle(optionId: string): void;
 }
 
 export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
@@ -49,18 +53,17 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
   body.castShadow = true;
   group.add(body);
 
-  const cabin = new Mesh(
-    new BoxGeometry(he.x * 1.6, he.y * 1.2, he.z * 0.9),
-    // L4: tinted-glass look (transparent) rather than solid metal, so the driver figure
-    // seated inside reads as visible through the windshield instead of fully hidden.
-    new MeshStandardMaterial({
-      color: 0x2b2b30,
-      roughness: 0.3,
-      metalness: 0.4,
-      transparent: true,
-      opacity: 0.55,
-    })
-  );
+  // L4/L5: tinted-glass look (transparent) rather than solid metal, so the driver figure seated
+  // inside reads as visible through the windshield instead of fully hidden. setWindowTint()
+  // (L5) recolours/re-opacifies this same material once a non-stock window style is equipped.
+  const cabinMaterial = new MeshStandardMaterial({
+    color: 0x2b2b30,
+    roughness: 0.3,
+    metalness: 0.4,
+    transparent: true,
+    opacity: 0.55,
+  });
+  const cabin = new Mesh(new BoxGeometry(he.x * 1.6, he.y * 1.2, he.z * 0.9), cabinMaterial);
   cabin.position.set(0, he.y * 1.4, -he.z * 0.15);
   cabin.castShadow = true;
   group.add(cabin);
@@ -76,6 +79,7 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
   group.add(driver);
 
   syncBumperStyle(group, 'bumper_stock', he);
+  syncDoorStyle(group, 'door_stock', he);
 
   const wheelGeometry = new CylinderGeometry(cfg.wheels.radius, cfg.wheels.radius, 0.3, 18);
   wheelGeometry.rotateZ(Math.PI / 2);
@@ -110,6 +114,14 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
     },
     setDriverColor(color: number) {
       driverMaterial.color.set(color);
+    },
+    setWindowTint(optionId: string, color: number, opacity: number) {
+      cabinMaterial.color.set(color);
+      cabinMaterial.opacity = opacity;
+      cabinMaterial.metalness = optionId === 'window_mirror' ? 0.9 : 0.4;
+    },
+    setDoorStyle(optionId: string) {
+      syncDoorStyle(group, optionId, he);
     },
   };
 }
