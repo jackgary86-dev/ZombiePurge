@@ -63,6 +63,13 @@ export class CarDamageView {
     this.halfExtents = vehicle.chassisHalfExtents;
   }
 
+  /** L2: sets the player's chosen paint colour as the new base, re-applying the current
+   *  damage tint on top of it so a repaint doesn't erase a wrecked/dented look. */
+  setPaintColor(color: number): void {
+    this.baseColor.set(color);
+    this.bodyMaterial.color.copy(this.baseColor).multiply(carDamageTint(this.stage));
+  }
+
   /** Call every frame with the car's current hp / maxHp. No-ops unless the stage changed. */
   setHpFraction(hpFraction: number): void {
     const stage = carDamageStage(hpFraction, this.cfg);

@@ -345,6 +345,40 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     );
   });
 
+  it('cosmetics (L1): category/option id required and unique, needs a free (stock) option', () => {
+    expect(
+      problems((c) => {
+        c.cosmetics[0].id = '';
+      })
+    ).toContain('cosmetics[0] (?).id is required');
+    expect(
+      problems((c) => {
+        c.cosmetics.push({ ...c.cosmetics[0] });
+      })
+    ).toEqual(expect.arrayContaining([expect.stringContaining('is duplicated')]));
+    expect(problems((c) => (c.cosmetics[0].options = []))).toContain(
+      'cosmetics[0] (paint) needs at least one option'
+    );
+    expect(
+      problems((c) => {
+        c.cosmetics[0].options[0].id = '';
+      })
+    ).toEqual(expect.arrayContaining([expect.stringContaining('.options[0] (?).id is required')]));
+    expect(
+      problems((c) => {
+        c.cosmetics[0].options[1].id = c.cosmetics[0].options[0].id;
+      })
+    ).toEqual(expect.arrayContaining([expect.stringContaining('is duplicated')]));
+    expect(problems((c) => (c.cosmetics[0].options[0].price = -1))).toEqual(
+      expect.arrayContaining([expect.stringContaining('price must be zero or greater')])
+    );
+    expect(
+      problems((c) => {
+        for (const opt of c.cosmetics[0].options) opt.price = 100;
+      })
+    ).toContain('cosmetics[0] (paint) needs at least one option priced 0 (the stock/default look)');
+  });
+
   it('maps: id, generator, chunk size, density/grip bounds, out-of-bounds geometry', () => {
     expect(problems((c) => (c.maps = []))).toContain('maps must contain at least one map');
     expect(

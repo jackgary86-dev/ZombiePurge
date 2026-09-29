@@ -251,7 +251,7 @@ async function boot(): Promise<void> {
   scene.add(...tracers.lines);
   const combat = new RunOverSystem(physics, car, pool, cfg.combat, cfg.vehicle.mass);
   const wallet = new Wallet(cfg.rewards);
-  const realGarage = new Garage(cfg.upgrades, wallet, 1);
+  const realGarage = new Garage(cfg.upgrades, wallet, 1, undefined, cfg.cosmetics);
   let garage = realGarage;
   let coins: CoinSource = wallet;
   /** F3: whichever wallet actually owns this run's coins — `wallet` in sandbox, a save
@@ -528,7 +528,7 @@ async function boot(): Promise<void> {
     storyProgress = loadStoryProgress(id, initialStoryProgress(storyMapIds), storage);
     const furthestId = storyProgress.unlocked[storyProgress.unlocked.length - 1];
     const currentMap = storyMaps.find((m) => m.id === furthestId)?.storyIndex ?? 1;
-    storyGarage = new Garage(cfg.upgrades, storyWallet, currentMap, storage);
+    storyGarage = new Garage(cfg.upgrades, storyWallet, currentMap, storage, cfg.cosmetics);
   }
 
   /** J5: play one story map — switches maps (via reload) when it isn't the one already loaded. */
@@ -588,6 +588,7 @@ async function boot(): Promise<void> {
   /** D2/D3-D7: push the garage's effective stats into the live systems. */
   function applyGarage(): void {
     const s = garage.applyTo(stockVehicle, cfg.vehicle);
+    carDamage.setPaintColor(garage.selectedCosmetic('paint')?.color ?? 0xc8402e);
     cfg.vehicle.tires.grip *= map.groundGrip ?? 1; // E7: snow/ice maps corner looser
     effectiveTopSpeed = s.topSpeed;
     effectiveAcceleration = s.acceleration;
@@ -663,7 +664,7 @@ async function boot(): Promise<void> {
     if (sandbox.infiniteMoney) {
       // A throwaway garage with everything unlocked and bottomless coins; nothing persists.
       coins = { balance: 1e9, spend: () => true };
-      garage = new Garage(cfg.upgrades, coins, 5, null);
+      garage = new Garage(cfg.upgrades, coins, 5, null, cfg.cosmetics);
     } else {
       coins = wallet;
       garage = realGarage;

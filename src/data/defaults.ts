@@ -426,6 +426,21 @@ export const DEFAULT_CONFIG: GameConfig = {
       ],
     },
   ],
+  cosmetics: [
+    {
+      id: 'paint',
+      label: 'Paint',
+      options: [
+        { id: 'paint_stock', label: 'Stock Red', price: 0, color: 0xc8402e },
+        { id: 'paint_black', label: 'Matte Black', price: 200, color: 0x1a1a1a },
+        { id: 'paint_blue', label: 'Steel Blue', price: 200, color: 0x2f5d8a },
+        { id: 'paint_green', label: 'Army Green', price: 200, color: 0x3d4a2b },
+        { id: 'paint_yellow', label: 'Taxi Yellow', price: 300, color: 0xe0b800 },
+        { id: 'paint_white', label: 'Ghost White', price: 300, color: 0xe8e4d8 },
+        { id: 'paint_purple', label: 'Neon Purple', price: 400, color: 0x7a2fb5 },
+      ],
+    },
+  ],
   maps: [
     {
       id: 'greybox',

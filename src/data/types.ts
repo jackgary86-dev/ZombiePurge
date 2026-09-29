@@ -472,6 +472,24 @@ export interface UpgradeDef {
   tiers: UpgradeTier[];
 }
 
+/** L1/L2: one purchasable/selectable look within a cosmetic category (e.g. one paint colour). */
+export interface CosmeticOption {
+  id: string;
+  label: string;
+  /** A price of 0 means always owned (the stock look). */
+  price: number;
+  /** Hex colour; every cosmetic category today (paint) is colour-based. */
+  color: number;
+}
+
+/** L1: a car customization category (paint, and more added by L3-L8) - exactly one option
+ * per category is selected at a time, independent of the tiered stat upgrades above. */
+export interface CosmeticCategoryConfig {
+  id: string;
+  label: string;
+  options: CosmeticOption[];
+}
+
 export interface GameConfig {
   physics: PhysicsConfig;
   vehicle: VehicleConfig;
@@ -480,6 +498,7 @@ export interface GameConfig {
   rewards: RewardsConfig;
   combat: CombatConfig;
   upgrades: UpgradeDef[];
+  cosmetics: CosmeticCategoryConfig[];
   maps: MapConfig[];
   hud: HudConfig;
   vfx: VfxConfig;
