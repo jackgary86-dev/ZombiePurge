@@ -1,5 +1,6 @@
 export * from './placeholders';
 export * from './upgradeParts';
+export * from './cosmeticParts';
 export * from './debugRings';
 export * from './pickups';
 export * from './BloodSplatter';

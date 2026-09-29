@@ -21,6 +21,14 @@ with from the initial scaffold.
 - **O1** Roof-mounted guns (machine gun/shotgun/rockets) now autoshoot the instant the
   auto-aim mount (D8) locks a target in range - no more holding Fire. The flamethrower is
   unchanged (camera-aimed, still needs the trigger held).
+- **L3** A second Customize category, Bumper: 3 purely cosmetic front-bumper styles (stock,
+  chrome, brush guard), each a genuinely different primitive shape (not just a recolour),
+  rebuilt on the car via a new `syncBumperStyle()` mirroring the existing D14 upgrade-parts
+  pattern. Kept close against the body so it never visually collides with an owned D12 ram.
+- **L4** A third Customize category, Driver: a simple placeholder driver figure seated in the
+  cabin. The cabin box is now semi-transparent (a tinted-glass look) so the figure reads as
+  visible through the windshield instead of hidden inside solid geometry. 5 purchasable outfit
+  colours, applied via a new `CarView.setDriverColor()`.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 
