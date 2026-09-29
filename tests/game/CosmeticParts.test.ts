@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { Group, Mesh, MeshStandardMaterial } from 'three';
-import { COSMETIC_PART_NAMES, syncBumperStyle, syncDoorStyle } from '../../src/game/art';
+import {
+  COSMETIC_PART_NAMES,
+  syncBumperStyle,
+  syncDecalStyle,
+  syncDoorStyle,
+} from '../../src/game/art';
 
 const HE = { x: 1, y: 0.5, z: 2 };
 
@@ -78,5 +83,55 @@ describe('L6 cosmetic door trim', () => {
     syncDoorStyle(car, 'door_paneled', HE);
     syncDoorStyle(car, 'door_chrome_trim', HE);
     expect(car.children.filter((c) => c.name === COSMETIC_PART_NAMES.doors)).toHaveLength(1);
+  });
+});
+
+describe('L7 cosmetic decals', () => {
+  it('"none" adds nothing - the free stock option', () => {
+    const car = new Group();
+    syncDecalStyle(car, 'decal_none', HE);
+    const decal = car.getObjectByName(COSMETIC_PART_NAMES.decal)!;
+    expect(decal).toBeDefined();
+    expect(decal.children).toHaveLength(0);
+  });
+
+  it('flames mirror a cluster of licks onto both sides', () => {
+    const car = new Group();
+    syncDecalStyle(car, 'decal_flames', HE);
+    const decal = car.getObjectByName(COSMETIC_PART_NAMES.decal)!;
+    expect(decal.children).toHaveLength(4); // 2 licks per side
+    const xs = (decal.children as Mesh[]).map((c) => Math.sign(c.position.x));
+    expect(xs.filter((x) => x < 0)).toHaveLength(2);
+    expect(xs.filter((x) => x > 0)).toHaveLength(2);
+  });
+
+  it('stripes mirror two long panels either side of the centreline', () => {
+    const car = new Group();
+    syncDecalStyle(car, 'decal_stripes', HE);
+    const decal = car.getObjectByName(COSMETIC_PART_NAMES.decal)!;
+    expect(decal.children).toHaveLength(2);
+    const [left, right] = decal.children as Mesh[];
+    expect(left.position.x).toBeCloseTo(-right.position.x);
+  });
+
+  it('skull adds a head plus two eye sockets per side', () => {
+    const car = new Group();
+    syncDecalStyle(car, 'decal_skull', HE);
+    const decal = car.getObjectByName(COSMETIC_PART_NAMES.decal)!;
+    expect(decal.children).toHaveLength(6); // (1 head + 2 sockets) x 2 sides
+  });
+
+  it('an unknown decal id falls back to none rather than crashing', () => {
+    const car = new Group();
+    syncDecalStyle(car, 'nonsense', HE);
+    expect(car.getObjectByName(COSMETIC_PART_NAMES.decal)!.children).toHaveLength(0);
+  });
+
+  it('re-syncing never duplicates the decal part', () => {
+    const car = new Group();
+    syncDecalStyle(car, 'decal_none', HE);
+    syncDecalStyle(car, 'decal_flames', HE);
+    syncDecalStyle(car, 'decal_number', HE);
+    expect(car.children.filter((c) => c.name === COSMETIC_PART_NAMES.decal)).toHaveLength(1);
   });
 });

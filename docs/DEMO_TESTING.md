@@ -109,7 +109,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
-## M7 – Car Customization & Combat Expansion (in progress: L1-L6, O1)
+## M7 – Car Customization & Combat Expansion (in progress: L1-L7, O1)
 
 - [ ] Garage → Customize tab: a "Paint" section lists 7 colour swatches; Stock Red shows "Equipped" and can't be bought again
 - [ ] Buy a colour you can afford: the button becomes "Equipped", its card gets a gold border, and the car turntable recolours immediately
@@ -125,6 +125,8 @@ Tick items in the PR that closes the milestone.
 - [ ] Garage → Customize tab: a "Windows" section lists Stock Tint/Clear Glass/Dark Tint/Mirrored; equipping Clear Glass makes the driver figure much easier to see, and Dark Tint makes it much harder, through the same cabin glass
 - [ ] Garage → Customize tab: a "Doors" section lists Stock/Paneled Trim/Chrome Trim; equipping a non-stock style adds a mirrored trim piece to both sides of the car
 - [ ] DRIVE with a non-stock window tint and door trim equipped: both are still visible in gameplay, not just in the garage
+- [ ] Garage → Customize tab: a "Decals" section lists None/Flames/Racing Stripes/Skull/Number Roundel; equipping a non-stock one adds a mirrored decal to both flanks of the car
+- [ ] Equip a decal alongside a non-stock paint colour: both show at once - the decal never gets overwritten or hidden by paint (L2)
 
 ### Known quirks (non-blocking)
 

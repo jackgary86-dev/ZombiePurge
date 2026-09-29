@@ -37,6 +37,10 @@ with from the initial scaffold.
 - **L6** A fifth Customize category, Doors: 3 cosmetic door-trim styles (stock/flush, paneled
   trim, chrome trim), mirrored on both sides of the body via a new `syncDoorStyle()` following
   the same rebuild-on-change pattern as L3's bumper.
+- **L7** A sixth Customize category, Decals: 5 options (None, Flames, Racing Stripes, Skull,
+  Number Roundel), each a small mirrored primitive cluster on its own named part
+  (`cosmetic_decal`) via a new `syncDecalStyle()`. Lives independently of the body's paint
+  material (L2), so paint and a decal can always be combined freely.
 
 ## 0.6.0 - M6: Polish & Release (in progress)
 

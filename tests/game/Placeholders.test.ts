@@ -54,4 +54,12 @@ describe('L3/L4 car cosmetics on the placeholder car', () => {
     car.setDoorStyle('door_chrome_trim');
     expect(car.group.children.filter((c) => c.name === 'cosmetic_doors')).toHaveLength(1);
   });
+
+  it('setDecalStyle swaps the decal without duplicating it', () => {
+    const car = buildPlaceholderCar(DEFAULT_CONFIG.vehicle);
+    car.setDecalStyle('decal_flames');
+    car.setDecalStyle('decal_skull');
+    expect(car.group.children.filter((c) => c.name === 'cosmetic_decal')).toHaveLength(1);
+    expect(car.group.getObjectByName('cosmetic_decal')!.children.length).toBeGreaterThan(0);
+  });
 });

@@ -20,7 +20,7 @@ import type { VehicleConfig, ZombieMotionConfig, ZombieRank } from '../../data/t
 import type { Vehicle } from '../vehicle/Vehicle';
 import type { Zombie } from '../zombies/Zombie';
 import { ZOMBIE_CAPSULE } from '../zombies/Zombie';
-import { syncBumperStyle, syncDoorStyle } from './cosmeticParts';
+import { syncBumperStyle, syncDecalStyle, syncDoorStyle } from './cosmeticParts';
 
 /** I12 placeholder art: primitives that match the physics shapes until real models land (I3, I5). */
 
@@ -39,6 +39,8 @@ export interface CarView {
   setWindowTint(optionId: string, color: number, opacity: number): void;
   /** L6: swaps the cosmetic door trim to match the selected style. */
   setDoorStyle(optionId: string): void;
+  /** L7: swaps the cosmetic body decal to match the selected style. */
+  setDecalStyle(optionId: string): void;
 }
 
 export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
@@ -80,6 +82,7 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
 
   syncBumperStyle(group, 'bumper_stock', he);
   syncDoorStyle(group, 'door_stock', he);
+  syncDecalStyle(group, 'decal_none', he);
 
   const wheelGeometry = new CylinderGeometry(cfg.wheels.radius, cfg.wheels.radius, 0.3, 18);
   wheelGeometry.rotateZ(Math.PI / 2);
@@ -122,6 +125,9 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
     },
     setDoorStyle(optionId: string) {
       syncDoorStyle(group, optionId, he);
+    },
+    setDecalStyle(optionId: string) {
+      syncDecalStyle(group, optionId, he);
     },
   };
 }
