@@ -20,7 +20,7 @@ import type { VehicleConfig, ZombieMotionConfig, ZombieRank } from '../../data/t
 import type { Vehicle } from '../vehicle/Vehicle';
 import type { Zombie } from '../zombies/Zombie';
 import { ZOMBIE_CAPSULE } from '../zombies/Zombie';
-import { syncBumperStyle, syncDecalStyle, syncDoorStyle } from './cosmeticParts';
+import { syncBumperStyle, syncDecalStyle, syncDoorStyle, syncTireStyle } from './cosmeticParts';
 
 /** I12 placeholder art: primitives that match the physics shapes until real models land (I3, I5). */
 
@@ -41,6 +41,8 @@ export interface CarView {
   setDoorStyle(optionId: string): void;
   /** L7: swaps the cosmetic body decal to match the selected style. */
   setDecalStyle(optionId: string): void;
+  /** L8: swaps every wheel's rim/tread trim to match the selected tire style. */
+  setTireStyle(optionId: string): void;
 }
 
 export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
@@ -92,6 +94,7 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
     wheel.castShadow = true;
     return wheel;
   });
+  syncTireStyle(wheels, 'tire_stock', cfg.wheels.radius);
 
   const scratchQ = new Quaternion();
   const yawQ = new Quaternion();
@@ -128,6 +131,9 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
     },
     setDecalStyle(optionId: string) {
       syncDecalStyle(group, optionId, he);
+    },
+    setTireStyle(optionId: string) {
+      syncTireStyle(wheels, optionId, cfg.wheels.radius);
     },
   };
 }
