@@ -32,6 +32,7 @@ import {
   DriveTrailView,
   driveTrailColor,
   FlameView,
+  HammerView,
   MuzzleFlashView,
   PickupViews,
   ProjectileViews,
@@ -49,6 +50,7 @@ import { ChaseCamera } from './game/camera';
 import {
   Flamethrower,
   FRONT_MOUNT,
+  HammerSwing,
   MachineGun,
   RocketLauncher,
   ROOF_MOUNT,
@@ -241,6 +243,8 @@ async function boot(): Promise<void> {
   for (const l of headlights.lights) carView.group.add(l, l.target);
   const sawView = new SawView(cfg.vehicle.chassisHalfExtents);
   carView.group.add(sawView.group);
+  const hammerView = new HammerView(cfg.vehicle.chassisHalfExtents);
+  carView.group.add(hammerView.group);
   scene.add(carView.group);
   lights.sun.target = carView.group;
 
@@ -274,6 +278,7 @@ async function boot(): Promise<void> {
   let shotgun: Shotgun | null = null;
   let rockets: RocketLauncher | null = null;
   let flamethrower: Flamethrower | null = null;
+  let hammer: HammerSwing | null = null;
   const rocketViews = new RocketViews();
   scene.add(...rocketViews.rockets, ...rocketViews.blasts);
   let flameView: FlameView | null = null;
@@ -657,6 +662,13 @@ async function boot(): Promise<void> {
       combat.meleeKnockback = 0;
     }
     combat.sawDamagePerSecond = front === 'saw' ? tierOf(front, cfg.combat.saw).damagePerSecond : 0;
+    if (front === 'hammer') {
+      const tier = tierOf(front, cfg.combat.hammer);
+      hammer = hammer ?? new HammerSwing(pool, tier);
+      hammer.stats = tier;
+    } else {
+      hammer = null;
+    }
     syncMeleeWeapon(carView.group, front, garage.ownedTier('spikes'), cfg.vehicle);
     syncUpgradeParts(carView.group, garage, cfg.vehicle);
   }
@@ -952,6 +964,16 @@ async function boot(): Promise<void> {
       sawView.group.getWorldPosition(sawSparkPos);
       muzzleFlash.trigger(sawSparkPos);
     }
+    if (hammer) {
+      const swing = hammer.update(deltaTime, senses.carPosition);
+      for (const k of swing.kills) rewardKill(k.zombie, k.position);
+      if (swing.swung) hammerView.triggerSwing();
+      if (swing.hits > 0) {
+        muzzleFlash.trigger(senses.carPosition);
+        audio.impact(1);
+      }
+    }
+    hammerView.update(deltaTime, hammer !== null);
     senses.noise = firing ? 0.5 : 0;
 
     let attackDamage = 0;

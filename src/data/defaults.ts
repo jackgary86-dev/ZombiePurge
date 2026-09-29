@@ -208,6 +208,11 @@ export const DEFAULT_CONFIG: GameConfig = {
       { damage: 50, knockback: 9 },
     ],
     saw: [{ damagePerSecond: 30 }, { damagePerSecond: 55 }, { damagePerSecond: 90 }],
+    hammer: [
+      { damage: 40, knockback: 6, radius: 2.5, cooldownSeconds: 2.5 },
+      { damage: 70, knockback: 8, radius: 3, cooldownSeconds: 2 },
+      { damage: 110, knockback: 11, radius: 3.5, cooldownSeconds: 1.5 },
+    ],
     runOverMinSpeed: 3,
     runOverDamageFactor: 0.01,
     impactDamageToCar: {
@@ -412,6 +417,19 @@ export const DEFAULT_CONFIG: GameConfig = {
         { tier: 1, price: 350, unlockMap: 1, modifiers: {}, label: 'Bench blade' },
         { tier: 2, price: 800, unlockMap: 2, modifiers: {}, label: 'Reinforced blade' },
         { tier: 3, price: 1500, unlockMap: 4, modifiers: {}, label: 'Carbide blade' },
+      ],
+    },
+    {
+      id: 'hammer',
+      category: 'melee',
+      slot: 'front',
+      name: 'Swinging Hammer',
+      description:
+        'A hammer that swings on its own cooldown, hitting everything nearby with a burst of damage and a knockback shove - no need to stay in contact.',
+      tiers: [
+        { tier: 1, price: 400, unlockMap: 1, modifiers: {}, label: 'Sledgehammer' },
+        { tier: 2, price: 900, unlockMap: 2, modifiers: {}, label: 'Wrecking ball' },
+        { tier: 3, price: 1700, unlockMap: 4, modifiers: {}, label: 'Piledriver' },
       ],
     },
     {

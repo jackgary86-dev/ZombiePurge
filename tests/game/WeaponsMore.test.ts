@@ -4,6 +4,7 @@ import { getConfig, resetConfig } from '../../src/data/config';
 import {
   Flamethrower,
   FRONT_MOUNT,
+  HammerSwing,
   RocketLauncher,
   ROOF_MOUNT,
   Shotgun,
@@ -156,5 +157,50 @@ describe('D10 flamethrower and D11 shotgun / rockets', () => {
     expect(cluster.every((z) => !z.isAlive())).toBe(true);
     expect(far.isAlive()).toBe(true);
     expect(launcher.state.rounds).toBe(stats.magazine - 1);
+  });
+
+  describe('M4 hammer swing', () => {
+    it('swings immediately, hits everything in radius, knocks back survivors, ignores the rest', () => {
+      const stats = getConfig().combat.hammer[0];
+      const hammer = new HammerSwing(pool, stats);
+      // A brute's HP comfortably survives one tier-1 hit, so this checks damage + knockback
+      // together rather than just the kill path (covered by its own test below).
+      const near = pool.spawn('brute', { x: 0, y: 0, z: stats.radius * 0.5 })!;
+      const far = pool.spawn('walker', { x: 0, y: 0, z: stats.radius * 3 })!;
+      const carPos = new Vector3(0, 1, 0);
+
+      const result = hammer.update(DT, carPos);
+      expect(result.swung).toBe(true);
+      expect(result.hits).toBe(1);
+      expect(near.hp).toBe(getConfig().zombies.brute.hp - stats.damage);
+      expect(near.knockbackTimeLeft).toBeGreaterThan(0);
+      expect(far.hp).toBe(getConfig().zombies.walker.hp); // outside the radius, untouched
+    });
+
+    it('reports a kill when the burst finishes a zombie off, without also knocking it back', () => {
+      const stats = { ...getConfig().combat.hammer[0], damage: 9999 };
+      const hammer = new HammerSwing(pool, stats);
+      const z = pool.spawn('walker', { x: 0, y: 0, z: 1 })!;
+      const carPos = new Vector3(0, 1, 0);
+
+      const result = hammer.update(DT, carPos);
+      expect(result.kills).toHaveLength(1);
+      expect(result.kills[0].zombie).toBe(z);
+      expect(z.knockbackTimeLeft).toBe(0);
+    });
+
+    it('does nothing again until its own cooldown expires', () => {
+      const stats = getConfig().combat.hammer[0];
+      const hammer = new HammerSwing(pool, stats);
+      const carPos = new Vector3(0, 1, 0);
+      hammer.update(DT, carPos);
+      const secondSwing = hammer.update(DT, carPos);
+      expect(secondSwing.swung).toBe(false);
+      let sawAnotherSwing = false;
+      for (let i = 0; i < Math.ceil(stats.cooldownSeconds / DT); i++) {
+        if (hammer.update(DT, carPos).swung) sawAnotherSwing = true;
+      }
+      expect(sawAnotherSwing).toBe(true);
+    });
   });
 });

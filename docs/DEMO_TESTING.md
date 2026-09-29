@@ -109,7 +109,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
 
-## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1-M3)
+## M7 – Car Customization & Combat Expansion (in progress: L1-L8, O1, M1-M4)
 
 - [ ] Garage → Customize tab: a "Paint" section lists 7 colour swatches; Stock Red shows "Equipped" and can't be bought again
 - [ ] Buy a colour you can afford: the button becomes "Equipped", its card gets a gold border, and the car turntable recolours immediately
@@ -135,6 +135,9 @@ Tick items in the PR that closes the milestone.
 - [ ] Garage → Melee tab: a "Circular Saw" card lists 3 tiers; buying it equips it into the front slot and a spinning blade appears at the front of the car, spinning continuously
 - [ ] DRIVE and stay in contact with a zombie with the Saw equipped (nudge it and hold position): it keeps taking damage the whole time it's touching, not just once, with a grinding sound and a spark flash while it's actually touching
 - [ ] Back off from the zombie with the Saw still equipped: the grinding sound stops but the blade keeps spinning (it's still equipped, just not touching anything)
+- [ ] Garage → Melee tab: a "Swinging Hammer" card lists 3 tiers; buying it equips it into the front slot and a hammer arm appears at the front, at rest
+- [ ] DRIVE near a horde with the Hammer equipped and just wait (no need to touch a zombie): it periodically swings on its own cooldown, damaging and knocking back everything within its radius, with the arm playing a one-shot swing animation and a flash/thump when it connects
+- [ ] Only one of Ram/Flamethrower/Spikes/Saw/Hammer shows or works at a time - buying a new one always takes over the front slot from whichever was equipped before
 
 ### Known quirks (non-blocking)
 
