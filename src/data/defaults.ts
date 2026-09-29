@@ -479,6 +479,17 @@ export const DEFAULT_CONFIG: GameConfig = {
         { id: 'door_chrome_trim', label: 'Chrome Trim', price: 250, color: 0xd8d8dc },
       ],
     },
+    {
+      id: 'decal',
+      label: 'Decals',
+      options: [
+        { id: 'decal_none', label: 'None', price: 0, color: 0x000000 },
+        { id: 'decal_flames', label: 'Flames', price: 200, color: 0xff6a1a },
+        { id: 'decal_stripes', label: 'Racing Stripes', price: 150, color: 0xe8e4d8 },
+        { id: 'decal_skull', label: 'Skull', price: 250, color: 0xe8e4d8 },
+        { id: 'decal_number', label: 'Number Roundel', price: 150, color: 0xffffff },
+      ],
+    },
   ],
   maps: [
     {

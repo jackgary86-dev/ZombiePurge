@@ -94,7 +94,7 @@ assets/            # 3D models, textures, sounds
 | **M4** | Story Mode: Map 1 (Suburbs)                   | ✅ Done (E4, E9, F2, F3, I6, J3, J5, J9)                                                                                                             |
 | **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                              |
 | **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
-| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L6, O1 done; L7-L8 garage cosmetics remaining; M1–M5 melee weapons; N1–N2 engine tuning/replacement)                              |
+| **M7** | Car Customization & Combat Expansion          | 🔶 In progress (L1-L7, O1 done; L8 garage cosmetics remaining; M1–M5 melee weapons; N1–N2 engine tuning/replacement)                                 |
 
 ## What's Built So Far
 
@@ -150,6 +150,7 @@ assets/            # 3D models, textures, sounds
 - **O1** Roof-mounted guns (machine gun/shotgun/rockets) now autoshoot the instant the existing auto-aim mount (D8) locks a target in range, instead of also requiring the Fire button held
 - **L5** Window customization: 4 cabin-glass tints/finishes (stock, clear, dark, mirrored), each its own colour/opacity/metalness combination, applied to the same cabin material the L4 driver figure is seen through
 - **L6** Door style selection: 3 cosmetic door-trim looks (stock/flush, paneled trim, chrome trim), mirrored on both sides of the body, independent of the door's underlying shape
+- **L7** Decals: 5 body-side decal options (none, flames, racing stripes, skull, number roundel), each a small mirrored primitive cluster on its own named part - stacks independently of paint (L2) since it never touches the body material
 
 ## Development
 
