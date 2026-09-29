@@ -639,6 +639,9 @@ async function boot(): Promise<void> {
         : null;
     if (rockets) rockets.stats = tierOf('rockets', cfg.combat.rockets);
     turret.visible = roof !== undefined;
+    // M5: the mounted turret's shape reflects whichever roof weapon is actually equipped,
+    // instead of always showing the same generic silhouette.
+    if (roof === 'machinegun' || roof === 'shotgun' || roof === 'rockets') turret.setKind(roof);
 
     const front = garage.equippedIn('front')?.id;
     if (front === 'flamethrower') {

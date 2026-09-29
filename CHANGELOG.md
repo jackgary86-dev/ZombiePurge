@@ -73,6 +73,15 @@ with from the initial scaffold.
   the spike cluster (M2) introduced. A new `HammerView` plays a one-shot swing arc (not a
   continuous loop like the saw's blade) each time it fires, and a muzzle-flash/thump plays when
   the swing actually connects.
+- **M5** The roof turret (`TurretView`) now has a per-weapon `TurretKind` ('machinegun' |
+  'shotgun' | 'rockets'): its barrel arrangement is rebuilt (only when the kind actually
+  changes) to a single long barrel, a stubby double barrel, or a 2x2 cluster of launch tubes,
+  instead of always showing the same generic silhouette regardless of which roof weapon is
+  equipped. Wired into `applyGarage()` alongside the existing `turret.visible` toggle. The
+  front-mounted weapons already got this treatment in M1-M4 (`FlameView`, `syncMeleeWeapon`,
+  `SawView`, `HammerView`), so this closes the matching gap on the roof slot; a full
+  preview-before-buying interaction (hovering an unpurchased weapon's shop card) was judged a
+  separate, more open-ended UX addition and left out of this ticket's scope.
 - **N1** Engine tuning: `VehicleConfig.engineTuning.swingFactor` (0.5 by default) plus a new
   `Garage.engineTuning` slider (-1..+1, 0 = balanced) that redistributes the _owned engine
   tier's own_ topSpeed/acceleration modifiers - `topSpeed * (1 + tuning * swingFactor)` and
