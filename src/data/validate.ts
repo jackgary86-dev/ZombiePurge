@@ -343,6 +343,16 @@ export function collectConfigProblems(config: GameConfig): string[] {
   positive(garage.interactRange, 'garage.interactRange', problems);
   positive(garage.stationInset, 'garage.stationInset', problems);
 
+  const snapZoneIds = new Set<string>();
+  for (const [i, zone] of config.snapZones.entries()) {
+    const at = `snapZones[${i}]`;
+    if (snapZoneIds.has(zone.id)) problems.push(`${at}.id "${zone.id}" is duplicated`);
+    snapZoneIds.add(zone.id);
+    if (!zone.slot && !zone.category) problems.push(`${at} needs a slot or a category`);
+    if (zone.slot && zone.category) problems.push(`${at} can't have both a slot and a category`);
+    positive(zone.radius, `${at}.radius`, problems);
+  }
+
   const upgradeIds = new Set<string>();
   const categories: UpgradeCategory[] = [
     'engine',

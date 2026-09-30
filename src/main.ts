@@ -44,6 +44,7 @@ import {
   SawView,
   ShotTracers,
   SkidMarkView,
+  SnapZoneMarker,
   syncMeleeWeapon,
   syncUpgradeParts,
   TurretView,
@@ -69,12 +70,15 @@ import {
   GARAGE_AVATAR_START,
   interact,
   layoutStations,
+  nearestOccupiedZone,
+  nearestValidEmptyZone,
   previewInteract,
   stepGarageAvatar,
   type DroppedPart,
   type GarageAvatarState,
   type GarageShoppingState,
   type GarageStation,
+  type WorldZone,
 } from './game/garageScene';
 import { initPhysics, PhysicsWorld, RAPIER } from './game/physics/PhysicsWorld';
 import { Garage, repairInGarage, repairPrice, type CoinSource } from './game/shop';
@@ -354,6 +358,64 @@ async function boot(): Promise<void> {
     }
     renderedDropped = shoppingState.dropped;
   }
+
+  // ---------- R3: snap-zone vehicle attachment ----------
+  // One marker per configured zone, parented straight onto the car's own group so it always
+  // tracks the car's position/orientation with no per-frame transform of its own.
+  const snapZoneMarkers = new Map<string, SnapZoneMarker>();
+  for (const zoneDef of cfg.snapZones) {
+    const marker = new SnapZoneMarker(zoneDef.radius);
+    marker.mesh.position.set(zoneDef.offset.x, zoneDef.offset.y, zoneDef.offset.z);
+    carView.group.add(marker.mesh);
+    snapZoneMarkers.set(zoneDef.id, marker);
+  }
+  const zoneWorldScratch = new Vector3();
+  /** The pure interaction logic has no Three.js dependency, so each zone's position is
+   *  computed here, once per frame, from the car's own current transform - in the same
+   *  room-local frame (relative to `spawn`) as the avatar and every station/dropped part,
+   *  not raw world coordinates. */
+  function computeWorldZones(): WorldZone[] {
+    return cfg.snapZones.map((zone) => {
+      zoneWorldScratch.set(zone.offset.x, zone.offset.y, zone.offset.z);
+      zoneWorldScratch.applyQuaternion(carView.group.quaternion);
+      return {
+        zone,
+        x: zoneWorldScratch.x + (carView.group.position.x - spawn.x),
+        z: zoneWorldScratch.z + (carView.group.position.z - spawn.z),
+      };
+    });
+  }
+  function updateZoneHighlights(
+    worldZones: WorldZone[],
+    avatarWorldX: number,
+    avatarWorldZ: number
+  ): void {
+    for (const marker of snapZoneMarkers.values()) marker.setHighlighted(false);
+    const targetId = shoppingState.heldId
+      ? nearestValidEmptyZone(
+          {
+            id: shoppingState.heldId,
+            slot: garage.get(shoppingState.heldId)?.slot,
+            category: garage.get(shoppingState.heldId)?.category,
+          },
+          worldZones,
+          garage,
+          shoppingState.installed,
+          avatarWorldX,
+          avatarWorldZ,
+          cfg.garage.interactRange
+        )?.id
+      : nearestOccupiedZone(
+          worldZones,
+          garage,
+          shoppingState.installed,
+          avatarWorldX,
+          avatarWorldZ,
+          cfg.garage.interactRange
+        )?.zone.id;
+    if (targetId) snapZoneMarkers.get(targetId)?.setHighlighted(true);
+  }
+
   let coins: CoinSource = wallet;
   /** F3: whichever wallet actually owns this run's coins — `wallet` in sandbox, a save
    *  slot's own wallet in story mode. Kept separate from `coins` because the infinite-money
@@ -1209,14 +1271,15 @@ async function boot(): Promise<void> {
       cfg.physics.fixedTimeStep,
       cfg.garage
     );
-    // R2: buy/pick-up/drop, resolved against the currently active Garage (Sandbox/Story/
-    // Slaughtermode each have their own instance and their own ownership).
+    // R2/R3: snap/drop/buy/pick-up, resolved against the currently active Garage (Sandbox/
+    // Story/Slaughtermode each have their own instance and their own ownership).
     if (input.justPressed('interact')) {
       const result = interact(garage, shoppingState, {
         avatarX: garageAvatarState.x,
         avatarZ: garageAvatarState.z,
         stations: garageStations,
         range: cfg.garage.interactRange,
+        zones: computeWorldZones(),
       });
       shoppingState = result.state;
       carriedMarker.visible = shoppingState.heldId !== null;
@@ -1287,11 +1350,14 @@ async function boot(): Promise<void> {
       // very next E-press so it stays correct as the avatar walks around.
       for (const [id, marker] of stationMarkers) marker.setOwned(garage.ownedTier(id) > 0);
       syncDroppedMarkers();
+      const worldZones = computeWorldZones();
+      updateZoneHighlights(worldZones, garageAvatarState.x, garageAvatarState.z);
       const preview = previewInteract(garage, shoppingState, {
         avatarX: garageAvatarState.x,
         avatarZ: garageAvatarState.z,
         stations: garageStations,
         range: cfg.garage.interactRange,
+        zones: worldZones,
       });
       garagePrompt.update(preview, garage);
     } else if (state === GameState.MainMenu) {

@@ -372,6 +372,26 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     );
   });
 
+  it('snap zones (R3): duplicate ids, missing/conflicting slot-or-category, bad radius', () => {
+    expect(problems((c) => (c.snapZones[1].id = c.snapZones[0].id))).toContain(
+      `snapZones[1].id "${DEFAULT_CONFIG.snapZones[0].id}" is duplicated`
+    );
+    expect(
+      problems((c) => {
+        delete c.snapZones[0].slot;
+        delete c.snapZones[0].category;
+      })
+    ).toContain('snapZones[0] needs a slot or a category');
+    expect(
+      problems((c) => {
+        c.snapZones[0].category = 'armor';
+      })
+    ).toContain(`snapZones[0] can't have both a slot and a category`);
+    expect(problems((c) => (c.snapZones[0].radius = 0))).toContain(
+      'snapZones[0].radius must be a positive number (got 0)'
+    );
+  });
+
   it('upgrades: id required/duplicated, unknown category, weapon without a slot', () => {
     expect(
       problems((c) => {

@@ -158,7 +158,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy/upgrade the regular Engine tier ladder (D3/N1) while an engine type is equipped: both bonuses stack - top speed/acceleration are higher than either one alone
 - [ ] With the V8 equipped, ram a zombie or wall: the car feels heavier/punchier than stock; with Electric equipped, it feels lighter - the `acceleration` stat itself (how fast 0-to-top-speed feels) stays consistent with what the Engine Tuning slider and tier cards show, regardless of which type is equipped
 
-## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1, R1, R2)
+## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1, R1, R2, R3)
 
 - [ ] Corner hard, clip a curb, or take a glancing zombie hit: the car leans but no longer
       tips onto its side/roof from ordinary driving
@@ -196,6 +196,19 @@ Tick items in the PR that closes the milestone.
       floor, and can be walked up to and picked back up the same way
 - [ ] While carrying a part, walking up to a different pedestal and pressing E always drops
       the carried part instead of buying/picking up the other one - only one at a time
+- [ ] Carry a bought part toward the car: a faint ring is visible at every attachment point,
+      and the one matching your carried part's own category turns bright green as you approach
+- [ ] Press E in a bright-green zone: the part snaps onto the car (prompt confirms it, and for
+      a weapon, the roof/front weapon model visibly appears)
+- [ ] Try this for a few different categories (a wheel/tires, armor, a roof weapon, engine):
+      every one of them lights up some zone on the car - if a carried part never lights up
+      anything anywhere, that's a bug
+- [ ] Carry a part to a zone that's already occupied by something else: it does not light up -
+      walk elsewhere and it can still be dropped normally
+- [ ] Press E while standing at an occupied (green-eligible-for-pickup) zone with empty hands:
+      the part there is picked back up and can be carried, dropped, or snapped somewhere else
+- [ ] A snapped weapon's stats apply exactly as they did through the old menu (check HP/speed/
+      etc. before and after against the Garage's own stat display)
 
 ### Known quirks (non-blocking)
 
