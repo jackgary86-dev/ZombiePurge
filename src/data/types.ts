@@ -344,7 +344,8 @@ export interface MapConfig {
     | 'desertHighway'
     | 'industrialCity'
     | 'frozenForest'
-    | 'quarantineLab';
+    | 'quarantineLab'
+    | 'slaughterRoad';
   seed: number;
   chunkSize: number;
   /** Optional spawn zones; without them the horde spawner uses the whole map. */
@@ -362,6 +363,23 @@ export interface MapConfig {
   boss?: MapBossConfig;
   /** G3: this map's ambient drone; defaults to a calm, mid-range one when omitted. */
   music?: MapMusicConfig;
+  /** Q1: overrides the default horde-spawner tuning for this map (e.g. Slaughtermode's tight,
+   *  continuous stream instead of the default open-map pacing). Missing fields keep the default. */
+  spawnerTuning?: SpawnerTuning;
+}
+
+/** Q1: every field mirrors `SpawnerConfig` (`game/zombies/HordeSpawner.ts`) - duplicated here,
+ *  rather than imported, so the data layer doesn't depend on the zombies module. */
+export interface SpawnerTuning {
+  spawnMinDistance?: number;
+  spawnMaxDistance?: number;
+  despawnDistance?: number;
+  viewHalfAngle?: number;
+  spawnsPerSecond?: number;
+  attemptsPerSpawn?: number;
+  clusterMin?: number;
+  clusterMax?: number;
+  clusterRadius?: number;
 }
 
 /** F4: overrides layered onto the shared `boss` rank config for this map's own fight. */

@@ -10,6 +10,7 @@ describe('driveTrailColor (I9)', () => {
     expect(driveTrailColor('suburbs')).toBe(0x6b7b4a);
     expect(driveTrailColor('industrialCity')).toBe(0x4a4f52);
     expect(driveTrailColor('quarantineLab')).toBe(0x3a4a3d);
+    expect(driveTrailColor('slaughterRoad')).toBe(0x2a2622);
     expect(driveTrailColor('greybox')).toBe(0x3d3d3d);
   });
 });

@@ -5,6 +5,7 @@ export * from './DesertHighwayMap';
 export * from './IndustrialCityMap';
 export * from './FrozenForestMap';
 export * from './QuarantineLabMap';
+export * from './SlaughterRoadMap';
 export * from './PlaceholderMapKit';
 export * from './ChunkStreamer';
 export * from './lighting';

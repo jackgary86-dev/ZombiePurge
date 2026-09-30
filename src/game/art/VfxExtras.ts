@@ -20,6 +20,8 @@ export function driveTrailColor(generator: MapConfig['generator']): number {
       return 0xdfe8f0;
     case 'quarantineLab':
       return 0x3a4a3d;
+    case 'slaughterRoad':
+      return 0x2a2622;
     default:
       return 0x3d3d3d;
   }

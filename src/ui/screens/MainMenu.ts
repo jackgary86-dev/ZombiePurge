@@ -7,6 +7,7 @@ export interface MainMenuActions {
   onContinue: () => void;
   onStory: () => void;
   onSandbox: () => void;
+  onSlaughter: () => void;
   onGarage: () => void;
   onSettings: () => void;
   onControls: () => void;
@@ -39,6 +40,8 @@ export function createMainMenu(
   story.replaceChildren(iconButton('distance', 'Story Mode'));
   const sandbox = menuButton('', actions.onSandbox);
   sandbox.replaceChildren(iconButton('nitro', 'Sandbox'));
+  const slaughter = menuButton('', actions.onSlaughter);
+  slaughter.replaceChildren(iconButton('melee', 'Slaughtermode'));
   const garage = menuButton('', actions.onGarage);
   garage.replaceChildren(iconButton('wrench', 'Garage'));
   const settings = menuButton('', actions.onSettings);
@@ -50,7 +53,7 @@ export function createMainMenu(
   const quit = menuButton('', actions.onQuit);
   quit.replaceChildren(iconButton('exit', 'Quit'));
 
-  body.append(cont, story, sandbox, garage, settings, controls, credits, quit);
+  body.append(cont, story, sandbox, slaughter, garage, settings, controls, credits, quit);
   parent.appendChild(el);
   return {
     id: 'main',

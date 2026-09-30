@@ -511,6 +511,42 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     ).toEqual(expect.arrayContaining([expect.stringContaining('must be less than fogDistance')]));
   });
 
+  it('map spawnerTuning (Q1): every numeric field must stay positive, with sane min/max pairs', () => {
+    const slaughterIndex = DEFAULT_CONFIG.maps.findIndex((m) => m.spawnerTuning);
+    expect(slaughterIndex).toBeGreaterThanOrEqual(0);
+    expect(problems((c) => (c.maps[slaughterIndex].spawnerTuning!.spawnMinDistance = -1))).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('spawnerTuning.spawnMinDistance must be a positive number'),
+      ])
+    );
+    expect(
+      problems((c) => {
+        c.maps[slaughterIndex].spawnerTuning!.spawnMinDistance = 300;
+        c.maps[slaughterIndex].spawnerTuning!.spawnMaxDistance = 200;
+      })
+    ).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('spawnMaxDistance must be greater than spawnMinDistance'),
+      ])
+    );
+    expect(problems((c) => (c.maps[slaughterIndex].spawnerTuning!.despawnDistance = 0))).toEqual(
+      expect.arrayContaining([expect.stringContaining('spawnerTuning.despawnDistance')])
+    );
+    expect(problems((c) => (c.maps[slaughterIndex].spawnerTuning!.spawnsPerSecond = 0))).toEqual(
+      expect.arrayContaining([expect.stringContaining('spawnerTuning.spawnsPerSecond')])
+    );
+    expect(
+      problems((c) => {
+        c.maps[slaughterIndex].spawnerTuning!.clusterMin = 10;
+        c.maps[slaughterIndex].spawnerTuning!.clusterMax = 5;
+      })
+    ).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('clusterMax must not be less than clusterMin'),
+      ])
+    );
+  });
+
   it('map boss (F4): position bounds, stats, slam and ranged sub-fields', () => {
     const bossMapIndex = DEFAULT_CONFIG.maps.findIndex((m) => m.boss);
     expect(bossMapIndex).toBeGreaterThanOrEqual(0);
