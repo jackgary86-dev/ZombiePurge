@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1, S2, S3)
+## M9 – Art pass & bug bash (in progress: S1-S4)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -250,6 +250,15 @@ Tick items in the PR that closes the milestone.
 - [ ] Walk the avatar around the room (WASD): movement, the bounds clamp, and the camera follow
       all behave exactly as before R1's own testing - none of the new dressing blocks movement or
       changes the walkable area
+- [ ] Drive Story Mode's Suburbs, Desert Highway, Frozen Forest, and Quarantine Lab maps: each is
+      visually distinguishable from the others at a glance - Desert Highway's gas stations now
+      have a roof overhang and signage, Frozen Forest's boulders have a snow cap, Suburbs' parked
+      cars have a cabin bump
+- [ ] Industrial City: warehouses show a roof cap and vent, crates a banding strap, gates a lamp -
+      **known pre-existing issue**, unrelated to this art pass: the story map's spawn point sits
+      inside a warehouse's own collider, so the car can't move from the start of a run there yet
+      (see the follow-up ticket); the props themselves are still verifiable by looking around at
+      spawn, or via `#debug`'s `tp` cheat once clear of the stuck spawn
 
 ### Known quirks (non-blocking)
 

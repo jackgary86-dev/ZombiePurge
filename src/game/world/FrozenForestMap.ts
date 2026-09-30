@@ -1,9 +1,10 @@
-import { Group } from 'three';
+import { Group, Mesh, SphereGeometry } from 'three';
 import type { PhysicsWorld } from '../physics/PhysicsWorld';
 import {
   buildKitColliders,
   buildKitMeshes,
   mulberry32,
+  type KitDecorator,
   type KitLayout,
   type KitPiece,
 } from './PlaceholderMapKit';
@@ -100,8 +101,25 @@ export function buildFrozenForestColliders(physics: PhysicsWorld, layout: KitLay
   return buildKitColliders(physics, layout);
 }
 
+/** S4: a snow cap on every boulder - purely visual, `buildKitColliders` never sees it. */
+const decorate: KitDecorator = (piece, _mesh, group, material) => {
+  if (piece.kind !== 'boulder') return;
+  const cap = new Mesh(
+    new SphereGeometry(piece.halfExtents.x * 0.65, 8, 6),
+    material('snow-cap', 0xf4f8fa, 0.8)
+  );
+  cap.position.set(
+    piece.position.x,
+    piece.position.y + piece.halfExtents.y * 0.55,
+    piece.position.z
+  );
+  cap.scale.set(1, 0.55, 1);
+  cap.castShadow = true;
+  group.add(cap);
+};
+
 export function buildFrozenForestMeshes(layout: KitLayout): Group {
-  const group = buildKitMeshes(layout, PALETTE);
+  const group = buildKitMeshes(layout, PALETTE, decorate);
   group.name = 'frozen-forest';
   return group;
 }

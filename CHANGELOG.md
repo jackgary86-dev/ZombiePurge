@@ -7,6 +7,27 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - S4: Art pass - per-map environment props
+
+- **S4** Gave each story map's placeholder kit-piece props more theme-appropriate detail, on top
+  of the shared `KitDecorator` hook (`PlaceholderMapKit.ts`, already used by Quarantine Lab's
+  glowing pods) that runs once per piece after its base box mesh is added - purely visual,
+  since `buildKitColliders` never calls it and only ever reads a piece's own `halfExtents`.
+  Desert Highway: gas stations get a roof overhang and a signage pole, pumps get a nozzle, and
+  cacti get two side arms for a saguaro silhouette. Industrial City: warehouses get a roof cap
+  and a vent, crates get a banding strap, and gates get a warning lamp. Frozen Forest: every
+  boulder gets a snow cap. Suburbs (already had house roofs and a fountain from before this
+  ticket) additionally gets a cabin bump on parked cars. Quarantine Lab and the intentionally
+  minimal Greybox/Open Field/Slaughtermode maps are unchanged, per the ticket's own scope.
+  Bug found in verification (pre-existing, not part of this change - flagged as a follow-up
+  rather than fixed here, since this ticket is visual-only): Industrial City's spawn point sits
+  inside a warehouse block's own collider footprint for the map's real seed/size, pinning the
+  car in place at the start of any run there - confirmed via a headless Playwright run that
+  couldn't move the car at all after spawning. Verified in-game for Suburbs, Desert Highway,
+  Frozen Forest, and Quarantine Lab; Industrial City's decorator additions were verified via a
+  unit test against the real generated layout instead, since the pre-existing spawn bug blocks
+  driving far enough to see them in a live screenshot.
+
 ## Unreleased - S3: Art pass - Physical Garage room
 
 - **S3** Dressed up the R1 walkable Garage room, previously a flat grey floor and four plain

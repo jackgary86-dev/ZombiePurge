@@ -278,6 +278,20 @@ export function buildSuburbsMeshes(layout: SuburbsLayout): Group {
         piece.position.z
       );
       group.add(water);
+    } else if (piece.kind === 'car') {
+      // S4: a smaller cabin bump toward the rear so parked cars read as cars, not bricks.
+      const cabin = new Mesh(
+        new BoxGeometry(piece.halfExtents.x * 1.5, piece.halfExtents.y * 0.9, piece.halfExtents.z),
+        material('car-cabin', PIECE_COLORS.car)
+      );
+      cabin.position.set(
+        piece.position.x,
+        piece.position.y + piece.halfExtents.y * 1.35,
+        piece.position.z - piece.halfExtents.z * 0.15
+      );
+      cabin.quaternion.copy(mesh.quaternion);
+      cabin.castShadow = true;
+      group.add(cabin);
     }
   }
 
