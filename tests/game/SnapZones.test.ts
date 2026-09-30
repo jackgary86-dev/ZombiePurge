@@ -6,6 +6,7 @@ import {
   categoryZoneOccupant,
   nearestOccupiedZone,
   nearestValidEmptyZone,
+  nearestValidOccupiedZone,
   zoneAccepts,
   zoneOccupant,
 } from '../../src/game/garageScene/SnapZones';
@@ -81,14 +82,14 @@ describe('R3 zone occupancy + proximity', () => {
   it('finds the nearest empty zone that accepts the carried part, skipping occupied ones', () => {
     const world = [{ zone: ARMOR, x: -0.9, z: 0 }];
     const part = { id: 'armor', category: 'armor' as const };
-    expect(nearestValidEmptyZone(part, world, garage, [], -0.9, 0, 1)?.id).toBe('armor_left');
-    expect(nearestValidEmptyZone(part, world, garage, ['armor'], -0.9, 0, 1)).toBeNull();
+    expect(nearestValidEmptyZone(part, world, garage, [], -0.9, 0)?.id).toBe('armor_left');
+    expect(nearestValidEmptyZone(part, world, garage, ['armor'], -0.9, 0)).toBeNull();
   });
 
   it('never proposes a zone that does not accept the carried part, however close', () => {
     const world = [{ zone: ARMOR, x: 0, z: 0 }];
     const wrongPart = { id: 'tires', category: 'tires' as const };
-    expect(nearestValidEmptyZone(wrongPart, world, garage, [], 0, 0, 5)).toBeNull();
+    expect(nearestValidEmptyZone(wrongPart, world, garage, [], 0, 0)).toBeNull();
   });
 
   it('finds the nearest occupied zone regardless of category, for picking a part back up', () => {
@@ -98,12 +99,80 @@ describe('R3 zone occupancy + proximity', () => {
     ];
     wallet.add(10000);
     garage.buy('machinegun');
-    expect(nearestOccupiedZone(world, garage, [], 0, 0.2, 1)?.occupantId).toBe('machinegun');
-    expect(nearestOccupiedZone(world, garage, ['armor'], -0.9, 0, 1)?.occupantId).toBe('armor');
+    expect(nearestOccupiedZone(world, garage, [], 0, 0.2)?.occupantId).toBe('machinegun');
+    expect(nearestOccupiedZone(world, garage, ['armor'], -0.9, 0)?.occupantId).toBe('armor');
   });
 
   it('returns null when nothing occupied is in range', () => {
     const world = [{ zone: ARMOR, x: -0.9, z: 0 }];
-    expect(nearestOccupiedZone(world, garage, [], -0.9, 0, 1)).toBeNull();
+    expect(nearestOccupiedZone(world, garage, [], -0.9, 0)).toBeNull();
+  });
+
+  it('bug found in verification: a zone’s own radius gates reach, not one blanket distance', () => {
+    // A wheel zone (radius 0.6 in the real config) accepts tires from close up, but a much
+    // larger radius (like the roof/front mounts' 0.9) would wrongly still match at the same
+    // distance if every zone shared one flat range instead of its own configured radius.
+    const smallZone: SnapZoneDef = {
+      id: 'wheel_fl',
+      category: 'tires',
+      offset: { x: 0, y: 0, z: 0 },
+      radius: 0.3,
+    };
+    const world = [{ zone: smallZone, x: 0, z: 0 }];
+    const part = { id: 'tires', category: 'tires' as const };
+    expect(nearestValidEmptyZone(part, world, garage, [], 0, 0.2)?.id).toBe('wheel_fl'); // inside 0.3
+    expect(nearestValidEmptyZone(part, world, garage, [], 0, 0.5)).toBeNull(); // outside 0.3
+  });
+});
+
+describe('R4 multi-mount parts and swapping', () => {
+  const REAR: SnapZoneDef = {
+    id: 'rear_weapon',
+    slot: 'rear',
+    offset: { x: 0, y: 0.6, z: -2.1 },
+    radius: 1,
+  };
+  let garage: Garage;
+  let wallet: Wallet;
+
+  beforeEach(() => {
+    resetConfig();
+    wallet = new Wallet(getConfig().rewards, null);
+    garage = new Garage(getConfig().upgrades, wallet, 1, null);
+  });
+
+  it('validSlots lets a part accept a zone beyond its own default slot', () => {
+    expect(zoneAccepts(REAR, { id: 'machinegun', slot: 'roof' })).toBe(false); // no validSlots
+    expect(
+      zoneAccepts(REAR, { id: 'machinegun', slot: 'roof', validSlots: ['roof', 'front', 'rear'] })
+    ).toBe(true);
+    expect(
+      zoneAccepts(ROOF, { id: 'machinegun', slot: 'roof', validSlots: ['roof', 'front', 'rear'] })
+    ).toBe(true); // its own default slot still matches too
+  });
+
+  it('nearestValidOccupiedZone finds a zone the part accepts that something else already holds', () => {
+    wallet.add(10000);
+    garage.buy('machinegun'); // auto-equips to 'roof'
+    const world = [{ zone: ROOF, x: 0, z: 0.2 }];
+    const rockets = { id: 'rockets', slot: 'roof' as const };
+    const found = nearestValidOccupiedZone(rockets, world, garage, [], 0, 0.2);
+    expect(found?.occupantId).toBe('machinegun');
+  });
+
+  it('never proposes swapping a part into a zone that already holds itself', () => {
+    wallet.add(10000);
+    garage.buy('machinegun');
+    const world = [{ zone: ROOF, x: 0, z: 0.2 }];
+    const sameId = { id: 'machinegun', slot: 'roof' as const };
+    expect(nearestValidOccupiedZone(sameId, world, garage, [], 0, 0.2)).toBeNull();
+  });
+
+  it('never proposes a swap into a zone the part is not accepted by', () => {
+    wallet.add(10000);
+    garage.buy('machinegun');
+    const world = [{ zone: ROOF, x: 0, z: 0.2 }];
+    const tires = { id: 'tires', category: 'tires' as const };
+    expect(nearestValidOccupiedZone(tires, world, garage, [], 0, 0.2)).toBeNull();
   });
 });

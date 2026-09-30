@@ -428,6 +428,21 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     ).toEqual(
       expect.arrayContaining([expect.stringContaining('is a engineType and needs a slot')])
     );
+    expect(
+      problems((c) => {
+        const machinegun = c.upgrades.find((u) => u.id === 'machinegun')!;
+        machinegun.validSlots = ['front', 'rear']; // drops 'roof', its own default slot
+      })
+    ).toEqual(
+      expect.arrayContaining([expect.stringContaining('validSlots must include its own default')])
+    );
+    expect(
+      problems((c) => {
+        const machinegun = c.upgrades.find((u) => u.id === 'machinegun')!;
+        delete machinegun.slot;
+        machinegun.validSlots = ['roof', 'front', 'rear'];
+      })
+    ).toEqual(expect.arrayContaining([expect.stringContaining('has validSlots but no default')]));
     expect(problems((c) => (c.upgrades[0].tiers = []))).toEqual(
       expect.arrayContaining([expect.stringContaining('needs at least one tier')])
     );

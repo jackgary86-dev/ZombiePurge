@@ -158,7 +158,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy/upgrade the regular Engine tier ladder (D3/N1) while an engine type is equipped: both bonuses stack - top speed/acceleration are higher than either one alone
 - [ ] With the V8 equipped, ram a zombie or wall: the car feels heavier/punchier than stock; with Electric equipped, it feels lighter - the `acceleration` stat itself (how fast 0-to-top-speed feels) stays consistent with what the Engine Tuning slider and tier cards show, regardless of which type is equipped
 
-## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1, R1, R2, R3)
+## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1, R1, R2, R3, R4)
 
 - [ ] Corner hard, clip a curb, or take a glancing zombie hit: the car leans but no longer
       tips onto its side/roof from ordinary driving
@@ -209,6 +209,17 @@ Tick items in the PR that closes the milestone.
       the part there is picked back up and can be carried, dropped, or snapped somewhere else
 - [ ] A snapped weapon's stats apply exactly as they did through the old menu (check HP/speed/
       etc. before and after against the Garage's own stat display)
+- [ ] Buy or `unlockall` the machine gun (roof by default): carry it up to the front mount and
+      the rear mount (behind the car) - both light up green, since it's valid at either
+- [ ] Snap the machine gun onto the rear mount and drive: a turret model is visible on the
+      back of the car and it fires backward at zombies chasing from behind, independently of
+      whatever's on the roof/front
+- [ ] With a different weapon already on the front mount, carry the machine gun up to front
+      and press E: the prompt says "Swap in ... (bumps ...)" - pressing E puts the machine gun
+      on front and the old weapon ends up in your hands, ready to carry, drop, or snap
+      elsewhere
+- [ ] Every other part (anything besides the machine gun) still only has the one zone it had
+      before - no unexpected multi-zone prompts anywhere else
 
 ### Known quirks (non-blocking)
 

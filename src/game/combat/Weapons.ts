@@ -16,10 +16,26 @@ export type AimMode = 'camera' | 'auto';
 export interface MountConfig {
   /** Local offset from the chassis centre where shots originate. */
   localOffset: Vector3;
+  /** Local direction this mount aims by default (no target, no camera aim) - roof/front both
+   *  face the car's own forward; R4's rear mount faces the opposite way. */
+  localForward: Vector3;
 }
 
-export const ROOF_MOUNT: MountConfig = { localOffset: new Vector3(0, 0.8, 0.2) };
-export const FRONT_MOUNT: MountConfig = { localOffset: new Vector3(0, 0.1, 2.2) };
+export const ROOF_MOUNT: MountConfig = {
+  localOffset: new Vector3(0, 0.8, 0.2),
+  localForward: new Vector3(0, 0, 1),
+};
+export const FRONT_MOUNT: MountConfig = {
+  localOffset: new Vector3(0, 0.1, 2.2),
+  localForward: new Vector3(0, 0, 1),
+};
+/** R4: a rear-facing mount, so a multi-mount-eligible weapon (the machine gun) can be snapped
+ *  onto the back of the car instead of the roof/front - it aims and fires backward, covering
+ *  zombies chasing from behind rather than duplicating the forward-facing mounts. */
+export const REAR_MOUNT: MountConfig = {
+  localOffset: new Vector3(0, 0.6, -2.1),
+  localForward: new Vector3(0, 0, -1),
+};
 
 export interface ShotEvent {
   origin: Vector3;
@@ -34,8 +50,6 @@ export interface WeaponState {
   overheated: boolean;
   firing: boolean;
 }
-
-const LOCAL_FORWARD = new Vector3(0, 0, 1);
 
 /**
  * D8: a mount on the car that resolves where a weapon aims each step - toward the
@@ -59,7 +73,7 @@ export class WeaponMount {
   update(pool: ZombiePool, cameraDir: Vector3, coneHalfAngle: number, range: number): void {
     this.car.getQuaternion(this.q);
     this.origin.copy(this.cfg.localOffset).applyQuaternion(this.q).add(this.car.getPosition());
-    this.forward.copy(LOCAL_FORWARD).applyQuaternion(this.q);
+    this.forward.copy(this.cfg.localForward).applyQuaternion(this.q);
     this.forward.y = 0;
     this.forward.normalize();
 

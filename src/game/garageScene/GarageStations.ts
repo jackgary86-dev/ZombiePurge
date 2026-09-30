@@ -1,6 +1,11 @@
 import type { Garage, PurchaseFailure } from '../shop';
 import type { SnapZoneDef } from '../../data/types';
-import { nearestOccupiedZone, nearestValidEmptyZone, type CarriedPartInfo } from './SnapZones';
+import {
+  nearestOccupiedZone,
+  nearestValidEmptyZone,
+  nearestValidOccupiedZone,
+  type CarriedPartInfo,
+} from './SnapZones';
 
 /** R2: one physical, walk-up-able location per top-level catalog entry (`garage.upgrades`),
  *  not per individual tier or cosmetic variant - see the R2 ticket's scoping discussion. */
@@ -111,6 +116,8 @@ export function nearestDropped(
 
 export type InteractOutcome =
   | { type: 'snapped'; id: string }
+  /** R4: `id` went onto the zone, `displacedId` came off it into the player's hands. */
+  | { type: 'swapped'; id: string; displacedId: string }
   | { type: 'pickedUpFromZone'; id: string }
   | { type: 'dropped'; id: string }
   | { type: 'bought'; id: string }
@@ -131,6 +138,7 @@ export interface InteractContext {
 
 export type InteractPreview =
   | { type: 'snap'; id: string }
+  | { type: 'swap'; id: string; displacedId: string }
   | { type: 'drop'; id: string }
   | { type: 'pickupZone'; id: string }
   | { type: 'pickupDropped'; id: string }
@@ -145,7 +153,7 @@ type GarageForInteract = Pick<
 
 function carriedPartInfo(garage: GarageForInteract, id: string): CarriedPartInfo {
   const def = garage.get(id);
-  return { id, slot: def?.slot, category: def?.category };
+  return { id, slot: def?.slot, validSlots: def?.validSlots, category: def?.category };
 }
 
 /**
@@ -160,16 +168,25 @@ export function previewInteract(
 ): InteractPreview {
   if (state.heldId !== null) {
     const zones = ctx.zones ?? [];
+    const part = carriedPartInfo(garage, state.heldId);
     const zone = nearestValidEmptyZone(
-      carriedPartInfo(garage, state.heldId),
+      part,
       zones,
       garage,
       state.installed,
       ctx.avatarX,
-      ctx.avatarZ,
-      ctx.range
+      ctx.avatarZ
     );
     if (zone) return { type: 'snap', id: state.heldId };
+    const occupied = nearestValidOccupiedZone(
+      part,
+      zones,
+      garage,
+      state.installed,
+      ctx.avatarX,
+      ctx.avatarZ
+    );
+    if (occupied) return { type: 'swap', id: state.heldId, displacedId: occupied.occupantId };
     return { type: 'drop', id: state.heldId };
   }
 
@@ -181,8 +198,7 @@ export function previewInteract(
     garage,
     state.installed,
     ctx.avatarX,
-    ctx.avatarZ,
-    ctx.range
+    ctx.avatarZ
   );
   if (occupied) return { type: 'pickupZone', id: occupied.occupantId };
 
@@ -196,11 +212,13 @@ export function previewInteract(
 
 /**
  * Resolves a single E-press. Priority order: (1) carrying something near a valid, empty snap
- * zone for it snaps it onto the car; (2) carrying something with no valid zone in reach drops
- * it right here instead - only one part can ever be carried, so the player must snap or drop
- * before starting a new interaction; (3) pick up a dropped part in range; (4) empty-handed and
- * standing at an occupied zone picks that part back up; (5) buy (if unowned) or pick up (if
- * owned) the nearest station in range; (6) otherwise nothing is in range.
+ * zone for it snaps it onto the car; (2) carrying something near a valid zone that's already
+ * occupied by something else swaps them - the old occupant comes off into the player's now-
+ * empty hands; (3) carrying something with no valid zone in reach at all drops it right here
+ * instead - only one part can ever be carried, so the player must snap, swap or drop before
+ * starting a new interaction; (4) pick up a dropped part in range; (5) empty-handed and
+ * standing at an occupied zone picks that part back up; (6) buy (if unowned) or pick up (if
+ * owned) the nearest station in range; (7) otherwise nothing is in range.
  */
 export function interact(
   garage: GarageForInteract,
@@ -210,21 +228,43 @@ export function interact(
   if (state.heldId !== null) {
     const heldId = state.heldId;
     const part = carriedPartInfo(garage, heldId);
+    const zones = ctx.zones ?? [];
     const zone = nearestValidEmptyZone(
       part,
-      ctx.zones ?? [],
+      zones,
       garage,
       state.installed,
       ctx.avatarX,
-      ctx.avatarZ,
-      ctx.range
+      ctx.avatarZ
     );
     if (zone) {
-      if (zone.slot) garage.equip(heldId);
+      if (zone.slot) garage.equip(heldId, zone.slot);
       const installed = zone.category ? [...state.installed, heldId] : state.installed;
       return {
         state: { ...state, heldId: null, installed },
         outcome: { type: 'snapped', id: heldId },
+      };
+    }
+    const occupied = nearestValidOccupiedZone(
+      part,
+      zones,
+      garage,
+      state.installed,
+      ctx.avatarX,
+      ctx.avatarZ
+    );
+    if (occupied) {
+      const { zone: occZone, occupantId } = occupied;
+      if (occZone.slot) {
+        garage.unequip(occZone.slot);
+        garage.equip(heldId, occZone.slot);
+      }
+      const installed = occZone.category
+        ? [...state.installed.filter((id) => id !== occupantId), heldId]
+        : state.installed;
+      return {
+        state: { ...state, heldId: occupantId, installed },
+        outcome: { type: 'swapped', id: heldId, displacedId: occupantId },
       };
     }
     const part2: DroppedPart = { id: heldId, x: ctx.avatarX, z: ctx.avatarZ };
@@ -251,8 +291,7 @@ export function interact(
     garage,
     state.installed,
     ctx.avatarX,
-    ctx.avatarZ,
-    ctx.range
+    ctx.avatarZ
   );
   if (occupied) {
     const { zone, occupantId } = occupied;

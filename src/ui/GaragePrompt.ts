@@ -43,6 +43,10 @@ function describe(
   switch (preview.type) {
     case 'snap':
       return `Snap on ${name}`;
+    case 'swap': {
+      const displacedName = garage.get(preview.displacedId)?.name ?? preview.displacedId;
+      return `Swap in ${name} (bumps ${displacedName})`;
+    }
     case 'drop':
       return `Drop ${name}`;
     case 'pickupDropped':

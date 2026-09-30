@@ -508,7 +508,10 @@ export type UpgradeCategory =
   | 'radar'
   | 'headlights';
 
-export type WeaponSlot = 'roof' | 'front' | 'engine';
+/** R4: 'rear' is a real, separate mount point (own aim direction, own visual) - not just a
+ *  label - so a multi-mount-eligible weapon can genuinely be equipped there instead of
+ *  roof/front, not merely renamed. */
+export type WeaponSlot = 'roof' | 'front' | 'engine' | 'rear';
 
 /** Additive changes to base stats. Multipliers are expressed as fractions (0.1 = +10%). */
 export interface StatModifiers {
@@ -543,8 +546,13 @@ export interface UpgradeDef {
   category: UpgradeCategory;
   name: string;
   description: string;
-  /** Weapons occupy a mount slot; only one weapon per slot can be equipped. */
+  /** Weapons occupy a mount slot; only one weapon per slot can be equipped. This is also the
+   *  slot a first purchase auto-equips into. */
   slot?: WeaponSlot;
+  /** R4: other slots this part may *also* be explicitly snapped into, walking the carried
+   *  part up to that specific zone - `slot` is just the default, not the only option, when
+   *  this is set. Omitted for every part with just the one slot. */
+  validSlots?: WeaponSlot[];
   tiers: UpgradeTier[];
 }
 

@@ -380,6 +380,11 @@ export function collectConfigProblems(config: GameConfig): string[] {
       !u.slot
     )
       problems.push(`${at} is a ${u.category} and needs a slot`);
+    // R4: validSlots (if present) is the full set of mounts a part may snap into - its own
+    // default slot has to be one of them, or Garage.equip() could never re-select it later.
+    if (u.validSlots && u.slot && !u.validSlots.includes(u.slot))
+      problems.push(`${at}.validSlots must include its own default slot "${u.slot}"`);
+    if (u.validSlots && !u.slot) problems.push(`${at} has validSlots but no default slot`);
     if (u.tiers.length === 0) problems.push(`${at} needs at least one tier`);
     let lastPrice = 0;
     u.tiers.forEach((t, ti) => {

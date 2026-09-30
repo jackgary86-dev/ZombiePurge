@@ -7,6 +7,29 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - R4: Physical Garage - multi-zone placement choice
+
+- **R4** Some parts are now valid in more than one snap zone. The one such part today, the
+  machine gun (`validSlots: ['roof', 'front', 'rear']`), can be snapped onto its default roof
+  mount, the front mount, or a brand new rear-facing mount - a real `WeaponSlot: 'rear'`, with
+  its own mount position and its own backward-facing aim direction (`REAR_MOUNT` in
+  `Weapons.ts`, `MountConfig` now carries a `localForward` per mount instead of a single
+  hardcoded forward shared by every mount), so a rear-mounted gun genuinely covers zombies
+  chasing from behind rather than just relabelling an existing mount. The player always
+  chooses which zone by walking up to that specific one - nothing auto-picks the nearest or a
+  default. Carrying a part up to a zone that's already occupied by something else swaps them:
+  the new part snaps on, the old occupant comes off straight into the player's now-empty
+  hands (`Garage.equip()` now takes an explicit target slot, defaulting to the part's own
+  `slot` for every other, single-slot upgrade - unchanged for those). New data:
+  `UpgradeDef.validSlots`, validated so it always includes the part's own default slot.
+  Bug found in verification: every snap zone's own `radius` (R3's per-zone tuning, 0.6-0.9m
+  depending on the zone) turned out to be purely a cosmetic ring size - the actual
+  interactability check in `nearestValidEmptyZone`/`nearestOccupiedZone` always used one flat
+  `garage.interactRange` (1.6m) for every zone regardless, so a wheel zone's deliberately
+  tight radius had no real effect on how close you needed to stand to it. Fixed so each
+  zone's own radius is what actually gates reach, matching its visual ring size; a
+  regression test locks this in.
+
 ## Unreleased - R3: Physical Garage - snap-zone vehicle attachment
 
 - **R3** The car now has 14 physical snap zones (new `snapZones` config), one per attachment

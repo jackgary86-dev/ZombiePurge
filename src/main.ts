@@ -57,6 +57,7 @@ import {
   FRONT_MOUNT,
   HammerSwing,
   MachineGun,
+  REAR_MOUNT,
   RocketLauncher,
   ROOF_MOUNT,
   RunOverSystem,
@@ -72,6 +73,7 @@ import {
   layoutStations,
   nearestOccupiedZone,
   nearestValidEmptyZone,
+  nearestValidOccupiedZone,
   previewInteract,
   stepGarageAvatar,
   type DroppedPart,
@@ -273,6 +275,11 @@ async function boot(): Promise<void> {
   const carView = buildPlaceholderCar(cfg.vehicle);
   const turret = new TurretView(ROOF_MOUNT.localOffset);
   carView.group.add(turret.group);
+  // R4: the rear mount only ever holds the one multi-mount-eligible weapon (the machine gun),
+  // so its turret view never needs setKind() swapping beyond the initial one.
+  const rearTurret = new TurretView(REAR_MOUNT.localOffset);
+  rearTurret.setKind('machinegun');
+  carView.group.add(rearTurret.group);
   const headlights = createHeadlights(30);
   for (const l of headlights.lights) carView.group.add(l, l.target);
   const sawView = new SawView(cfg.vehicle.chassisHalfExtents);
@@ -391,28 +398,41 @@ async function boot(): Promise<void> {
     avatarWorldZ: number
   ): void {
     for (const marker of snapZoneMarkers.values()) marker.setHighlighted(false);
-    const targetId = shoppingState.heldId
-      ? nearestValidEmptyZone(
-          {
-            id: shoppingState.heldId,
-            slot: garage.get(shoppingState.heldId)?.slot,
-            category: garage.get(shoppingState.heldId)?.category,
-          },
+    let targetId: string | undefined;
+    if (shoppingState.heldId !== null) {
+      const heldDef = garage.get(shoppingState.heldId);
+      const part = {
+        id: shoppingState.heldId,
+        slot: heldDef?.slot,
+        validSlots: heldDef?.validSlots,
+        category: heldDef?.category,
+      };
+      targetId =
+        nearestValidEmptyZone(
+          part,
           worldZones,
           garage,
           shoppingState.installed,
           avatarWorldX,
-          avatarWorldZ,
-          cfg.garage.interactRange
-        )?.id
-      : nearestOccupiedZone(
+          avatarWorldZ
+        )?.id ??
+        nearestValidOccupiedZone(
+          part,
           worldZones,
           garage,
           shoppingState.installed,
           avatarWorldX,
-          avatarWorldZ,
-          cfg.garage.interactRange
+          avatarWorldZ
         )?.zone.id;
+    } else {
+      targetId = nearestOccupiedZone(
+        worldZones,
+        garage,
+        shoppingState.installed,
+        avatarWorldX,
+        avatarWorldZ
+      )?.zone.id;
+    }
     if (targetId) snapZoneMarkers.get(targetId)?.setHighlighted(true);
   }
 
@@ -429,9 +449,13 @@ async function boot(): Promise<void> {
   const mount = new WeaponMount(car, ROOF_MOUNT);
   const frontMount = new WeaponMount(car, FRONT_MOUNT);
   frontMount.aimMode = 'camera';
+  // R4: autoshoots like the roof gun (its own default aim mode is already 'auto') - covers
+  // zombies chasing from behind rather than needing a separate aim scheme.
+  const rearMount = new WeaponMount(car, REAR_MOUNT);
   let gun: MachineGun | null = null;
   let shotgun: Shotgun | null = null;
   let rockets: RocketLauncher | null = null;
+  let rearGun: MachineGun | null = null;
   let flamethrower: Flamethrower | null = null;
   let hammer: HammerSwing | null = null;
   const rocketViews = new RocketViews();
@@ -817,6 +841,18 @@ async function boot(): Promise<void> {
     // instead of always showing the same generic silhouette.
     if (roof === 'machinegun' || roof === 'shotgun' || roof === 'rockets') turret.setKind(roof);
 
+    // R4: the one multi-mount-eligible weapon (the machine gun) can also be snapped onto
+    // the rear mount instead of the roof - a second, independent instance covering whatever
+    // the roof gun can't reach.
+    const rear = garage.equippedIn('rear')?.id;
+    rearGun =
+      rear === 'machinegun'
+        ? (rearGun ??
+          new MachineGun(physics, car, pool, tierOf('machinegun', cfg.combat.machineGun)))
+        : null;
+    if (rearGun) rearGun.stats = tierOf('machinegun', cfg.combat.machineGun);
+    rearTurret.visible = rear !== undefined;
+
     const front = garage.equippedIn('front')?.id;
     if (front === 'flamethrower') {
       const tier = tierOf(front, cfg.combat.flamethrower);
@@ -929,6 +965,7 @@ async function boot(): Promise<void> {
         ? new ObjectiveTracker(map.objectives)
         : null;
     if (gun) gun.heat = 0;
+    if (rearGun) rearGun.heat = 0;
     nitro.refill();
     rocketViews.syncRockets([]);
     car.getPosition(senses.carPosition);
@@ -1100,6 +1137,7 @@ async function boot(): Promise<void> {
         popups.add(20, { x: p.x, y: 1.5, z: p.z });
       } else if (p.kind === 'ammo') {
         if (gun) gun.heat = 0;
+        if (rearGun) rearGun.heat = 0;
         if (shotgun) {
           shotgun.rounds = shotgun.stats.magazine;
           shotgun.reloadLeft = 0;
@@ -1155,6 +1193,18 @@ async function boot(): Promise<void> {
         }
       }
       turret.aim(mount.yawRelativeToCar());
+    }
+    if (rearGun) {
+      rearMount.update(pool, camForward, rearGun.stats.autoAimCone, rearGun.stats.range);
+      const rearTrigger = rearMount.target !== null;
+      for (const shot of rearGun.update(deltaTime, rearTrigger, rearMount)) {
+        firing = true;
+        tracers.add(shot.origin, shot.end);
+        muzzleFlash.trigger(shot.origin);
+        audio.weaponFire('machinegun');
+        if (shot.killed && shot.hit) rewardKill(shot.hit, shot.hit.getPosition());
+      }
+      rearTurret.aim(rearMount.yawRelativeToCar());
     }
     if (flamethrower) {
       frontMount.update(pool, camForward, 0, flamethrower.stats.range);

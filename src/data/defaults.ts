@@ -384,6 +384,9 @@ export const DEFAULT_CONFIG: GameConfig = {
       id: 'machinegun',
       category: 'weapon',
       slot: 'roof',
+      // R4: the one multi-mount-eligible part - can also be snapped onto the front or the
+      // new rear mount, player's choice, instead of only ever sitting on its default (roof).
+      validSlots: ['roof', 'front', 'rear'],
       name: 'Machine Gun',
       description: 'Roof-mounted hitscan gun. Overheats if you hold the trigger.',
       tiers: [
@@ -917,6 +920,9 @@ export const DEFAULT_CONFIG: GameConfig = {
   snapZones: [
     { id: 'roof', slot: 'roof', offset: { x: 0, y: 0.8, z: 0.2 }, radius: 0.9 },
     { id: 'front', slot: 'front', offset: { x: 0, y: 0.1, z: 2.2 }, radius: 0.9 },
+    // R4: matches REAR_MOUNT in game/combat/Weapons.ts - kept as a plain literal rather than
+    // an import, since src/data never imports from src/game (see Q1's own note on the same).
+    { id: 'rear_weapon', slot: 'rear', offset: { x: 0, y: 0.6, z: -2.1 }, radius: 0.9 },
     // The base 'engine' upgrade is a plain tiered stat bonus (no slot); swapping between
     // engine *types* (V8/Turbo/Electric, category 'engineType') is the separate, sloted choice.
     { id: 'engine_bay', category: 'engine', offset: { x: 0, y: 0.3, z: 1.6 }, radius: 0.8 },
