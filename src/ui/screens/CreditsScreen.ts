@@ -1,10 +1,11 @@
+import { icon, type IconName } from '../icons';
 import { buildPanel, menuButton, type MenuScreen } from '../MenuStack';
 
-function section(heading: string, items: string[]): HTMLDivElement {
+function section(heading: string, iconName: IconName, items: string[]): HTMLDivElement {
   const div = document.createElement('div');
   div.className = 'credits-section';
   const h2 = document.createElement('h2');
-  h2.textContent = heading;
+  h2.innerHTML = `${icon(iconName, 18)} ${heading}`;
   const ul = document.createElement('ul');
   for (const item of items) {
     const li = document.createElement('li');
@@ -22,9 +23,9 @@ export function createCreditsScreen(
 ): MenuScreen {
   const { el, body } = buildPanel('credits-screen', 'CREDITS');
 
-  const team = section('Team', ['ZombiePurge — built by a dad and his son.']);
+  const team = section('Team', 'credits', ['ZombiePurge — built by a dad and his son.']);
 
-  const tools = section('Tools', [
+  const tools = section('Tools', 'wrench', [
     'Three.js — 3D rendering',
     'Rapier3D (Dimforge) — physics',
     'TypeScript — language',
@@ -33,7 +34,7 @@ export function createCreditsScreen(
     'ESLint + Prettier — linting and formatting',
   ]);
 
-  const licenses = section('Asset Licenses', [
+  const licenses = section('Asset Licenses', 'customize', [
     'Bebas Neue — Dharma Type, SIL Open Font License 1.1, served via Google Fonts',
     'Everything else (models, VFX, sound) is placeholder or procedural, built in-house — no third-party license needed yet',
   ]);

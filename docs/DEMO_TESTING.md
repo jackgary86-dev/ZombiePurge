@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S6)
+## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -281,6 +281,17 @@ Tick items in the PR that closes the milestone.
 - [ ] Switch graphics quality to Low (Settings, no restart needed): the bloom/vignette
       disappear immediately and the scene matches today's plain look exactly - the toggle takes
       effect the moment you leave Settings, not on the next map load
+- [ ] Walk up to a part station in the Garage's walk-up avatar mode: the E-prompt now shows the
+      part's own icon next to the key-cap, not just plain text
+- [ ] Open the Pause menu: all six buttons (Resume, Restart run, Settings, Controls, Return to
+      Garage, Quit to Main Menu) show an icon, matching the same icons the Main Menu's
+      equivalent buttons already use
+- [ ] Open Settings: graphics quality, draw distance, the three volume sliders, camera
+      sensitivity/invert, low gore, and show fps all show a leading icon, and the "Controls"
+      heading has one too
+- [ ] Open Credits: Team, Tools, and Asset Licenses each show a heading icon
+- [ ] Finish a run and reach the Results screen: every row has an icon, including the per-rank
+      kill breakdown rows and the Time row (previously plain text)
 
 ### Known quirks (non-blocking)
 

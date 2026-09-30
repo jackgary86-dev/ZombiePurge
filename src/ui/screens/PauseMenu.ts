@@ -1,4 +1,5 @@
-import { buildPanel, menuButton, type MenuScreen } from '../MenuStack';
+import { icon } from '../icons';
+import { buildPanel, iconMenuButton, type MenuScreen } from '../MenuStack';
 
 export interface PauseActions {
   onResume: () => void;
@@ -9,19 +10,20 @@ export interface PauseActions {
   onMainMenu: () => void;
 }
 
-/** J7: Resume, Restart, Settings, Controls, Return to Garage, Quit to Main Menu. */
+/** J7/S7: Resume, Restart, Settings, Controls, Return to Garage, Quit to Main Menu - each with
+ *  the same I10 icon its Main Menu equivalent uses, for visual consistency between the two. */
 export function createPauseMenu(
   actions: PauseActions,
   parent: HTMLElement = document.body
 ): MenuScreen {
   const { el, body } = buildPanel('pause-menu', 'PAUSED');
   body.append(
-    menuButton('Resume', actions.onResume, 'primary'),
-    menuButton('Restart run', actions.onRestart),
-    menuButton('Settings', actions.onSettings),
-    menuButton('Controls', actions.onControls),
-    menuButton('Return to Garage', actions.onGarage),
-    menuButton('Quit to Main Menu', actions.onMainMenu)
+    iconMenuButton(icon('play', 18), 'Resume', actions.onResume, 'primary'),
+    iconMenuButton(icon('restart', 18), 'Restart run', actions.onRestart),
+    iconMenuButton(icon('settings', 18), 'Settings', actions.onSettings),
+    iconMenuButton(icon('gamepad', 18), 'Controls', actions.onControls),
+    iconMenuButton(icon('wrench', 18), 'Return to Garage', actions.onGarage),
+    iconMenuButton(icon('exit', 18), 'Quit to Main Menu', actions.onMainMenu)
   );
   parent.appendChild(el);
   return {

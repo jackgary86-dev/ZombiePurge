@@ -1,6 +1,7 @@
 import type { GameSettings, GraphicsQuality, SettingsStore } from '../../data/settings';
 import type { Bindings, GameAction } from '../../core/input';
 import { GAME_ACTIONS, rebindKeyboard } from '../../core/input';
+import { icon } from '../icons';
 import { buildPanel, menuButton, type MenuScreen } from '../MenuStack';
 import { labelledRow, select, slider, toggle } from './common';
 
@@ -64,22 +65,22 @@ export function createSettingsMenu(
   const fps = toggle(s().showFps, (v) => store.set({ showFps: v }));
 
   body.append(
-    labelledRow('Graphics quality', graphics),
-    labelledRow('Draw distance', draw),
-    labelledRow('Master volume', master),
-    labelledRow('Music volume', music),
-    labelledRow('Effects volume', sfx),
-    labelledRow('Camera sensitivity', sens),
-    labelledRow('Invert camera Y', invert),
-    labelledRow('Low gore', gore),
-    labelledRow('Show fps', fps)
+    labelledRow('Graphics quality', graphics, icon('settings', 16)),
+    labelledRow('Draw distance', draw, icon('distance', 16)),
+    labelledRow('Master volume', master, icon('volume', 16)),
+    labelledRow('Music volume', music, icon('volume', 16)),
+    labelledRow('Effects volume', sfx, icon('volume', 16)),
+    labelledRow('Camera sensitivity', sens, icon('camera', 16)),
+    labelledRow('Invert camera Y', invert, icon('camera', 16)),
+    labelledRow('Low gore', gore, icon('health', 16)),
+    labelledRow('Show fps', fps, icon('radar', 16))
   );
 
   // Key rebinding: click a key button, press the new key.
   const keys = document.createElement('div');
   keys.className = 'keybinds';
   const heading = document.createElement('h2');
-  heading.textContent = 'Controls';
+  heading.innerHTML = `${icon('gamepad', 18)} Controls`;
   keys.appendChild(heading);
   const keyButtons = new Map<GameAction, HTMLButtonElement>();
   let listening: GameAction | null = null;

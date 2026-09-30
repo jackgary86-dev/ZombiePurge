@@ -257,3 +257,26 @@ export function menuButton(label: string, onClick: () => void, className = ''): 
   b.addEventListener('click', onClick);
   return b;
 }
+
+/** S7: an I10 icon glyph plus its label, on one line - the standard shape for a menu button's
+ *  contents wherever the button represents one specific, iconable thing (a screen, an action). */
+export function iconLabel(svg: string, label: string): HTMLSpanElement {
+  const span = document.createElement('span');
+  span.className = 'menu-button-label';
+  span.innerHTML = svg;
+  span.append(document.createTextNode(label));
+  return span;
+}
+
+/** A `menuButton` whose contents are `iconLabel(svg, label)` - the common case once a screen's
+ *  buttons all get icons, so callers don't have to build+replaceChildren by hand each time. */
+export function iconMenuButton(
+  svg: string,
+  label: string,
+  onClick: () => void,
+  className = ''
+): HTMLButtonElement {
+  const b = menuButton('', onClick, className);
+  b.replaceChildren(iconLabel(svg, label));
+  return b;
+}

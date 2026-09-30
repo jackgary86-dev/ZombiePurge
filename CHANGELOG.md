@@ -7,6 +7,24 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - S7: Art pass - UI icon & font consistency
+
+- **S7** Filled in every remaining generic/placeholder icon gap found across the UI, expanding
+  I10's icon set from 28 to 32 icons (`restart`, `clock`, `volume`, `camera`). The walk-up
+  Garage part station prompt (R2's `GaragePrompt`) now shows the part's own I10 category/weapon
+  icon next to the key-cap - it previously had no icon at all. The Pause menu's six buttons
+  (Resume, Restart run, Settings, Controls, Return to Garage, Quit to Main Menu) now carry the
+  same icons their Main Menu equivalents already used, via a new shared `iconMenuButton()`
+  helper (`MenuStack.ts`). The Settings screen's main rows (graphics quality, draw distance, the
+  three volume sliders, camera sensitivity/invert, low gore, show fps) and its "Controls"
+  section heading are now icon-led too, through a new optional icon parameter on
+  `labelledRow()`. The Credits screen's three sections (Team, Tools, Asset Licenses) each get a
+  heading icon. The Results screen's per-rank kill breakdown rows and its Time row - previously
+  falling through to plain text since they weren't in the old hardcoded row-name lookup table -
+  now get the `kill`/`clock` icons every other row already had, via a small refactor that
+  attaches each row's icon at the point it's built instead of matching it back out of the row's
+  own generated label text.
+
 ## Unreleased - S6: Art pass - lighting & post-processing
 
 - **S6** A light post-processing pass (`PostFX.ts`: bloom via `UnrealBloomPass`, plus a subtle

@@ -1,11 +1,15 @@
 import type { Garage } from '../game/shop';
 import type { InteractPreview } from '../game/garageScene';
+import { iconForUpgrade } from './icons';
 
-/** R2: a single "E - Buy/Pick up/Drop <part>" prompt, shown only while something is in
+/** R2/S7: a single "E - Buy/Pick up/Drop <part>" prompt, shown only while something is in
  *  range (or being carried) in the walkable Garage - mirrors `previewInteract()`'s own
- *  wording of what the next E-press will actually do. */
+ *  wording of what the next E-press will actually do. The part's own I10 category/weapon
+ *  icon sits between the key-cap and the text, matching every other on-screen prompt that
+ *  names a specific part (the Garage menu's own tier cards, the HUD). */
 export class GaragePrompt {
   private readonly el: HTMLDivElement;
+  private readonly iconEl: HTMLSpanElement;
   private readonly text: HTMLSpanElement;
 
   constructor(parent: HTMLElement = document.body) {
@@ -15,9 +19,11 @@ export class GaragePrompt {
     const key = document.createElement('span');
     key.className = 'garage-prompt-key';
     key.textContent = 'E';
+    this.iconEl = document.createElement('span');
+    this.iconEl.className = 'garage-prompt-icon';
     this.text = document.createElement('span');
     this.text.className = 'garage-prompt-text';
-    this.el.append(key, this.text);
+    this.el.append(key, this.iconEl, this.text);
     parent.appendChild(this.el);
   }
 
@@ -26,6 +32,8 @@ export class GaragePrompt {
       this.hide();
       return;
     }
+    const def = garage.get(preview.id);
+    this.iconEl.innerHTML = def ? iconForUpgrade(def.id, def.category, 18) : '';
     this.text.textContent = describe(preview, garage);
     this.el.hidden = false;
   }

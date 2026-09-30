@@ -3,15 +3,6 @@ import { ZOMBIE_RANKS } from '../../data/validate';
 import { icon, type IconName } from '../icons';
 import { buildPanel, menuButton, type MenuScreen } from '../MenuStack';
 
-const ROW_ICON: Record<string, IconName> = {
-  'Total kills': 'kill',
-  Distance: 'distance',
-  'Coins from kills': 'coin',
-  'Coins from distance': 'coin',
-  'Total earned': 'coin',
-  Kept: 'coin',
-};
-
 export interface ResultsActions {
   onRetry: () => void;
   onGarage: () => void;
@@ -43,27 +34,33 @@ export function createResultsScreen(actions: ResultsActions, parent: HTMLElement
   function show(data: ResultsData): void {
     title.textContent = data.title;
     const s = data.summary;
-    const rows: [string, string][] = [];
+    // S7: every row gets its own I10 icon - rank breakdown rows share `kill` with the "Total
+    // kills" row underneath them (a run-over/shot kill reads the same regardless of rank).
+    const rows: [string, string, IconName][] = [];
     for (const rank of ZOMBIE_RANKS) {
       if (s.killsByRank[rank] > 0)
-        rows.push([`${rank[0].toUpperCase()}${rank.slice(1)}s`, String(s.killsByRank[rank])]);
+        rows.push([
+          `${rank[0].toUpperCase()}${rank.slice(1)}s`,
+          String(s.killsByRank[rank]),
+          'kill',
+        ]);
     }
-    rows.push(['Total kills', String(s.totalKills)]);
-    rows.push(['Distance', `${(s.distanceMeters / 1000).toFixed(2)} km`]);
+    rows.push(['Total kills', String(s.totalKills), 'kill']);
+    rows.push(['Distance', `${(s.distanceMeters / 1000).toFixed(2)} km`, 'distance']);
     rows.push([
       'Time',
       `${Math.floor(s.durationSeconds / 60)}:${String(Math.floor(s.durationSeconds % 60)).padStart(2, '0')}`,
+      'clock',
     ]);
-    rows.push(['Coins from kills', String(s.coinsFromKills)]);
-    rows.push(['Coins from distance', String(s.coinsFromDistance)]);
-    rows.push(['Total earned', String(s.coinsTotal)]);
-    rows.push(['Kept', String(data.coinsKept)]);
+    rows.push(['Coins from kills', String(s.coinsFromKills), 'coin']);
+    rows.push(['Coins from distance', String(s.coinsFromDistance), 'coin']);
+    rows.push(['Total earned', String(s.coinsTotal), 'coin']);
+    rows.push(['Kept', String(data.coinsKept), 'coin']);
     table.replaceChildren(
-      ...rows.map(([k, v]) => {
+      ...rows.map(([k, v, rowIcon]) => {
         const tr = document.createElement('tr');
         const td1 = document.createElement('td');
-        const rowIcon = ROW_ICON[k];
-        td1.innerHTML = rowIcon ? `${icon(rowIcon, 15)} ${k}` : k;
+        td1.innerHTML = `${icon(rowIcon, 15)} ${k}`;
         const td2 = document.createElement('td');
         td2.textContent = v;
         tr.append(td1, td2);
