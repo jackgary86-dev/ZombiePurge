@@ -50,6 +50,12 @@ export const DEFAULT_CONFIG: GameConfig = {
     engineTuning: {
       swingFactor: 0.5,
     },
+    stability: {
+      uprightSpringTorque: 6000,
+      uprightDamping: 1500,
+      maxUprightTorque: 5000,
+      maxCorrectedAngle: Math.PI / 3,
+    },
   },
   camera: {
     distance: 8,

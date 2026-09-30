@@ -95,6 +95,7 @@ assets/            # 3D models, textures, sounds
 | **M5** | Story Mode: Maps 2-5                          | ✅ Done (E5–E8, F4, I7)                                                                                                                              |
 | **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
 | **M7** | Car Customization & Combat Expansion          | ✅ Done (L1-L8, O1, M1-M5, N1-N2)                                                                                                                    |
+| **M8** | Vehicle & Garage Overhaul                     | 🔶 In progress (P1 done; Q1, R1-R4 pending)                                                                                                          |
 
 ## What's Built So Far
 
@@ -159,6 +160,7 @@ assets/            # 3D models, textures, sounds
 - **N1** Engine tuning: a free, always-adjustable slider (Garage → Engine tab, once the engine upgrade is owned) that trades the owned engine tier's own top speed bonus against its acceleration bonus, rather than one fixed stat pair per tier. Config-driven via `vehicle.engineTuning.swingFactor` (0.5 by default - up to a 50% swing either way); a balanced slider (0) reproduces the exact pre-N1 stats.
 - **N2** Engine replacement: three alternative engine types (V8, Turbo, Electric), each its own top speed/acceleration/weight trade-off, occupying a new `'engine'` mount slot alongside the existing tier ladder (D3/N1) rather than replacing it - only one type is equipped at a time, and swapping is a separate purchase/equip action. Weight actually matters: `Vehicle.setMass()` re-applies the physics body's real simulated mass (not just the config number) whenever it changes, so a heavier V8 or lighter Electric motor is felt in collisions without throwing off the `acceleration` stat's own meaning. The equipped type's own visual cue is the exhaust - stock gets a single small pipe, V8 a chrome dual pipe, Turbo one wide pipe, and Electric none at all.
 - **K5** PR preview demos: every pull request now gets its own preview link (`pr-<number>/`), built and published by `.github/workflows/preview.yml` on every push to the PR, with a bot comment carrying the link that updates in place rather than piling up. `deploy.yml` mirrors main's own build alongside those previews on the same `gh-pages` branch, so they coexist without clobbering each other. **Not live by default** - see the CI/CD section below for the one-time Settings step that turns it on.
+- **P1** The car no longer flips onto its side/roof from ordinary driving (hard turns, curb clips, glancing zombie hits): a config-driven (`vehicle.stability`) corrective torque pulls it back toward upright while at least one wheel has grip, fading out and capping below what a real hard hit (a ram-speed collision, a bad jump landing) still needs to complete a genuine flip - the existing flip-reset button still works exactly as before for when one does happen.
 
 ## Development
 

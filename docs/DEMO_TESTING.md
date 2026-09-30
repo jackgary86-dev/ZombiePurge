@@ -158,6 +158,15 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy/upgrade the regular Engine tier ladder (D3/N1) while an engine type is equipped: both bonuses stack - top speed/acceleration are higher than either one alone
 - [ ] With the V8 equipped, ram a zombie or wall: the car feels heavier/punchier than stock; with Electric equipped, it feels lighter - the `acceleration` stat itself (how fast 0-to-top-speed feels) stays consistent with what the Engine Tuning slider and tier cards show, regardless of which type is equipped
 
+## M8 – Vehicle & Garage Overhaul (in progress: P1)
+
+- [ ] Corner hard, clip a curb, or take a glancing zombie hit: the car leans but no longer
+      tips onto its side/roof from ordinary driving
+- [ ] Ram straight into a Tank at speed, or launch off a jump ramp badly: the car can still
+      flip - the stability assist raises the threshold, it doesn't remove flipping entirely
+- [ ] Flip it anyway (drive into a ramp edge sideways hard enough) and press R: it still
+      rights itself exactly as before
+
 ### Known quirks (non-blocking)
 
 - Holding throttle in a dead-straight line for many seconds can drift the car slightly off a

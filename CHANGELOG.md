@@ -7,6 +7,19 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - P1: Vehicle rollover / flip stability
+
+- **P1** The car no longer flips onto its side/roof from ordinary driving - hard cornering,
+  curb clips, and glancing zombie hits. A new `vehicle.stability` config (`uprightSpringTorque`,
+  `uprightDamping`, `maxUprightTorque`, `maxCorrectedAngle`) drives a corrective torque applied
+  each step: while at least one wheel has grip, it pulls the chassis back toward upright in
+  proportion to how far it's tilted, damped by the current tipping rate to settle without
+  rocking, and capped so it can't just hold the car upright indefinitely. Past
+  `maxCorrectedAngle` (60° by default) the correction switches off entirely, so a hit hard
+  enough to matter - a ram-speed collision, a bad jump landing - still completes a real flip;
+  the existing flip-reset button (R) is unchanged for when one does happen. Gated on having
+  ground contact so it never fights the existing air-control torques during a jump.
+
 ## Unreleased - K5: PR preview demos
 
 - **K5** Every pull request now gets its own preview link, built and published by a new
