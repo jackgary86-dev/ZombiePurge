@@ -8,6 +8,7 @@ export const GAME_ACTIONS = [
   'nitro',
   'fire',
   'pause',
+  'interact',
 ] as const;
 
 export type GameAction = (typeof GAME_ACTIONS)[number];

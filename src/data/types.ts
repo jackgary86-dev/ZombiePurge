@@ -589,8 +589,8 @@ export interface GameConfig {
 }
 
 /** R1: the walkable Garage scene - a player-controlled avatar around the car's build pad,
- *  replacing the old fixed camera orbit. R2-R4 build the actual shopping/snap-on interaction
- *  on top of this. */
+ *  replacing the old fixed camera orbit. R2 adds walk-up part shopping on top of this;
+ *  R3-R4 will add snapping a carried part onto the car. */
 export interface GarageConfig {
   /** Avatar walk speed, m/s. */
   walkSpeed: number;
@@ -598,6 +598,10 @@ export interface GarageConfig {
   bounds: { x: number; z: number };
   /** How quickly the follow camera catches up to the avatar; higher is snappier. */
   cameraLerp: number;
+  /** R2: max distance from a station/dropped part before it stops being interactable. */
+  interactRange: number;
+  /** R2: how far in from the walls the shopping stations sit. */
+  stationInset: number;
 }
 
 export type DeepPartial<T> = {

@@ -908,5 +908,7 @@ export const DEFAULT_CONFIG: GameConfig = {
     walkSpeed: 3.2,
     bounds: { x: 9, z: 9 },
     cameraLerp: 4,
+    interactRange: 1.6,
+    stationInset: 1.2,
   },
 };

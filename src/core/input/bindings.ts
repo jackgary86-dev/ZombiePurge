@@ -16,6 +16,7 @@ export const DEFAULT_BINDINGS: Bindings = {
     nitro: ['ShiftLeft', 'ShiftRight'],
     fire: ['Mouse0', 'KeyF'],
     pause: ['Escape', 'KeyP'],
+    interact: ['KeyE'],
   },
   gamepad: {
     throttle: [{ kind: 'button', index: 7 }],
@@ -27,6 +28,7 @@ export const DEFAULT_BINDINGS: Bindings = {
     nitro: [{ kind: 'button', index: 2 }],
     fire: [{ kind: 'button', index: 5 }],
     pause: [{ kind: 'button', index: 9 }],
+    interact: [{ kind: 'button', index: 1 }],
   },
 };
 

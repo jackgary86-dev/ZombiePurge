@@ -340,6 +340,8 @@ export function collectConfigProblems(config: GameConfig): string[] {
   positive(garage.bounds.x, 'garage.bounds.x', problems);
   positive(garage.bounds.z, 'garage.bounds.z', problems);
   positive(garage.cameraLerp, 'garage.cameraLerp', problems);
+  positive(garage.interactRange, 'garage.interactRange', problems);
+  positive(garage.stationInset, 'garage.stationInset', problems);
 
   const upgradeIds = new Set<string>();
   const categories: UpgradeCategory[] = [

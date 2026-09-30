@@ -17,6 +17,7 @@ export function createControlsScreen(
     ['Flip reset', 'R', 'Y'],
     ['Orbit camera', 'Click, then move the mouse', 'Right stick'],
     ['Pause', 'Esc / P', 'Start'],
+    ['Interact / buy / carry (Garage only)', 'E', 'B'],
   ];
   const head = document.createElement('tr');
   for (const h of ['Action', 'Keyboard', 'Gamepad']) {

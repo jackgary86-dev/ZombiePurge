@@ -77,3 +77,38 @@ export class GarageAvatarView {
     this.group.rotation.y = state.facing;
   }
 }
+
+const stationOwnedMaterial = new MeshStandardMaterial({ color: 0x5a6a58, roughness: 0.8 });
+const stationUnownedMaterial = new MeshStandardMaterial({ color: 0x8a6a2a, roughness: 0.7 });
+const carriedMaterial = new MeshStandardMaterial({
+  color: 0xe0c040,
+  emissive: 0x443000,
+  roughness: 0.4,
+});
+
+/**
+ * R2: a simple pedestal marking one walk-up shopping station (or a dropped part sitting on
+ * the floor). Colour is the only thing distinguishing owned (already-bought, ready to carry)
+ * from unowned (still purchasable) - swap `setOwned()` rather than rebuilding the mesh.
+ */
+export class GarageStationMarker {
+  readonly mesh: Mesh;
+
+  constructor() {
+    this.mesh = new Mesh(new BoxGeometry(0.6, 0.9, 0.6), stationUnownedMaterial);
+    this.mesh.position.y = 0.45;
+    this.mesh.castShadow = true;
+    this.mesh.receiveShadow = true;
+  }
+
+  setOwned(owned: boolean): void {
+    this.mesh.material = owned ? stationOwnedMaterial : stationUnownedMaterial;
+  }
+}
+
+/** R2: a small marker hovering above the avatar's head while it's carrying a part. */
+export function buildCarriedMarker(): Mesh {
+  const mesh = new Mesh(new BoxGeometry(0.22, 0.22, 0.22), carriedMaterial);
+  mesh.position.y = 1.7;
+  return mesh;
+}

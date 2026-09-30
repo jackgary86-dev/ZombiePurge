@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three';
+import { Group, PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three';
 import './style.css';
 import { GameLoop } from './core/GameLoop';
 import { GameState } from './core/GameState';
@@ -26,6 +26,7 @@ import {
 import type { MapConfig, VehicleConfig } from './data/types';
 import {
   BloodSplatterView,
+  buildCarriedMarker,
   buildGarageRoom,
   buildPlaceholderCar,
   CarDamageView,
@@ -34,6 +35,7 @@ import {
   driveTrailColor,
   FlameView,
   GarageAvatarView,
+  GarageStationMarker,
   HammerView,
   MuzzleFlashView,
   PickupViews,
@@ -62,7 +64,18 @@ import {
   WeaponMount,
 } from './game/combat';
 import { RunStats, Wallet } from './game/economy';
-import { GARAGE_AVATAR_START, stepGarageAvatar, type GarageAvatarState } from './game/garageScene';
+import {
+  createShoppingState,
+  GARAGE_AVATAR_START,
+  interact,
+  layoutStations,
+  previewInteract,
+  stepGarageAvatar,
+  type DroppedPart,
+  type GarageAvatarState,
+  type GarageShoppingState,
+  type GarageStation,
+} from './game/garageScene';
 import { initPhysics, PhysicsWorld, RAPIER } from './game/physics/PhysicsWorld';
 import { Garage, repairInGarage, repairPrice, type CoinSource } from './game/shop';
 import {
@@ -127,6 +140,7 @@ import { showBuildTag } from './ui/BuildTag';
 import { CheatConsole } from './ui/CheatConsole';
 import { CoinPopups } from './ui/CoinPopups';
 import { GarageMenu } from './ui/GarageMenu';
+import { GaragePrompt } from './ui/GaragePrompt';
 import { Hud } from './ui/Hud';
 import { MenuStack, type MenuScreen } from './ui/MenuStack';
 import { computeMinimapFrame, Minimap } from './ui/Minimap';
@@ -299,6 +313,47 @@ async function boot(): Promise<void> {
   const wallet = new Wallet(cfg.rewards);
   const realGarage = new Garage(cfg.upgrades, wallet, 1, undefined, cfg.cosmetics);
   let garage = realGarage;
+
+  // ---------- R2: walk-up part shopping & pickup ----------
+  // One physical station per top-level catalog entry (not every cosmetic variant - see the
+  // R2 ticket's scoping discussion), laid out purely from the room's own bounds.
+  const garageStations: GarageStation[] = layoutStations(
+    cfg.upgrades.map((u) => u.id),
+    cfg.garage.bounds,
+    cfg.garage.stationInset
+  );
+  const stationMarkers = new Map<string, GarageStationMarker>();
+  for (const station of garageStations) {
+    const marker = new GarageStationMarker();
+    marker.mesh.position.x = station.x;
+    marker.mesh.position.z = station.z;
+    garageRoom.add(marker.mesh);
+    stationMarkers.set(station.id, marker);
+  }
+  const carriedMarker = buildCarriedMarker();
+  carriedMarker.visible = false;
+  garageAvatarView.group.add(carriedMarker);
+  const droppedGroup = new Group();
+  garageRoom.add(droppedGroup);
+  let shoppingState: GarageShoppingState = createShoppingState();
+  let renderedDropped: DroppedPart[] = shoppingState.dropped;
+  function resetShopping(): void {
+    shoppingState = createShoppingState();
+  }
+  /** Dropped parts come and go at arbitrary times, so their markers are rebuilt only when the
+   *  dropped list actually changed (a new array reference from `interact()`), not every frame. */
+  function syncDroppedMarkers(): void {
+    if (shoppingState.dropped === renderedDropped) return;
+    droppedGroup.clear();
+    for (const part of shoppingState.dropped) {
+      const marker = new GarageStationMarker();
+      marker.setOwned(true);
+      marker.mesh.position.x = part.x;
+      marker.mesh.position.z = part.z;
+      droppedGroup.add(marker.mesh);
+    }
+    renderedDropped = shoppingState.dropped;
+  }
   let coins: CoinSource = wallet;
   /** F3: whichever wallet actually owns this run's coins — `wallet` in sandbox, a save
    *  slot's own wallet in story mode. Kept separate from `coins` because the infinite-money
@@ -373,6 +428,7 @@ async function boot(): Promise<void> {
   });
 
   const hud = new Hud(cfg.hud);
+  const garagePrompt = new GaragePrompt();
   const popups = new CoinPopups();
   const minimap = new Minimap();
   const rings = new DetectionRings(ZOMBIE_CAPACITY);
@@ -464,6 +520,8 @@ async function boot(): Promise<void> {
       applyGarage();
       garageMenu.open();
       resetGarageAvatar();
+      resetShopping();
+      carriedMarker.visible = false;
       garageRoom.visible = true;
       garageAvatarView.group.visible = true;
     },
@@ -471,6 +529,7 @@ async function boot(): Promise<void> {
       garageMenu.close();
       garageRoom.visible = false;
       garageAvatarView.group.visible = false;
+      garagePrompt.hide();
     },
   };
   const mainMenu = createMainMenu({
@@ -1150,6 +1209,18 @@ async function boot(): Promise<void> {
       cfg.physics.fixedTimeStep,
       cfg.garage
     );
+    // R2: buy/pick-up/drop, resolved against the currently active Garage (Sandbox/Story/
+    // Slaughtermode each have their own instance and their own ownership).
+    if (input.justPressed('interact')) {
+      const result = interact(garage, shoppingState, {
+        avatarX: garageAvatarState.x,
+        avatarZ: garageAvatarState.z,
+        stations: garageStations,
+        range: cfg.garage.interactRange,
+      });
+      shoppingState = result.state;
+      carriedMarker.visible = shoppingState.heldId !== null;
+    }
   });
   loop.registerStateHandler(GameState.MainMenu, menuState);
   loop.registerStateHandler(GameState.MapComplete, menuState);
@@ -1210,6 +1281,19 @@ async function boot(): Promise<void> {
       camera.position.lerp(garageCamTarget, Math.min(1, cfg.garage.cameraLerp * deltaTime));
       garageLookAt.set(ax, 1, az);
       camera.lookAt(garageLookAt);
+
+      // R2: station colours track the currently active Garage's ownership, dropped-part
+      // markers are rebuilt only when they actually changed, and the prompt previews the
+      // very next E-press so it stays correct as the avatar walks around.
+      for (const [id, marker] of stationMarkers) marker.setOwned(garage.ownedTier(id) > 0);
+      syncDroppedMarkers();
+      const preview = previewInteract(garage, shoppingState, {
+        avatarX: garageAvatarState.x,
+        avatarZ: garageAvatarState.z,
+        stations: garageStations,
+        range: cfg.garage.interactRange,
+      });
+      garagePrompt.update(preview, garage);
     } else if (state === GameState.MainMenu) {
       // Slow turntable around the car behind the title screen.
       const t = elapsedTime * 0.35;
