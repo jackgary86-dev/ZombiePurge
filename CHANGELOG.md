@@ -7,6 +7,26 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - T1: Bug bash - vehicle physics & handling
+
+- **T1** Fixed a flip-reset softlock: the P1 stability assist gives up correcting tilt past
+  `stability.maxCorrectedAngle` (60° by default), but the manual flip-reset (R) only fired once
+  the car was fully upside down (past 90°). A hard hit or an odd-angle ramp landing that tipped
+  the car onto its side - well past where the assist could right it, but short of 90° - left the
+  player stuck: not upright enough to drive, not "upside down" enough for the reset button to
+  do anything. `Vehicle` gained `needsFlipReset()`, which fires once tilt passes the assist's
+  own giving-up point rather than requiring a full flip, so the reset is available exactly when
+  the car can no longer recover on its own. Added a regression test (`tests/game/Vehicle.test.ts`)
+  driving the real Rapier simulation to a 75° side-rest and confirming the old `isUpsideDown()`
+  gate would have stayed closed there while the new one opens.
+- Systematically exercised the rest of the ticket's edge cases (extreme speed with nitro +
+  top-tier engine stacked, multi-body car/zombie-horde collisions, P1 interacting with jump
+  ramps and hard ram-speed impacts, N1/N2 engine tuning/type swaps) against the real physics
+  simulation and the existing `RunOverSystem`/`Nitro`/`Vehicle` test coverage; no other
+  reproducible bug turned up. Engine-type swaps are only ever applied via `applyGarage()` at
+  Garage-state boundaries (entering the garage, starting a run), so "mid-run" swapping isn't
+  actually reachable, matching the ticket's own "(if reachable)" caveat.
+
 ## Unreleased - S7: Art pass - UI icon & font consistency
 
 - **S7** Filled in every remaining generic/placeholder icon gap found across the UI, expanding

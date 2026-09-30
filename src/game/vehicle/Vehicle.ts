@@ -163,7 +163,7 @@ export class Vehicle {
 
   /** Apply one fixed step of driver input. Call before physics.step(). */
   update(input: VehicleInput, dt: number): void {
-    if (input.flipReset && this.isUpsideDown()) this.flipReset();
+    if (input.flipReset && this.needsFlipReset()) this.flipReset();
 
     // Rapier keeps added forces until told otherwise, so clear last step's before applying this step's.
     this.body.resetForces(true);
@@ -368,6 +368,18 @@ export class Vehicle {
 
   isUpsideDown(): boolean {
     return this.tmp.copy(UP).applyQuaternion(this.getQuaternion(this.q)).dot(UP) < 0;
+  }
+
+  /** T1: true once the chassis has tipped past P1's own recovery range (stability.maxCorrectedAngle)
+   *  - e.g. resting on its side against a wall or a rock after a hard hit or an odd-angle landing.
+   *  Gating flip-reset on `isUpsideDown()` alone left a dead zone between that angle and fully
+   *  upside down where the assist had already given up but the reset button still refused to
+   *  fire, softlocking the player. Using the same angle the assist itself gives up at means the
+   *  reset becomes available exactly when the car can no longer right itself on its own. */
+  needsFlipReset(): boolean {
+    const up = this.tmp.copy(UP).applyQuaternion(this.getQuaternion(this.q));
+    const tiltAngle = Math.acos(Math.min(1, Math.max(-1, up.dot(UP))));
+    return tiltAngle > this.cfg.stability.maxCorrectedAngle;
   }
 
   /** Rights the car in place, lifted slightly so it doesn't spawn inside the ground. */

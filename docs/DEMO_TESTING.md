@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete)
+## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1 done)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -292,6 +292,17 @@ Tick items in the PR that closes the milestone.
 - [ ] Open Credits: Team, Tools, and Asset Licenses each show a heading icon
 - [ ] Finish a run and reach the Results screen: every row has an icon, including the per-rank
       kill breakdown rows and the Time row (previously plain text)
+
+- [ ] Roll/flip the car onto its side against a wall or rock (e.g. a hard ram hit, or landing
+      badly off a jump ramp) rather than fully upside down: pressing R (flip reset) now rights it
+      even though it never passed the old "fully upside down" threshold - it no longer gets stuck
+      unable to drive or reset
+- [ ] Flip reset still does nothing while the car is upright or only mildly tilted (a normal hard
+      turn or curb clip) - P1's own stability assist still handles those on its own
+- [ ] Stack nitro with a top-tier engine and hold throttle: speed still caps smoothly at the
+      combined top speed, no jitter or runaway velocity
+- [ ] Drive through a cluster of several zombies at once: each one is hit and damaged
+      independently in the same step, no missed or double-counted impacts
 
 ### Known quirks (non-blocking)
 
