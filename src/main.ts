@@ -39,6 +39,7 @@ import {
   HammerView,
   MuzzleFlashView,
   PickupViews,
+  PostFX,
   ProjectileViews,
   RocketViews,
   SawView,
@@ -513,6 +514,17 @@ async function boot(): Promise<void> {
     },
   });
 
+  // S6: bloom + vignette/colour-grade, gated off entirely on 'low' graphics quality in
+  // applySettings() below so that setting still means zero post-processing overhead.
+  const postFx = new PostFX(
+    renderer,
+    scene,
+    camera,
+    cfg.postFx,
+    window.innerWidth,
+    window.innerHeight
+  );
+
   const hud = new Hud(cfg.hud);
   const garagePrompt = new GaragePrompt();
   const popups = new CoinPopups();
@@ -560,6 +572,8 @@ async function boot(): Promise<void> {
     );
     renderer.shadowMap.enabled = quality !== 'low';
     lights.sun.castShadow = quality !== 'low';
+    postFx.enabled = quality !== 'low';
+    postFx.setSize(window.innerWidth, window.innerHeight); // composer buffers track the new pixel ratio
     viewDistance = map.fogDistance * s.drawDistanceScale;
     camera.far = viewDistance * 1.5;
     camera.updateProjectionMatrix();
@@ -1442,7 +1456,8 @@ async function boot(): Promise<void> {
         ? DEFAULT_ZOMBIE_AI.loudMultiplier
         : 1
     );
-    renderer.render(scene, camera);
+    if (postFx.enabled) postFx.render();
+    else renderer.render(scene, camera);
     popups.update(deltaTime, project);
     if (state === GameState.Playing || state === GameState.Paused) {
       minimap.draw(
@@ -1534,6 +1549,7 @@ async function boot(): Promise<void> {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    postFx.setSize(window.innerWidth, window.innerHeight);
   });
 
   applyGarage();

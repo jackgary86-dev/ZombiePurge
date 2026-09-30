@@ -7,6 +7,22 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - S6: Art pass - lighting & post-processing
+
+- **S6** A light post-processing pass (`PostFX.ts`: bloom via `UnrealBloomPass`, plus a subtle
+  vignette/colour-grade `ShaderPass`) layered on top of the existing per-map day/night lighting
+  presets (I8). New `postFx` config block (`bloomStrength`, `bloomRadius`, `bloomThreshold`,
+  `vignetteDarkness`, `vignetteOffset`), validated the same way as every other tunable. Gated
+  entirely off on 'low' graphics quality (alongside shadows, which already followed the same
+  rule) - at 'low' the render loop calls the plain `renderer.render()` it always has, with zero
+  composited-pipeline overhead, so that setting still means today's exact look. Toggling
+  graphics quality mid-run (Settings, no restart) flips the composited pipeline on/off
+  immediately via the existing `applySettings()`/`settings.onChange()` wiring already used for
+  shadows and pixel ratio. Verified in-game across both a night preset (bloom visibly glowing
+  around the headlights) and a day preset (the vignette darkening toward the frame edges),
+  each confirmed at both 'low' (no effect, matching the pre-S6 look) and 'high' (effect visibly
+  active) quality.
+
 ## Unreleased - S5: Art pass - VFX polish
 
 - **S5** More visual punch for the existing particle/VFX systems - purely visual, no gameplay

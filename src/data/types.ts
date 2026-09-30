@@ -208,6 +208,22 @@ export interface VfxConfig {
   driveTrail: DriveTrailConfig;
 }
 
+/**
+ * S6: a light post-processing pass (bloom + vignette/colour grade) layered on top of the
+ * per-map day/night lighting presets (I8) - disabled outright on 'low' graphics quality so
+ * that setting still means today's exact look, no composited pass at all.
+ */
+export interface PostFxConfig {
+  bloomStrength: number;
+  bloomRadius: number;
+  /** Luminance threshold above which a pixel contributes to the bloom. */
+  bloomThreshold: number;
+  /** 0 (no darkening) to 1 (fully black at the frame edge). */
+  vignetteDarkness: number;
+  /** How far in from the edge the vignette starts, in normalised screen units. */
+  vignetteOffset: number;
+}
+
 /** G3: engine note driven by the car's own speed, not a fixed loop. */
 export interface EngineAudioConfig {
   idleHz: number;
@@ -588,6 +604,7 @@ export interface GameConfig {
   maps: MapConfig[];
   hud: HudConfig;
   vfx: VfxConfig;
+  postFx: PostFxConfig;
   audio: AudioConfig;
   performance: PerformanceConfig;
   assetBudget: AssetBudgetConfig;

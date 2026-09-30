@@ -269,6 +269,27 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     );
   });
 
+  it('postFx (S6): bloom + vignette/colour-grade tunables', () => {
+    expect(problems((c) => (c.postFx.bloomStrength = -1))).toContain(
+      'postFx.bloomStrength must be zero or greater (got -1)'
+    );
+    expect(problems((c) => (c.postFx.bloomRadius = -1))).toContain(
+      'postFx.bloomRadius must be zero or greater (got -1)'
+    );
+    expect(problems((c) => (c.postFx.bloomThreshold = 1.5))).toContain(
+      'postFx.bloomThreshold must be between 0 and 1 (got 1.5)'
+    );
+    expect(problems((c) => (c.postFx.bloomThreshold = -0.1))).toContain(
+      'postFx.bloomThreshold must be between 0 and 1 (got -0.1)'
+    );
+    expect(problems((c) => (c.postFx.vignetteDarkness = 1.5))).toContain(
+      'postFx.vignetteDarkness must be between 0 and 1 (got 1.5)'
+    );
+    expect(problems((c) => (c.postFx.vignetteOffset = -1))).toContain(
+      'postFx.vignetteOffset must be zero or greater (got -1)'
+    );
+  });
+
   it('audio (G3): engine range, skid speed, zombie groan voices', () => {
     expect(problems((c) => (c.audio.engine.maxHz = c.audio.engine.idleHz))).toContain(
       'audio.engine.maxHz must be greater than audio.engine.idleHz'

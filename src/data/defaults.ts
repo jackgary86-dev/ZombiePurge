@@ -868,6 +868,13 @@ export const DEFAULT_CONFIG: GameConfig = {
       maxPuffs: 40,
     },
   },
+  postFx: {
+    bloomStrength: 0.45,
+    bloomRadius: 0.4,
+    bloomThreshold: 0.82,
+    vignetteDarkness: 0.35,
+    vignetteOffset: 0.55,
+  },
   audio: {
     engine: {
       idleHz: 70,
