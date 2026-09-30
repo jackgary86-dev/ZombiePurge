@@ -29,7 +29,11 @@ describe('ZombieInstances (B7)', () => {
     const pos = new Vector3().setFromMatrixPosition(m);
     expect(pos.x).toBeCloseTo(10, 1);
     const scale = new Vector3().setFromMatrixScale(m);
-    expect(scale.x).toBeCloseTo(1.8, 5); // tank is bigger
+    // S1: tank is wide and squat, not just uniformly bigger - a distinct proportion, not a
+    // single scale factor.
+    expect(scale.x).toBeCloseTo(1.75, 5);
+    expect(scale.y).toBeCloseTo(1.35, 5);
+    expect(scale.x).toBeGreaterThan(scale.y); // wider than it is tall, relative to a walker
 
     const emptySlot = pool.zombies.find((z) => !z.active)!.poolIndex; // never spawned
     view.bodies.getMatrixAt(emptySlot, m);

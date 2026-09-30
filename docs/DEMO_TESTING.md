@@ -158,7 +158,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy/upgrade the regular Engine tier ladder (D3/N1) while an engine type is equipped: both bonuses stack - top speed/acceleration are higher than either one alone
 - [ ] With the V8 equipped, ram a zombie or wall: the car feels heavier/punchier than stock; with Electric equipped, it feels lighter - the `acceleration` stat itself (how fast 0-to-top-speed feels) stays consistent with what the Engine Tuning slider and tier cards show, regardless of which type is equipped
 
-## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1, R1, R2, R3, R4)
+## M8 – Vehicle & Garage Overhaul (done: P1, Q1, R1, R2, R3, R4)
 
 - [ ] Corner hard, clip a curb, or take a glancing zombie hit: the car leans but no longer
       tips onto its side/roof from ordinary driving
@@ -220,6 +220,20 @@ Tick items in the PR that closes the milestone.
       elsewhere
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
+
+## M9 – Art pass & bug bash (in progress: S1)
+
+- [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
+      and drive past it: each rank's silhouette is distinguishable from the others at range, not
+      just by colour - the boss towers over a walker, tanks read as squat and wide, runners as
+      leaner and taller
+- [ ] The horde still renders as two draw calls total (check the debug HUD's zombie count moves
+      normally with no fps cliff as the horde grows toward the map's budget)
+- [ ] Run over/shoot a zombie of any rank: it dies and ragdolls/despawns exactly as before - the
+      new geometry doesn't change hit detection or death behaviour (the physics capsule size is
+      unchanged regardless of rank)
+- [ ] Zombies still walk/attack with the existing bob and lunge motion (I5) - the new geometry
+      doesn't look stiff or broken mid-animation
 
 ### Known quirks (non-blocking)
 
