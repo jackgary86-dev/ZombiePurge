@@ -384,3 +384,126 @@ describe('R3 snapping onto the car', () => {
     ).toEqual({ type: 'pickupZone', id: 'armor' });
   });
 });
+
+describe('R4 swapping an occupied zone', () => {
+  let garage: Garage;
+  let wallet: Wallet;
+  const roofZone = {
+    zone: { id: 'roof', slot: 'roof' as const, offset: { x: 0, y: 0, z: 0 }, radius: 1 },
+    x: 5,
+    z: 5,
+  };
+  const rearZone = {
+    zone: { id: 'rear_weapon', slot: 'rear' as const, offset: { x: 0, y: 0, z: 0 }, radius: 1 },
+    x: 5,
+    z: 5,
+  };
+  const frontZone = {
+    zone: { id: 'front', slot: 'front' as const, offset: { x: 0, y: 0, z: 0 }, radius: 1 },
+    x: 5,
+    z: 5,
+  };
+  const noStations: never[] = [];
+
+  beforeEach(() => {
+    resetConfig();
+    wallet = new Wallet(getConfig().rewards, null);
+    garage = new Garage(getConfig().upgrades, wallet, 5, null); // every weapon's tiers unlocked
+    wallet.add(10000);
+  });
+
+  it('swaps two ordinary same-slot weapons: the occupant comes off into the carrier’s hands', () => {
+    garage.buy('machinegun'); // auto-equips to 'roof'
+    garage.buy('rockets');
+    garage.unequip('roof');
+    garage.equip('rockets'); // simulate carrying rockets, having picked it up from elsewhere
+    const carrying = { heldId: 'rockets', dropped: [], installed: [] };
+    garage.equip('machinegun'); // machinegun re-occupies 'roof' for this scenario
+    const { state, outcome } = interact(garage, carrying, {
+      avatarX: 5,
+      avatarZ: 5,
+      stations: noStations,
+      range: 1,
+      zones: [roofZone],
+    });
+    expect(outcome).toEqual({ type: 'swapped', id: 'rockets', displacedId: 'machinegun' });
+    expect(state.heldId).toBe('machinegun');
+    expect(garage.equippedIn('roof')?.id).toBe('rockets');
+  });
+
+  it('R4: the multi-mount machine gun snaps onto the empty rear mount (its non-default slot)', () => {
+    garage.buy('machinegun'); // auto-equips to its default, 'roof'
+    garage.unequip('roof'); // simulate carrying it - not equipped anywhere right now
+    const carrying = { heldId: 'machinegun', dropped: [], installed: [] };
+    const { state, outcome } = interact(garage, carrying, {
+      avatarX: 5,
+      avatarZ: 5,
+      stations: noStations,
+      range: 1,
+      zones: [rearZone],
+    });
+    expect(outcome).toEqual({ type: 'snapped', id: 'machinegun' });
+    expect(state.heldId).toBeNull();
+    expect(garage.equippedIn('rear')?.id).toBe('machinegun');
+  });
+
+  it('R4: the multi-mount machine gun can swap onto front, displacing whatever else is there', () => {
+    garage.buy('flamethrower'); // occupies 'front'
+    garage.buy('machinegun'); // auto-equips to 'roof'
+    garage.unequip('roof'); // simulate carrying it, not equipped anywhere right now
+    const carrying = { heldId: 'machinegun', dropped: [], installed: [] };
+    const { state, outcome } = interact(garage, carrying, {
+      avatarX: 5,
+      avatarZ: 5,
+      stations: noStations,
+      range: 1,
+      zones: [frontZone],
+    });
+    expect(outcome).toEqual({ type: 'swapped', id: 'machinegun', displacedId: 'flamethrower' });
+    expect(state.heldId).toBe('flamethrower');
+    expect(garage.equippedIn('front')?.id).toBe('machinegun');
+  });
+
+  it('preview matches: swap when a valid zone is occupied by something else', () => {
+    garage.buy('machinegun');
+    garage.buy('rockets');
+    garage.unequip('roof');
+    garage.equip('machinegun');
+    const carrying = { heldId: 'rockets', dropped: [], installed: [] };
+    expect(
+      previewInteract(garage, carrying, {
+        avatarX: 5,
+        avatarZ: 5,
+        stations: noStations,
+        range: 1,
+        zones: [roofZone],
+      })
+    ).toEqual({ type: 'swap', id: 'rockets', displacedId: 'machinegun' });
+  });
+
+  it('never swaps a part with itself, even if a state somehow marked it both carried and installed', () => {
+    // Defensive guard, not a reachable gameplay state: every passive category has exactly
+    // one id, so there is never a *different* part to swap it with - this only confirms
+    // nearestValidOccupiedZone's own same-id guard rather than a real play scenario.
+    garage.buy('armor');
+    const armorZoneWorld = {
+      zone: {
+        id: 'armor_left',
+        category: 'armor' as const,
+        offset: { x: 0, y: 0, z: 0 },
+        radius: 1,
+      },
+      x: 5,
+      z: 5,
+    };
+    const carrying = { heldId: 'armor', dropped: [], installed: ['armor'] };
+    const { outcome } = interact(garage, carrying, {
+      avatarX: 5,
+      avatarZ: 5,
+      stations: noStations,
+      range: 1,
+      zones: [armorZoneWorld],
+    });
+    expect(outcome).toEqual({ type: 'dropped', id: 'armor' });
+  });
+});

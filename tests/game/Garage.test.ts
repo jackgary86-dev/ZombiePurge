@@ -133,6 +133,18 @@ describe('D2 Garage purchase & equip logic', () => {
     expect(garage.equippedIn('roof')).toBeNull();
   });
 
+  it('R4: equip() takes an explicit slot for the one multi-mount part, and rejects an invalid one', () => {
+    wallet.add(5000);
+    expect(garage.buy('machinegun').ok).toBe(true); // auto-equips to its default, 'roof'
+    expect(garage.equip('machinegun', 'rear')).toBe(true);
+    expect(garage.equippedIn('rear')?.id).toBe('machinegun');
+    expect(garage.equip('machinegun', 'front')).toBe(true);
+    expect(garage.equippedIn('front')?.id).toBe('machinegun');
+    // A part with no validSlots entry for 'engine' can never go there, owned or not.
+    expect(garage.equip('machinegun', 'engine')).toBe(false);
+    expect(garage.equip('shotgun', 'rear')).toBe(false); // not owned, and not multi-mount anyway
+  });
+
   it('folds owned tiers into effective vehicle stats', () => {
     const base = getConfig().vehicle;
     const stock = garage.effectiveStats(base);

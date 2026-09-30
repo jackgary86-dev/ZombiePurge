@@ -159,10 +159,14 @@ export class Garage {
     return check;
   }
 
-  equip(id: string): boolean {
+  /** R4: `slot` picks which of a multi-mount part's `validSlots` to equip into (its own
+   *  `slot` when omitted) - e.g. the one weapon that can also go on the rear mount. */
+  equip(id: string, slot?: WeaponSlot): boolean {
     const def = this.byId.get(id);
     if (!def || !def.slot || this.ownedTier(id) === 0) return false;
-    this.equipped.set(def.slot, id);
+    const target = slot ?? def.slot;
+    if (target !== def.slot && !def.validSlots?.includes(target)) return false;
+    this.equipped.set(target, id);
     this.save();
     return true;
   }
