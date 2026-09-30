@@ -158,7 +158,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy/upgrade the regular Engine tier ladder (D3/N1) while an engine type is equipped: both bonuses stack - top speed/acceleration are higher than either one alone
 - [ ] With the V8 equipped, ram a zombie or wall: the car feels heavier/punchier than stock; with Electric equipped, it feels lighter - the `acceleration` stat itself (how fast 0-to-top-speed feels) stays consistent with what the Engine Tuning slider and tier cards show, regardless of which type is equipped
 
-## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1)
+## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1, R1)
 
 - [ ] Corner hard, clip a curb, or take a glancing zombie hit: the car leans but no longer
       tips onto its side/roof from ordinary driving
@@ -179,6 +179,12 @@ Tick items in the PR that closes the milestone.
       results screen instead, banking every coin from the run - not the reduced wreck share
 - [ ] Quit to the main menu and pick "Continue": it resumes Slaughtermode directly (same as
       Sandbox's own Continue), not Sandbox's last map
+- [ ] Open the Garage: your car sits on its build pad inside a simple walled room, and a
+      standing player figure is visible nearby instead of the old fixed camera orbit
+- [ ] Walk the avatar with WASD (or the left stick): the camera follows behind it, turning to
+      face the direction you're walking
+- [ ] Walk into any of the four walls: the avatar stops right at it - it never clips through
+- [ ] The Garage's buy/equip UI on the left still works exactly as before while walking around
 
 ### Known quirks (non-blocking)
 

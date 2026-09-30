@@ -357,6 +357,21 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     );
   });
 
+  it('garage (R1): walk speed, bounds and camera lerp must all stay positive', () => {
+    expect(problems((c) => (c.garage.walkSpeed = 0))).toContain(
+      'garage.walkSpeed must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.garage.bounds.x = -1))).toContain(
+      'garage.bounds.x must be a positive number (got -1)'
+    );
+    expect(problems((c) => (c.garage.bounds.z = 0))).toContain(
+      'garage.bounds.z must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.garage.cameraLerp = -2))).toContain(
+      'garage.cameraLerp must be a positive number (got -2)'
+    );
+  });
+
   it('upgrades: id required/duplicated, unknown category, weapon without a slot', () => {
     expect(
       problems((c) => {
