@@ -16,6 +16,7 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { VehicleConfig, ZombieMotionConfig, ZombieRank } from '../../data/types';
 import type { Vehicle } from '../vehicle/Vehicle';
 import type { Zombie } from '../zombies/Zombie';
@@ -150,14 +151,20 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
   };
 }
 
-const RANK_STYLE: Record<ZombieRank, { color: number; scale: number }> = {
-  walker: { color: 0x8a9a7a, scale: 1 },
-  runner: { color: 0xa0a070, scale: 0.95 },
-  spitter: { color: 0x9cff3a, scale: 1 },
-  brute: { color: 0x6f5a4a, scale: 1.35 },
-  tank: { color: 0x555a50, scale: 1.8 },
-  iceZombie: { color: 0xaee0ff, scale: 1.1 },
-  boss: { color: 0xff5a1f, scale: 2.8 },
+/** S1: each rank's own non-uniform (x, y, z) scale of the one shared body/head geometry -
+ *  proportion, not just size or tint, is what actually reads as a different rank at a
+ *  distance (a runner leaner and taller, a tank squat and wide, a boss simply huge). */
+const RANK_STYLE: Record<
+  ZombieRank,
+  { color: number; scale: { x: number; y: number; z: number } }
+> = {
+  walker: { color: 0x8a9a7a, scale: { x: 1, y: 1, z: 1 } },
+  runner: { color: 0xa0a070, scale: { x: 0.82, y: 1.08, z: 0.82 } },
+  spitter: { color: 0x9cff3a, scale: { x: 0.92, y: 1.15, z: 0.92 } },
+  brute: { color: 0x6f5a4a, scale: { x: 1.3, y: 1.2, z: 1.3 } },
+  tank: { color: 0x555a50, scale: { x: 1.75, y: 1.35, z: 1.75 } },
+  iceZombie: { color: 0xaee0ff, scale: { x: 1.05, y: 1.15, z: 1.05 } },
+  boss: { color: 0xff5a1f, scale: { x: 2.2, y: 2.6, z: 2.2 } },
 };
 
 const DEAD_TINT = new Color(0x3a3030);
@@ -175,12 +182,30 @@ function jitterColor(hex: number, variance: number, out: Color): Color {
   return out.setHSL(h, hslScratch.s, l);
 }
 
-const bodyGeometry = new CapsuleGeometry(
-  ZOMBIE_CAPSULE.radius,
-  ZOMBIE_CAPSULE.halfHeight * 2,
-  4,
-  8
-);
+/** S1: a torso plus two arm capsules merged into one geometry, so every rank's body is still a
+ *  single InstancedMesh draw call - proportion differences come entirely from each rank's own
+ *  non-uniform scale (RANK_STYLE), not from swapping geometry per rank. */
+function buildZombieBodyGeometry(): BufferGeometry {
+  const torsoRadius = ZOMBIE_CAPSULE.radius * 0.9;
+  const torsoHalfHeight = ZOMBIE_CAPSULE.halfHeight * 0.85;
+  const torso = new CapsuleGeometry(torsoRadius, torsoHalfHeight * 2, 4, 8);
+
+  const armRadius = ZOMBIE_CAPSULE.radius * 0.24;
+  const armHalfLength = ZOMBIE_CAPSULE.halfHeight * 0.55;
+  const armOffsetX = torsoRadius + armRadius + 0.03;
+  const armOffsetY = torsoHalfHeight * 0.3;
+
+  const leftArm = new CapsuleGeometry(armRadius, armHalfLength * 2, 2, 6);
+  leftArm.translate(-armOffsetX, armOffsetY, 0);
+  const rightArm = new CapsuleGeometry(armRadius, armHalfLength * 2, 2, 6);
+  rightArm.translate(armOffsetX, armOffsetY, 0);
+
+  const merged = mergeGeometries([torso, leftArm, rightArm], false);
+  if (!merged) throw new Error('failed to merge zombie body geometry');
+  return merged;
+}
+
+const bodyGeometry = buildZombieBodyGeometry();
 const headGeometry = new SphereGeometry(0.2, 8, 6);
 /**
  * B7: every zombie is one instance in two InstancedMeshes (body, head), so a horde of
@@ -248,14 +273,14 @@ export class ZombieInstances {
         this.bodies.setColorAt(i, this.baseColor[i]);
         this.heads.setColorAt(i, this.baseColor[i]);
       }
-      const s = RANK_STYLE[z.rank].scale;
+      const style = RANK_STYLE[z.rank].scale;
       let scaleMul = 1;
       z.getPosition(this.position);
       const yaw = Math.atan2(z.facing.x, z.facing.z);
       this.facingQ.setFromAxisAngle(this.up, yaw);
       if (z.state === 'dead') {
         this.quaternion.copy(this.facingQ).multiply(this.lieDownQ);
-        this.position.y -= ZOMBIE_CAPSULE.halfHeight * s * 0.8;
+        this.position.y -= ZOMBIE_CAPSULE.halfHeight * style.y * 0.8;
         if (this.deadFade[i] < 1) {
           this.deadFade[i] = Math.min(1, this.deadFade[i] + 0.05);
           this.color.copy(this.baseColor[i]).lerp(DEAD_TINT, this.deadFade[i]);
@@ -286,7 +311,7 @@ export class ZombieInstances {
           scaleMul = 1 + pulse * 0.12;
         }
       }
-      this.scale.set(s * scaleMul, s * scaleMul, s * scaleMul);
+      this.scale.set(style.x * scaleMul, style.y * scaleMul, style.z * scaleMul);
       this.matrix.compose(this.position, this.quaternion, this.scale);
       this.bodies.setMatrixAt(i, this.matrix);
 
@@ -296,7 +321,7 @@ export class ZombieInstances {
         // Head sits on top of the capsule in local space; rotate with the body.
         this.position.addScaledVector(
           this.up.clone().applyQuaternion(this.quaternion),
-          (ZOMBIE_CAPSULE.halfHeight + ZOMBIE_CAPSULE.radius + 0.05) * s
+          (ZOMBIE_CAPSULE.halfHeight + ZOMBIE_CAPSULE.radius + 0.05) * style.y
         );
         this.matrix.compose(this.position, this.quaternion, this.scale);
         this.heads.setMatrixAt(i, this.matrix);

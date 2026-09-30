@@ -7,6 +7,20 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - S1: Art pass - zombie models
+
+- **S1** Replaced the placeholder capsule+sphere zombie body with a merged torso+arms silhouette
+  (`buildZombieBodyGeometry()`, `mergeGeometries` from three's `BufferGeometryUtils`) and gave
+  each rank its own non-uniform proportions instead of a single uniform scale factor
+  (`RANK_STYLE.scale: {x, y, z}` in `placeholders.ts`) - runners are leaner and taller, spitters
+  tall and thin, brutes bulky, tanks squat and wide, the boss towering. Still exactly two
+  instanced draw calls for the whole horde (`bodies`, `heads`), unchanged from I5 - every rank
+  shares the same geometry and is differentiated purely by per-instance transform and colour, so
+  the draw-call budget doesn't regress. The Rapier collider size is unaffected (fixed per rank,
+  independent of the visual scale), so this is purely a cosmetic change. Verified in a full-density
+  sandbox horde: ranks are visually distinguishable at range by both silhouette proportion and
+  colour (e.g. the boss towers over a walker from 20m+ away).
+
 ## Unreleased - R4: Physical Garage - multi-zone placement choice
 
 - **R4** Some parts are now valid in more than one snap zone. The one such part today, the
