@@ -10,6 +10,20 @@ describe('L3/L4 car cosmetics on the placeholder car', () => {
     expect(car.driver.children.length).toBeGreaterThan(0);
   });
 
+  it('S2: the body and every wheel are one merged Mesh each, more detailed than a plain box/cylinder', () => {
+    const car = buildPlaceholderCar(DEFAULT_CONFIG.vehicle);
+    // a plain BoxGeometry has 24 vertices (4 unique per face x 6 faces); the merged hood/trunk/
+    // spoiler body should have meaningfully more, while still being exactly one Mesh (so
+    // CarDamageView's single-material tint and the cosmetics' single-body lookup keep working).
+    expect(car.body.geometry.attributes.position.count).toBeGreaterThan(24);
+    expect(car.wheels).toHaveLength(4);
+    for (const wheel of car.wheels) {
+      // a plain 18-segment cylinder has (18+1)*2 + 18*2 = 74 vertices; the merged tire+hub
+      // should have more, from the extra hub-cap geometry.
+      expect(wheel.geometry.attributes.position.count).toBeGreaterThan(74);
+    }
+  });
+
   it('setBumperStyle swaps the bumper without duplicating it', () => {
     const car = buildPlaceholderCar(DEFAULT_CONFIG.vehicle);
     car.setBumperStyle('bumper_chrome');

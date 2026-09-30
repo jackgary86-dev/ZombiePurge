@@ -54,13 +54,54 @@ export interface CarView {
   setEngineType(optionId: string): void;
 }
 
+/**
+ * S2: the chassis slab plus a rear spoiler on two struts - a single merged geometry so `body`
+ * stays one Mesh (cosmetics/damage tinting still key off it unchanged). The spoiler sits just
+ * past the rear face, the way the exhaust/bumper cosmetics already do, so it can't collide with
+ * any cosmetic part's own fixed attachment point (bumper at he.z+, doors at ±he.x, the roofline
+ * stripe decal at he.y+). Earlier revisions of this also added a hood/trunk ridge sitting flush
+ * against the slab's own top surface - dropped after verification showed it caused shadow-acne
+ * (a dark banding artifact from two near-coincident surfaces fighting in the shadow map), for a
+ * bump that was mostly hidden inside the slab's own silhouette anyway.
+ */
+function buildCarBodyGeometry(he: { x: number; y: number; z: number }): BufferGeometry {
+  const parts: BufferGeometry[] = [new BoxGeometry(he.x * 2, he.y * 2, he.z * 2)];
+
+  const wing = new BoxGeometry(he.x * 1.4, 0.05, 0.16);
+  wing.translate(0, he.y * 1.1, -he.z - 0.12);
+  parts.push(wing);
+  for (const sign of [-1, 1]) {
+    const strut = new BoxGeometry(0.05, he.y * 0.35, 0.05);
+    strut.translate(sign * he.x * 0.55, he.y * 0.92, -he.z - 0.12);
+    parts.push(strut);
+  }
+
+  const merged = mergeGeometries(parts, false);
+  if (!merged) throw new Error('failed to merge car body geometry');
+  return merged;
+}
+
+/** S2: a smoother tire plus a slightly wider hub cap, still one merged geometry per wheel so
+ *  `car.wheels` stays an array of plain Mesh (L8's tire-trim cosmetics still attach as children
+ *  the same way). The hub is intentionally a hair wider than the tire so its rim edge reads as
+ *  a visible ring on both sides for the stock look, before any tire-style cosmetic is applied. */
+function buildWheelGeometry(radius: number): BufferGeometry {
+  const width = 0.3;
+  const tire = new CylinderGeometry(radius, radius, width, 24);
+  const hub = new CylinderGeometry(radius * 0.4, radius * 0.4, width + 0.02, 12);
+  const merged = mergeGeometries([tire, hub], false);
+  if (!merged) throw new Error('failed to merge wheel geometry');
+  merged.rotateZ(Math.PI / 2);
+  return merged;
+}
+
 export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
   const he = cfg.chassisHalfExtents;
   const group = new Group();
   group.name = 'car';
 
   const body = new Mesh(
-    new BoxGeometry(he.x * 2, he.y * 2, he.z * 2),
+    buildCarBodyGeometry(he),
     new MeshStandardMaterial({ color: 0xc8402e, roughness: 0.5, metalness: 0.2 })
   );
   body.castShadow = true;
@@ -96,8 +137,7 @@ export function buildPlaceholderCar(cfg: VehicleConfig): CarView {
   syncDecalStyle(group, 'decal_none', he);
   syncEngineType(group, 'engine_stock', he);
 
-  const wheelGeometry = new CylinderGeometry(cfg.wheels.radius, cfg.wheels.radius, 0.3, 18);
-  wheelGeometry.rotateZ(Math.PI / 2);
+  const wheelGeometry = buildWheelGeometry(cfg.wheels.radius);
   const wheelMaterial = new MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
   const wheels = [0, 1, 2, 3].map(() => {
     const wheel = new Mesh(wheelGeometry, wheelMaterial);

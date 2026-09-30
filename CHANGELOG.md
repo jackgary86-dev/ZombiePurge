@@ -7,6 +7,23 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - S2: Art pass - player car model
+
+- **S2** Replaced the plain box+cylinder placeholder car body/wheels with a merged low-poly
+  model: the chassis slab now carries a rear spoiler on two struts (`buildCarBodyGeometry()`),
+  and every wheel is a smoother tire plus a slightly wider hub cap (`buildWheelGeometry()`) -
+  both still exactly one `Mesh` each (`body`, and each of the four `wheels`), so every system
+  built on top of the old model keeps working unchanged: damage tinting/dents (I3) still key off
+  `body.material`, every cosmetic option (paint, bumper, doors, decals, tires, engine exhaust -
+  L1/L2/L3/L6/L7/L8/N2) still attaches the same way since it was always positioned from the
+  vehicle config's own `chassisHalfExtents`, never from the body's actual geometry, and weapon
+  mounts (roof/front/rear) are unaffected for the same reason. Physics collider is unchanged -
+  visual only, per the ticket's own scope. An earlier revision of the body also added a hood and
+  trunk ridge sitting flush against the chassis slab's own top surface; dropped after an in-game
+  Playwright pass turned up shadow-acne (a dark banding artifact from two very-close-together
+  surfaces fighting in the shadow map) for a bump that was mostly hidden inside the slab's
+  existing silhouette anyway.
+
 ## Unreleased - S1: Art pass - zombie models
 
 - **S1** Replaced the placeholder capsule+sphere zombie body with a merged torso+arms silhouette
