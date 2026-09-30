@@ -428,6 +428,7 @@ export function collectConfigProblems(config: GameConfig): string[] {
         'industrialCity',
         'frozenForest',
         'quarantineLab',
+        'slaughterRoad',
       ].includes(map.generator)
     ) {
       problems.push(`maps[${i}].generator "${map.generator}" is unknown`);
@@ -506,6 +507,48 @@ export function collectConfigProblems(config: GameConfig): string[] {
       positive(map.music.baseHz, `maps[${i}].music.baseHz`, problems);
       if (!['calm', 'tense', 'dread'].includes(map.music.mood)) {
         problems.push(`maps[${i}].music.mood "${map.music.mood}" is unknown`);
+      }
+    }
+    if (map.spawnerTuning) {
+      const t = map.spawnerTuning;
+      if (t.spawnMinDistance !== undefined) {
+        positive(t.spawnMinDistance, `maps[${i}].spawnerTuning.spawnMinDistance`, problems);
+      }
+      if (t.spawnMaxDistance !== undefined) {
+        positive(t.spawnMaxDistance, `maps[${i}].spawnerTuning.spawnMaxDistance`, problems);
+      }
+      if (
+        t.spawnMinDistance !== undefined &&
+        t.spawnMaxDistance !== undefined &&
+        t.spawnMinDistance >= t.spawnMaxDistance
+      ) {
+        problems.push(
+          `maps[${i}].spawnerTuning.spawnMaxDistance must be greater than spawnMinDistance`
+        );
+      }
+      if (t.despawnDistance !== undefined) {
+        positive(t.despawnDistance, `maps[${i}].spawnerTuning.despawnDistance`, problems);
+      }
+      if (t.viewHalfAngle !== undefined) {
+        positive(t.viewHalfAngle, `maps[${i}].spawnerTuning.viewHalfAngle`, problems);
+      }
+      if (t.spawnsPerSecond !== undefined) {
+        positive(t.spawnsPerSecond, `maps[${i}].spawnerTuning.spawnsPerSecond`, problems);
+      }
+      if (t.attemptsPerSpawn !== undefined) {
+        positive(t.attemptsPerSpawn, `maps[${i}].spawnerTuning.attemptsPerSpawn`, problems);
+      }
+      if (t.clusterMin !== undefined) {
+        positive(t.clusterMin, `maps[${i}].spawnerTuning.clusterMin`, problems);
+      }
+      if (t.clusterMax !== undefined) {
+        positive(t.clusterMax, `maps[${i}].spawnerTuning.clusterMax`, problems);
+      }
+      if (t.clusterMin !== undefined && t.clusterMax !== undefined && t.clusterMin > t.clusterMax) {
+        problems.push(`maps[${i}].spawnerTuning.clusterMax must not be less than clusterMin`);
+      }
+      if (t.clusterRadius !== undefined) {
+        positive(t.clusterRadius, `maps[${i}].spawnerTuning.clusterRadius`, problems);
       }
     }
   });

@@ -651,6 +651,38 @@ export const DEFAULT_CONFIG: GameConfig = {
       ],
     },
     {
+      id: 'slaughterRoad',
+      name: 'Slaughtermode: The Gutter',
+      size: 2200,
+      fogDistance: 220,
+      zombieRanks: ['walker', 'runner', 'spitter', 'brute'],
+      generator: 'slaughterRoad',
+      seed: 77,
+      chunkSize: 2200,
+      spawnDensity: 1,
+      music: { baseHz: 100, mood: 'dread' },
+      // A chain of narrow, overlapping zones the width of the road itself (not the wider
+      // map bounds) - every spawn attempt lands on the drivable strip, never off in the dead
+      // space beyond the walls that flank it.
+      spawnZones: Array.from({ length: 15 }, (_, i) => ({
+        x: 0,
+        z: -1000 + i * 140,
+        radius: 6,
+        weight: 1,
+      })),
+      spawnerTuning: {
+        spawnMinDistance: 40,
+        spawnMaxDistance: 260,
+        despawnDistance: 320,
+        spawnsPerSecond: 30,
+        attemptsPerSpawn: 10,
+        clusterMin: 6,
+        clusterMax: 14,
+        clusterRadius: 6,
+      },
+      objectives: [{ kind: 'reachExit', x: 0, z: 1085, label: 'Reach the end of the gutter' }],
+    },
+    {
       id: 'suburbs',
       name: 'Map 1: Suburbs',
       size: 900,

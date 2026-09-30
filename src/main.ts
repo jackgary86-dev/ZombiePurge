@@ -88,6 +88,8 @@ import {
   buildIndustrialCityMeshes,
   buildQuarantineLabColliders,
   buildQuarantineLabMeshes,
+  buildSlaughterRoadColliders,
+  buildSlaughterRoadMeshes,
   buildSuburbsColliders,
   buildSuburbsMeshes,
   ChunkStreamer,
@@ -99,6 +101,7 @@ import {
   generateIndustrialCity,
   generateOpenField,
   generateQuarantineLab,
+  generateSlaughterRoad,
   generateSuburbs,
   greyboxSpawn,
   presetFor,
@@ -107,6 +110,7 @@ import {
 } from './game/world';
 import { collectPickups, resetPickups, type PickupState } from './game/world/Pickups';
 import {
+  DEFAULT_SPAWNER,
   DEFAULT_ZOMBIE_AI,
   HordeSpawner,
   ProjectileSystem,
@@ -151,6 +155,9 @@ const SKIP_MENUS = hashParams.has('drive') || AUTOPLAY;
 const MAP_OVERRIDE = hashParams.get('map');
 /** Set across a map-switch reload so boot() can land back on the story flow (F2/J3/J5). */
 const STORY_SLOT = hashParams.get('story');
+/** Q1: set across Slaughtermode's own map-switch reload so boot() resumes straight into the
+ *  garage instead of stranding the player back on the main menu. */
+const SLAUGHTER_REQUESTED = hashParams.has('slaughter');
 /** After a wreck the car is towed back with this much HP; the rest costs coins to repair. */
 const TOW_HP_FRACTION = 0.25;
 const LAST_MODE_KEY = 'zombiepurge.lastMode';
@@ -226,6 +233,12 @@ async function boot(): Promise<void> {
     scene.add(buildQuarantineLabMeshes(layout));
     roads = layout.roads;
     spawn = new Vector3(layout.spawn.x, layout.spawn.y, layout.spawn.z);
+  } else if (map.generator === 'slaughterRoad') {
+    const layout = generateSlaughterRoad(map.seed, map.size);
+    buildSlaughterRoadColliders(physics, layout);
+    scene.add(buildSlaughterRoadMeshes(layout));
+    roads = layout.roads;
+    spawn = new Vector3(layout.spawn.x, layout.spawn.y, layout.spawn.z);
   } else {
     const layout = createGreyboxLayout(map.size);
     buildGreyboxColliders(physics, layout);
@@ -251,7 +264,13 @@ async function boot(): Promise<void> {
   const pool = new ZombiePool(physics, ZOMBIE_CAPACITY, cfg.zombies);
   const zombieInstances = new ZombieInstances(ZOMBIE_CAPACITY, cfg.zombieMotion);
   scene.add(zombieInstances.bodies, zombieInstances.heads);
-  const spawner = new HordeSpawner(pool, map);
+  // Q1: Slaughtermode (and any future map) can override the default open-map pacing via its
+  // own map.spawnerTuning; every other map omits it and keeps DEFAULT_SPAWNER untouched.
+  const spawner = new HordeSpawner(
+    pool,
+    map,
+    map.spawnerTuning ? { ...DEFAULT_SPAWNER, ...map.spawnerTuning } : undefined
+  );
   const projectiles = new ProjectileSystem(64);
   const projectileViews = new ProjectileViews(64);
   scene.add(...projectileViews.meshes);
@@ -293,6 +312,8 @@ async function boot(): Promise<void> {
     .sort((a, b) => a.storyIndex - b.storyIndex);
   const storyMapIds = storyMaps.map((m) => m.id);
   let inStoryMode = false;
+  /** Q1: Slaughtermode - a single map, no save slots, always banks real coins. */
+  let inSlaughterMode = false;
   let activeSlotId: string | null = null;
   let storyWallet: Wallet | null = null;
   let storyGarage: Garage | null = null;
@@ -427,10 +448,14 @@ async function boot(): Promise<void> {
     onLeave: () => garageMenu.close(),
   };
   const mainMenu = createMainMenu({
-    canContinue: () => localStorage.getItem(LAST_MODE_KEY) === 'sandbox',
-    onContinue: () => beginSandbox(sandbox),
+    canContinue: () => ['sandbox', 'slaughter'].includes(localStorage.getItem(LAST_MODE_KEY) ?? ''),
+    onContinue: () => {
+      if (localStorage.getItem(LAST_MODE_KEY) === 'slaughter') beginSlaughter();
+      else beginSandbox(sandbox);
+    },
     onStory: () => menus.push(saveSlotsScreen),
     onSandbox: () => menus.push(sandboxScreen),
+    onSlaughter: () => beginSlaughter(),
     onGarage: () => menus.push(garageScreen),
     onSettings: () => menus.push(settingsScreen),
     onControls: () => menus.push(controlsScreen),
@@ -716,6 +741,29 @@ async function boot(): Promise<void> {
     menus.reset(garageScreen);
   }
 
+  /** Q1: build your car, then drive the gauntlet - one map, real coins, no options screen. */
+  function beginSlaughter(): void {
+    inStoryMode = false;
+    inSlaughterMode = true;
+    objectiveTracker = null;
+    localStorage.setItem(LAST_MODE_KEY, 'slaughter');
+    if (map.id !== 'slaughterRoad') {
+      location.hash = '#map=slaughterRoad&slaughter=1';
+      location.reload();
+      return;
+    }
+    spawner.density = map.spawnDensity ?? 1;
+    nightMode = false;
+    noFail = false;
+    applySettings(settings.get());
+    headlights.setOn(nightMode);
+    activeWallet = wallet;
+    coins = wallet;
+    garage = realGarage;
+    garageMenu.setGarage(garage, coins);
+    menus.reset(garageScreen);
+  }
+
   function startRun(): void {
     menus.reset(null);
     hud.setVisible(true);
@@ -730,7 +778,9 @@ async function boot(): Promise<void> {
     stats = new RunStats(cfg.rewards);
     resetPickups(pickupSpots);
     objectiveTracker =
-      inStoryMode && map.objectives?.length ? new ObjectiveTracker(map.objectives) : null;
+      (inStoryMode || inSlaughterMode) && map.objectives?.length
+        ? new ObjectiveTracker(map.objectives)
+        : null;
     if (gun) gun.heat = 0;
     nitro.refill();
     rocketViews.syncRockets([]);
@@ -771,12 +821,16 @@ async function boot(): Promise<void> {
     loop.setState(GameState.Playing);
   }
 
-  function endRun(title: string): void {
+  /** `died` picks the bank-on-death share vs. keeping every coin; only Slaughtermode's own
+   *  "reached the end" ending passes false - a wreck/dry-tank ending (any mode) still passes
+   *  the default true. */
+  function endRun(title: string, died = true): void {
     const summary = stats.summary();
-    // Sandbox's "infinite money" free-roam banks nothing; story mode always banks for real,
-    // regardless of whatever the (unrelated) sandbox infinite-money flag last happened to be.
-    const noBank = !inStoryMode && sandbox.infiniteMoney;
-    const kept = noBank ? 0 : activeWallet.bankRun(summary.coinsTotal, true);
+    // Sandbox's "infinite money" free-roam banks nothing; story mode and Slaughtermode always
+    // bank for real, regardless of whatever the (unrelated) sandbox infinite-money flag last
+    // happened to be.
+    const noBank = !inStoryMode && !inSlaughterMode && sandbox.infiniteMoney;
+    const kept = noBank ? 0 : activeWallet.bankRun(summary.coinsTotal, died);
     if (inStoryMode && activeSlotId) addPlayTime(activeSlotId, summary.durationSeconds);
     document.exitPointerLock?.();
     // Towed home: some HP comes back for free, the rest is a repair bill.
@@ -790,6 +844,7 @@ async function boot(): Promise<void> {
 
   function enterMainMenu(): void {
     inStoryMode = false;
+    inSlaughterMode = false;
     document.exitPointerLock?.();
     loop.setState(GameState.MainMenu);
     hud.setVisible(false);
@@ -1037,8 +1092,10 @@ async function boot(): Promise<void> {
     stats.trackPosition(senses.carPosition, deltaTime);
     slowMo.trigger(killsThisTick);
 
-    if (objectiveTracker?.isComplete()) completeStoryMap();
-    else if (car.isDestroyed()) endRun('WRECKED');
+    if (objectiveTracker?.isComplete()) {
+      if (inStoryMode) completeStoryMap();
+      else endRun('ROAD CLEARED', false); // Q1: Slaughtermode reached the end - keep every coin
+    } else if (car.isDestroyed()) endRun('WRECKED');
     else if (tank.isEmpty() && senses.carSpeed < 0.5) endRun('OUT OF GAS');
   });
 
@@ -1240,6 +1297,9 @@ async function boot(): Promise<void> {
     enterStorySlot(STORY_SLOT);
     menus.push(storyMapSelectScreen);
     beginStoryRun(MAP_OVERRIDE ?? map.id);
+  } else if (SLAUGHTER_REQUESTED) {
+    // Landed back here after beginSlaughter()'s own map-switch reload.
+    beginSlaughter();
   } else {
     enterMainMenu();
   }

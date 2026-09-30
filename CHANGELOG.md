@@ -7,6 +7,28 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - Q1: Slaughtermode
+
+- **Q1** A third game mode, alongside Story and Sandbox: build your car in the Garage, then
+  drive a single long (2.2 km), narrow (12 m), dead-straight road walled in on both sides -
+  no branches, no navigation, just a continuous stream of zombies to kill. New generator
+  `slaughterRoad` (`SlaughterRoadMap.ts`), following the same deterministic kit-piece pattern
+  as the other story maps but with the road's whole length flanked by walls instead of the
+  usual outer-perimeter-only bounds, so both the car and the horde stay confined to the strip.
+  New `MapConfig.spawnerTuning` lets a map override `HordeSpawner`'s default open-map pacing
+  (tighter min/max spawn distance, a much higher spawn rate, bigger clusters) without changing
+  the spawner itself; Slaughtermode's own map pairs that with a chain of narrow, overlapping
+  `spawnZones` running the road's length so every spawn attempt lands on the drivable strip,
+  not the dead space beyond the walls. Reaching the far end (a `reachExit` objective, reused
+  from the story-mode system but independent of its save-slot bookkeeping) ends the run banking
+  every coin, unlike a wreck's usual 50% cut (`endRun` now takes a `died` flag); wrecking or
+  running dry along the way still ends it the normal way. Always banks real coins regardless
+  of Sandbox's own infinite-money flag, which a naive mode check would otherwise have kept
+  reading. Verified with a new `SlaughterRoadMap.test.ts` (determinism, road/wall geometry,
+  collider placement) and a headless Playwright pass through the real UI (Garage entry, one
+  click and no confusing reload-then-stuck-at-the-main-menu detour, a full drive into a packed
+  horde, a wreck, and a correct Results screen).
+
 ## Unreleased - P1: Vehicle rollover / flip stability
 
 - **P1** The car no longer flips onto its side/roof from ordinary driving - hard cornering,

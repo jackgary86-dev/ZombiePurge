@@ -158,7 +158,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy/upgrade the regular Engine tier ladder (D3/N1) while an engine type is equipped: both bonuses stack - top speed/acceleration are higher than either one alone
 - [ ] With the V8 equipped, ram a zombie or wall: the car feels heavier/punchier than stock; with Electric equipped, it feels lighter - the `acceleration` stat itself (how fast 0-to-top-speed feels) stays consistent with what the Engine Tuning slider and tier cards show, regardless of which type is equipped
 
-## M8 – Vehicle & Garage Overhaul (in progress: P1)
+## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1)
 
 - [ ] Corner hard, clip a curb, or take a glancing zombie hit: the car leans but no longer
       tips onto its side/roof from ordinary driving
@@ -166,6 +166,19 @@ Tick items in the PR that closes the milestone.
       flip - the stability assist raises the threshold, it doesn't remove flipping entirely
 - [ ] Flip it anyway (drive into a ramp edge sideways hard enough) and press R: it still
       rights itself exactly as before
+- [ ] Main menu shows a "Slaughtermode" button alongside Story Mode and Sandbox; picking it
+      goes straight to the Garage (one click, no detour back to the main menu)
+- [ ] The Garage works exactly as normal in Slaughtermode - buy/equip anything, real coins
+- [ ] DRIVE: a single long, narrow, straight road walled in on both sides, no side routes,
+      packed with zombies almost immediately - the HUD's zombie count sits near the map's
+      full budget (200) from the start
+- [ ] Kill your way down the road: coins/kills tick up exactly like any other mode
+- [ ] Wreck or run dry partway down: the usual WRECKED/OUT OF GAS results screen, banking
+      only the normal share of that run's coins (same as any other mode)
+- [ ] Reach the far end (or use `#debug`'s `tp 0 1085` to jump there): a "ROAD CLEARED"
+      results screen instead, banking every coin from the run - not the reduced wreck share
+- [ ] Quit to the main menu and pick "Continue": it resumes Slaughtermode directly (same as
+      Sandbox's own Continue), not Sandbox's last map
 
 ### Known quirks (non-blocking)
 
