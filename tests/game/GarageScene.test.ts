@@ -38,6 +38,19 @@ describe('R1 Garage room + avatar view', () => {
     expect(endWalls).toHaveLength(2);
   });
 
+  it('S3: dresses the room with trim, light fixtures, floor markings, and a garage door - without adding any more walls/floors', () => {
+    const group = buildGarageRoom(CFG);
+    const dressing = group.getObjectByName('garage-room-dressing')!;
+    expect(dressing).toBeDefined();
+    expect(dressing.children.filter((c) => c.name === 'room-trim').length).toBe(4);
+    expect(dressing.children.filter((c) => c.name === 'light-fixture').length).toBeGreaterThan(0);
+    expect(dressing.children.filter((c) => c.name === 'floor-marking').length).toBe(4);
+    expect(dressing.getObjectByName('garage-door')).toBeDefined();
+    // still exactly one floor and four walls - the dressing must not touch the room-shape tests
+    expect(group.children.filter((c) => c.name === 'wall')).toHaveLength(4);
+    expect(group.children.filter((c) => c.name === 'floor')).toHaveLength(1);
+  });
+
   it('the avatar view tracks state at the build pad world offset, facing included', () => {
     const view = new GarageAvatarView();
     view.sync({ x: 2, z: -1, facing: Math.PI / 2 }, 100, 50);

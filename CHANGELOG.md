@@ -7,6 +7,20 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - S3: Art pass - Physical Garage room
+
+- **S3** Dressed up the R1 walkable Garage room, previously a flat grey floor and four plain
+  walls: dark baseboard trim along each wall's inner face, a couple of ceiling light fixtures
+  (housing + a downward-facing glow panel), painted floor markings tracing a parking-bay outline
+  around the build pad, and a garage-door silhouette (a panel with horizontal grooves) on the
+  back wall. All of it lives in a new `garage-room-dressing` child group, purely cosmetic - no
+  colliders, and `cfg.bounds`/the avatar's own movement clamp are completely untouched, so R1's
+  walkable behaviour is unaffected. Bug found in verification: an early version of the light
+  fixture's glow panel had an unnecessary 90-degree rotation baked in, turning what should have
+  been a small downward-facing disc (a plain `CylinderGeometry`'s round caps already face up/down
+  by default) into a large disc facing the camera instead, dominating the shot from most angles.
+  Fixed by dropping the stray rotation and sizing the disc to actually fit inside its housing.
+
 ## Unreleased - S2: Art pass - player car model
 
 - **S2** Replaced the plain box+cylinder placeholder car body/wheels with a merged low-poly

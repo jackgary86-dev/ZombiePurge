@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1, S2)
+## M9 – Art pass & bug bash (in progress: S1, S2, S3)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -243,6 +243,13 @@ Tick items in the PR that closes the milestone.
       dent decals still apply correctly to the new body model
 - [ ] Equip a roof and a front weapon: both still mount and aim correctly on the new body - no
       visual clipping or misalignment from the model change
+- [ ] Enter the Garage (walk-up avatar mode): the room shows dark baseboard trim along the base
+      of the walls, a couple of ceiling light fixtures, a painted parking-bay outline on the
+      floor around the build pad, and a garage-door panel with horizontal grooves on the back
+      wall - it reads as a garage, not a bare grey box
+- [ ] Walk the avatar around the room (WASD): movement, the bounds clamp, and the camera follow
+      all behave exactly as before R1's own testing - none of the new dressing blocks movement or
+      changes the walkable area
 
 ### Known quirks (non-blocking)
 
