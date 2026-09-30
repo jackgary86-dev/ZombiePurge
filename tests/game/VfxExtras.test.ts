@@ -30,6 +30,18 @@ describe('MuzzleFlashView (I9)', () => {
     expect(view.mesh.visible).toBe(false);
   });
 
+  it('S5: also drives a secondary ring for extra punch, in the same group as the core flash', () => {
+    const view = new MuzzleFlashView(FLASH_CFG);
+    expect(view.group.children).toContain(view.mesh);
+    expect(view.group.children).toContain(view.ring);
+    expect(view.ring.visible).toBe(false);
+    view.trigger(new Vector3(1, 2, 3));
+    expect(view.ring.visible).toBe(true);
+    expect(view.ring.position.x).toBe(1);
+    view.update(0.1); // past durationSeconds
+    expect(view.ring.visible).toBe(false);
+  });
+
   it('update() before any trigger is a no-op', () => {
     const view = new MuzzleFlashView(FLASH_CFG);
     view.update(0.5);

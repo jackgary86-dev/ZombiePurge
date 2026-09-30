@@ -459,7 +459,7 @@ async function boot(): Promise<void> {
   let flamethrower: Flamethrower | null = null;
   let hammer: HammerSwing | null = null;
   const rocketViews = new RocketViews();
-  scene.add(...rocketViews.rockets, ...rocketViews.blasts);
+  scene.add(...rocketViews.rockets, ...rocketViews.blasts, ...rocketViews.shockwaves);
   let flameView: FlameView | null = null;
   let stats = new RunStats(cfg.rewards);
   const pickupSpots: PickupState[] = (map.pickups ?? []).map((p) => ({ ...p, taken: false }));
@@ -529,7 +529,7 @@ async function boot(): Promise<void> {
   const carDamage = new CarDamageView(carView.body, cfg.carDamage, cfg.vehicle);
   carView.group.add(carDamage.group);
   const muzzleFlash = new MuzzleFlashView(cfg.vfx.muzzleFlash);
-  scene.add(muzzleFlash.mesh);
+  scene.add(muzzleFlash.group);
   const skidMarks = new SkidMarkView(cfg.vfx.skidMarks);
   scene.add(skidMarks.group);
   const driveTrail = new DriveTrailView(cfg.vfx.driveTrail);
@@ -858,12 +858,12 @@ async function boot(): Promise<void> {
       const tier = tierOf(front, cfg.combat.flamethrower);
       flamethrower = flamethrower ?? new Flamethrower(pool, tier, drain);
       flamethrower.stats = tier;
-      if (flameView) scene.remove(flameView.mesh);
+      if (flameView) scene.remove(flameView.group);
       flameView = new FlameView(tier.range, tier.cone);
-      scene.add(flameView.mesh);
+      scene.add(flameView.group);
     } else {
       flamethrower = null;
-      if (flameView) scene.remove(flameView.mesh);
+      if (flameView) scene.remove(flameView.group);
       flameView = null;
     }
     if (front === 'spikes') {

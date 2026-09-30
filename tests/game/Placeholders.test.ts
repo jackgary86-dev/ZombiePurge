@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { Mesh, MeshStandardMaterial, Vector3 } from 'three';
-import { buildPlaceholderCar, HammerView, SawView, TurretView } from '../../src/game/art';
+import {
+  buildPlaceholderCar,
+  FlameView,
+  HammerView,
+  RocketViews,
+  SawView,
+  TurretView,
+} from '../../src/game/art';
 import { DEFAULT_CONFIG } from '../../src/data/defaults';
 
 describe('L3/L4 car cosmetics on the placeholder car', () => {
@@ -172,5 +179,47 @@ describe('M5 TurretView', () => {
 
     turret.setKind('machinegun');
     expect(barrels.children).toHaveLength(1);
+  });
+});
+
+describe('S5: RocketViews blast shockwave', () => {
+  it('explode() shows a blast sphere and a shockwave ring together, both fading and hiding by the end of their life', () => {
+    const views = new RocketViews();
+    expect(views.blasts[0].visible).toBe(false);
+    expect(views.shockwaves[0].visible).toBe(false);
+
+    views.explode(new Vector3(5, 0, 5), 10);
+    expect(views.blasts[0].visible).toBe(true);
+    expect(views.shockwaves[0].visible).toBe(true);
+    expect(views.shockwaves[0].position.x).toBe(5);
+
+    views.update(0.5); // past the 0.45s blast lifetime
+    expect(views.blasts[0].visible).toBe(false);
+    expect(views.shockwaves[0].visible).toBe(false);
+  });
+
+  it('reuses the oldest blast slot once every slot is in use, without throwing', () => {
+    const views = new RocketViews(12, 2);
+    views.explode(new Vector3(), 5);
+    views.update(0.01);
+    views.explode(new Vector3(1, 0, 0), 5);
+    views.update(0.01);
+    expect(() => views.explode(new Vector3(2, 0, 0), 5)).not.toThrow();
+  });
+});
+
+describe('S5: FlameView hot core', () => {
+  it('shows/hides its outer cone and hotter inner core together, both riding in the same group', () => {
+    const flame = new FlameView(10, 0.4);
+    expect(flame.group.children).toContain(flame.mesh);
+    expect(flame.group.children).toContain(flame.core);
+    expect(flame.group.visible).toBe(false);
+
+    flame.sync(true, new Vector3(0, 1, 0), new Vector3(0, 0, 1));
+    expect(flame.group.visible).toBe(true);
+    expect(flame.group.position.y).toBe(1);
+
+    flame.sync(false, new Vector3(), new Vector3(0, 0, 1));
+    expect(flame.group.visible).toBe(false);
   });
 });

@@ -30,10 +30,15 @@ export class BloodSplatterView {
         oldest.geometry.dispose();
         (oldest.material as MeshBasicMaterial).dispose();
       }
+      // S5: a random size and a slightly squashed, non-square aspect per splatter, plus a
+      // darker-to-brighter colour jitter, so a build-up of them reads as irregular spatter
+      // rather than a grid of identical uniform decals.
+      const shade = 0x40 + Math.floor(Math.random() * 0x30);
+      const color = (shade << 16) | 0x0a0a;
       const mesh = new Mesh(
         this.geometry,
         new MeshBasicMaterial({
-          color: 0x5c0b0b,
+          color,
           transparent: true,
           opacity: 0.55 + Math.random() * 0.3,
           depthWrite: false,
@@ -46,6 +51,8 @@ export class BloodSplatterView {
         he.z * (0.2 + Math.random() * 0.85)
       );
       mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      const size = 0.7 + Math.random() * 0.8;
+      mesh.scale.set(size, size * (0.6 + Math.random() * 0.6), 1);
       this.group.add(mesh);
       this.splatters.push(mesh);
     }
