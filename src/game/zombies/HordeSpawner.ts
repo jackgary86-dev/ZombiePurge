@@ -98,7 +98,23 @@ export class HordeSpawner {
       ) {
         const a = this.rng() * Math.PI * 2;
         const r = Math.sqrt(this.rng()) * this.cfg.clusterRadius;
-        const spot = { x: centre.x + Math.sin(a) * r, y: 0, z: centre.z + Math.cos(a) * r };
+        let mx = centre.x + Math.sin(a) * r;
+        let mz = centre.z + Math.cos(a) * r;
+        // T2: an unclamped cluster offset can push a member outside the zone that validated
+        // the centre - harmless slack on a wide zone, but on a narrow one (e.g. Slaughtermode's
+        // road-width zones, clusterRadius == zone radius) it lands the zombie beyond the map's
+        // own flanking geometry. Pull it back onto the zone's edge rather than outside it.
+        if (centre.zone) {
+          const dx = mx - centre.zone.x;
+          const dz = mz - centre.zone.z;
+          const d = Math.hypot(dx, dz);
+          if (d > centre.zone.radius) {
+            const scale = centre.zone.radius / d;
+            mx = centre.zone.x + dx * scale;
+            mz = centre.zone.z + dz * scale;
+          }
+        }
+        const spot = { x: mx, y: 0, z: mz };
         if (!this.pool.spawn(this.pickRank(), spot)) return { spawned, despawned };
         this.spawnBudget -= 1;
         spawned++;
@@ -124,15 +140,16 @@ export class HordeSpawner {
   pickSpawnPoint(
     view: SpawnerView,
     ignoreView = false
-  ): { x: number; y: number; z: number } | null {
+  ): { x: number; y: number; z: number; zone: SpawnZone | null } | null {
     const half = this.map.size / 2 - 5;
     const zones = (this.map.spawnZones ?? []).filter((z) => z.weight > 0);
     for (let i = 0; i < this.cfg.attemptsPerSpawn; i++) {
       let x: number;
       let z: number;
+      let zone: SpawnZone | null = null;
       if (zones.length > 0) {
         // Weighted zone, then a random point inside it (uniform over the disc).
-        const zone = this.pickZone(zones);
+        zone = this.pickZone(zones);
         const a = this.rng() * Math.PI * 2;
         const r = Math.sqrt(this.rng()) * zone.radius;
         x = zone.x + Math.sin(a) * r;
@@ -150,7 +167,7 @@ export class HordeSpawner {
       const dist = offset.length();
       if (dist < this.cfg.spawnMinDistance || dist > this.cfg.spawnMaxDistance) continue;
       if (!ignoreView && this.isInViewCone(offset, view.viewForward, dist)) continue;
-      return { x, y: 0, z };
+      return { x, y: 0, z, zone };
     }
     return null;
   }

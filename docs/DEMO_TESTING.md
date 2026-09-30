@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1 done)
+## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T2 done)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -303,6 +303,14 @@ Tick items in the PR that closes the milestone.
       combined top speed, no jitter or runaway velocity
 - [ ] Drive through a cluster of several zombies at once: each one is hit and damaged
       independently in the same step, no missed or double-counted impacts
+- [ ] Play Slaughtermode (The Gutter) for a stretch and watch the horde as it spawns ahead:
+      every zombie lands on the drivable strip, none appear stranded inside or beyond the
+      flanking walls
+- [ ] Let a zombie notice the car, then drive away far enough to break line of sight/range: it
+      gives up and returns to idle/wander rather than chasing forever
+- [ ] Run over a zombie, then keep driving through where its corpse landed: the corpse can still
+      be nudged by the car for a few seconds (ragdoll), but never damages the car or gets
+      re-killed for coins/score
 
 ### Known quirks (non-blocking)
 

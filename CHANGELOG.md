@@ -7,6 +7,31 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - T2: Bug bash - zombie AI & spawner
+
+- **T2** Fixed a horde-spawner bug: cluster members were placed at an unclamped random offset
+  from their (validated) cluster centre, with no re-check against the zone that validated the
+  centre. Harmless slack on a wide zone (the offset is tiny next to the zone radius), but on a
+  zone as narrow as Slaughtermode's own road-width spawn zones (`spawnZones` radius == the
+  `spawnerTuning.clusterRadius` override, both 6 m, matching the drivable strip's exact
+  half-width) a meaningful fraction of cluster members landed inside or beyond the flanking
+  walls - contradicting the map's own stated design intent ("every spawn attempt lands on the
+  drivable strip, never off in the dead space beyond the walls"). `pickSpawnPoint()` now also
+  returns which zone (if any) validated the centre, and each cluster member is pulled back onto
+  that zone's edge if its offset would otherwise escape it. Added a regression test mirroring
+  Slaughtermode's own radius/clusterRadius numbers, confirmed to fail without the fix (a member
+  landing ~10 m from a 6 m-radius zone centre) and pass with it.
+- Systematically exercised the rest of the ticket's edge cases (state-machine stuck states,
+  detection-range/hearing logic at density extremes, the Slaughtermode `spawnerTuning` override
+  leaking onto other maps) by reading `ZombieAI.ts`'s full state machine and the spawner's
+  density/zone math; no other reproducible bug turned up. `alerted` always times out to `chase`
+  unconditionally, and `chase`/`attack` both re-check distance every tick and fall back
+  accordingly, so a zombie can't get stuck alerted forever or attacking empty air. A "dead"
+  corpse keeps a live physics body for its `deathLinger` window (so the car can still nudge it)
+  but all damage/knockback paths already gate on `isAlive()` - verified as intentional ragdoll
+  behaviour, not a bug. Verified via a headless driving pass across Sandbox, Suburbs (Story),
+  and Slaughtermode.
+
 ## Unreleased - T1: Bug bash - vehicle physics & handling
 
 - **T1** Fixed a flip-reset softlock: the P1 stability assist gives up correcting tilt past
