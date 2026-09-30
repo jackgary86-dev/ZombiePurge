@@ -156,6 +156,28 @@ describe('Vehicle', () => {
     expect(car.wheels.every((w) => w.grounded)).toBe(true);
   });
 
+  it('T1: flip reset also recovers a car resting on its side, not just fully upside down', () => {
+    // A hard hit or an odd-angle landing can tip the car onto its side (~75°) rather than fully
+    // over. That's well past where P1's own stability assist gives up (maxCorrectedAngle, 60° by
+    // default) but short of the 90° "upside down" threshold, so without a fix the car is stuck:
+    // not upright enough to drive, not "upside down" enough for a manual reset to fire either -
+    // a softlock.
+    const onSide = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), (Math.PI * 5) / 12);
+    car.body.setRotation({ x: onSide.x, y: onSide.y, z: onSide.z, w: onSide.w }, true);
+    car.body.setTranslation({ x: 0, y: 1.5, z: 0 }, true);
+    physics.step();
+
+    expect(car.isUpsideDown()).toBe(false); // not past 90°, so the old gate would refuse to fire
+    expect(car.needsFlipReset()).toBe(true); // but well past the assist's own recovery range
+
+    car.update({ ...NEUTRAL_INPUT, flipReset: true }, DT);
+    physics.step();
+    expect(car.needsFlipReset()).toBe(false);
+    run(physics, car, 2);
+    expect(car.isUpsideDown()).toBe(false);
+    expect(car.wheels.every((w) => w.grounded)).toBe(true);
+  });
+
   it('ignores flip reset while upright', () => {
     run(physics, car, 1);
     const before = car.getPosition();
