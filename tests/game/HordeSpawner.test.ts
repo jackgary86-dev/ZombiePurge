@@ -198,4 +198,29 @@ describe('HordeSpawner', () => {
     expect(east).toBeGreaterThan(south); // weight 3 vs 1
     expect(south).toBeGreaterThan(0);
   });
+
+  it("T2: cluster members never escape a zone as narrow as the one the centre obeyed (Slaughtermode's road-width zones)", () => {
+    // Mirrors Slaughtermode's own setup (defaults.ts): a zone radius equal to clusterRadius, so
+    // an unclamped cluster offset would push members up to 2x the zone radius from its centre -
+    // easily past the walls flanking the zone's own road-width strip.
+    const zone = { x: 0, z: 200, radius: 6, weight: 1 };
+    const map = { ...getMapConfig('greybox'), size: 2000, spawnZones: [zone] };
+    const cfg = {
+      ...DEFAULT_SPAWNER,
+      spawnMinDistance: 0,
+      spawnMaxDistance: 1000,
+      clusterMin: 6,
+      clusterMax: 14,
+      clusterRadius: 6,
+    };
+    const spawner = new HordeSpawner(pool, map, cfg, undefined, seeded(17));
+    spawner.prefill(view);
+    expect(pool.aliveCount).toBeGreaterThan(0);
+    for (const z of pool.active()) {
+      const p = z.getPosition();
+      const d = Math.hypot(p.x - zone.x, p.z - zone.z);
+      // A small epsilon for Rapier's internal float32 body-position precision, not the clamp math.
+      expect(d).toBeLessThanOrEqual(zone.radius + 1e-3);
+    }
+  });
 });
