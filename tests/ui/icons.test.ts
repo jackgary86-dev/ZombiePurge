@@ -31,6 +31,10 @@ const ALL_ICONS: IconName[] = [
   'wrench',
   'credits',
   'customize',
+  'restart',
+  'clock',
+  'volume',
+  'camera',
 ];
 
 const ALL_CATEGORIES: UpgradeCategory[] = [

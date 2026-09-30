@@ -1,8 +1,16 @@
-export function labelledRow(label: string, control: HTMLElement): HTMLLabelElement {
+/** `iconSvg` (S7, e.g. from `icon('camera', 16)`) is optional so existing rows without a good
+ *  icon match stay plain text - only prepended when given. */
+export function labelledRow(
+  label: string,
+  control: HTMLElement,
+  iconSvg?: string
+): HTMLLabelElement {
   const row = document.createElement('label');
   row.className = 'menu-row';
   const span = document.createElement('span');
-  span.textContent = label;
+  span.className = 'menu-row-label';
+  if (iconSvg) span.innerHTML = iconSvg;
+  span.append(document.createTextNode(label));
   row.append(span, control);
   return row;
 }

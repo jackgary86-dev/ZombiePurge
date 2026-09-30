@@ -135,6 +135,12 @@ describe('M3 menu screens', () => {
     expect(text).toContain('1.23 km');
     expect(text).toContain('1:35');
     expect(text).toContain('Kept7');
+    // S7: every row now carries its own I10 icon - including per-rank kill breakdown rows and
+    // Time, which previously fell through to plain text.
+    const html = results.screen.el.innerHTML;
+    expect(html).toContain('icon-kill');
+    expect(html).toContain('icon-clock');
+    expect(html).toContain('icon-distance');
 
     let resumed = 0;
     const pause = createPauseMenu({

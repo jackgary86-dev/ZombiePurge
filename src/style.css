@@ -746,6 +746,13 @@ canvas {
   gap: 10px;
 }
 
+/* S7: same icon+label layout as .menu-button-label, for a settings/labelled row's own span. */
+.menu-row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .menu-button.primary {
   background: #c8402e;
   color: #fff;
@@ -1058,4 +1065,11 @@ canvas {
   background: #f4e9d8;
   color: #14141a;
   font-weight: bold;
+}
+
+/* S7: the part's own I10 category/weapon icon, between the key-cap and the description. */
+.garage-prompt-icon {
+  display: inline-flex;
+  align-items: center;
+  color: #f4e9d8;
 }

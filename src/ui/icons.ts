@@ -33,7 +33,11 @@ export type IconName =
   | 'exit'
   | 'wrench'
   | 'credits'
-  | 'customize';
+  | 'customize'
+  | 'restart'
+  | 'clock'
+  | 'volume'
+  | 'camera';
 
 /**
  * A repeated shape (gear teeth, wheel spokes) rendered once per angle via `transform="rotate"`
@@ -92,6 +96,10 @@ const SHAPES: Record<IconName, string> = {
   wrench: `<path d="M14.5 3.5a4.5 4.5 0 0 0-5.7 5.4L3.5 14.2a2 2 0 0 0 2.8 2.8l5.3-5.3a4.5 4.5 0 0 0 5.4-5.7l-3 3-2-2z"/>`,
   credits: `<path d="M12 3.2 14.5 8.5 20.3 9.3 16.1 13.3 17.1 19 12 16.2 6.9 19 7.9 13.3 3.7 9.3 9.5 8.5z"/>`,
   customize: `<rect x="5" y="4" width="14" height="6" rx="1.5"/><path d="M9 10v3a2 2 0 0 0 2 2h0a2 2 0 0 1 2 2v5"/>`,
+  restart: `<path d="M4 4v5h5M20 20v-5h-5"/><path d="M5.6 9A8 8 0 0 1 20 12M18.4 15A8 8 0 0 1 4 12"/>`,
+  clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>`,
+  volume: `<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none"/><path d="M17 9a5 5 0 0 1 0 6M19.5 6.5a9 9 0 0 1 0 11"/>`,
+  camera: `<path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>`,
 };
 
 /** Renders an icon as a standalone inline `<svg>` string, sized `size`x`size`. */
