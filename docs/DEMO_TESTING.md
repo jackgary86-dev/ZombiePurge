@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1)
+## M9 – Art pass & bug bash (in progress: S1, S2)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -234,6 +234,15 @@ Tick items in the PR that closes the milestone.
       unchanged regardless of rank)
 - [ ] Zombies still walk/attack with the existing bob and lunge motion (I5) - the new geometry
       doesn't look stiff or broken mid-animation
+- [ ] Drive the car in Sandbox or Story mode: the body reads as a proper low-poly car (a rear
+      spoiler visible from behind) rather than a plain box, and the wheels show a visible hub cap
+- [ ] Open the Garage and cycle through paint colours, bumper/door/decal/tire styles, and engine
+      types: every cosmetic option still swaps in cleanly on the new body/wheel model, exactly as
+      before
+- [ ] Take damage until the car reaches the dented and wrecked visual stages: the tint change and
+      dent decals still apply correctly to the new body model
+- [ ] Equip a roof and a front weapon: both still mount and aim correctly on the new body - no
+      visual clipping or misalignment from the model change
 
 ### Known quirks (non-blocking)
 
