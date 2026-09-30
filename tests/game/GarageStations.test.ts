@@ -110,7 +110,7 @@ describe('R2 buy / pick up / drop interaction', () => {
   });
 
   it('drops the carried part at the avatar position on the next press, regardless of range', () => {
-    const carrying = { heldId: 'tires', dropped: [] };
+    const carrying = { heldId: 'tires', dropped: [], installed: [] };
     const farFromAnything = { avatarX: 3, avatarZ: 3, stations, range: 1.6 };
     const { state, outcome } = interact(garage, carrying, farFromAnything);
     expect(outcome).toEqual({ type: 'dropped', id: 'tires' });
@@ -119,7 +119,7 @@ describe('R2 buy / pick up / drop interaction', () => {
   });
 
   it('picks a dropped part back up, removing it from the dropped list', () => {
-    const onTheGround = { heldId: null, dropped: [{ id: 'tires', x: 3, z: 3 }] };
+    const onTheGround = { heldId: null, dropped: [{ id: 'tires', x: 3, z: 3 }], installed: [] };
     const { state, outcome } = interact(garage, onTheGround, {
       avatarX: 3,
       avatarZ: 3,
@@ -134,7 +134,7 @@ describe('R2 buy / pick up / drop interaction', () => {
   it('carrying always takes priority - never picks up a second part', () => {
     wallet.add(10000);
     garage.buy('tires');
-    const carrying = { heldId: 'something-else', dropped: [] };
+    const carrying = { heldId: 'something-else', dropped: [], installed: [] };
     const { outcome } = interact(garage, carrying, rangeCtx);
     expect(outcome).toEqual({ type: 'dropped', id: 'something-else' });
   });
@@ -180,13 +180,13 @@ describe('R2 interact preview (for the live HUD prompt)', () => {
   });
 
   it('previews a drop whenever something is carried, regardless of range', () => {
-    const carrying = { heldId: 'tires', dropped: [] };
+    const carrying = { heldId: 'tires', dropped: [], installed: [] };
     const farAway = { avatarX: 100, avatarZ: 100, stations, range: 1.6 };
     expect(previewInteract(garage, carrying, farAway)).toEqual({ type: 'drop', id: 'tires' });
   });
 
   it('previews picking a dropped part back up', () => {
-    const onGround = { heldId: null, dropped: [{ id: 'tires', x: 0, z: -7.8 }] };
+    const onGround = { heldId: null, dropped: [{ id: 'tires', x: 0, z: -7.8 }], installed: [] };
     expect(previewInteract(garage, onGround, rangeCtx)).toEqual({
       type: 'pickupDropped',
       id: 'tires',
@@ -205,5 +205,182 @@ describe('R2 interact preview (for the live HUD prompt)', () => {
     wallet.add(10000);
     const { outcome } = interact(garage, createShoppingState(), rangeCtx);
     expect(outcome).toEqual({ type: 'bought', id: 'tires' });
+  });
+});
+
+describe('R3 snapping onto the car', () => {
+  let garage: Garage;
+  let wallet: Wallet;
+  const roofZone = {
+    zone: { id: 'roof', slot: 'roof' as const, offset: { x: 0, y: 0, z: 0 }, radius: 1 },
+    x: 5,
+    z: 5,
+  };
+  const armorZone = {
+    zone: { id: 'armor_left', category: 'armor' as const, offset: { x: 0, y: 0, z: 0 }, radius: 1 },
+    x: -5,
+    z: -5,
+  };
+  const noStations: never[] = [];
+
+  beforeEach(() => {
+    resetConfig();
+    wallet = new Wallet(getConfig().rewards, null);
+    garage = new Garage(getConfig().upgrades, wallet, 1, null);
+    wallet.add(10000);
+  });
+
+  it('snaps a carried slotted part onto its zone and equips it', () => {
+    garage.buy('machinegun'); // auto-equips to 'roof' since it's free at purchase time
+    garage.unequip('roof'); // pick it back up conceptually - not carried via a station here
+    const carrying = { heldId: 'machinegun', dropped: [], installed: [] };
+    const { state, outcome } = interact(garage, carrying, {
+      avatarX: 5,
+      avatarZ: 5,
+      stations: noStations,
+      range: 1,
+      zones: [roofZone],
+    });
+    expect(outcome).toEqual({ type: 'snapped', id: 'machinegun' });
+    expect(state.heldId).toBeNull();
+    expect(garage.equippedIn('roof')?.id).toBe('machinegun');
+  });
+
+  it(
+    'bug found in verification: picking a just-bought weapon up from its own station ' +
+      'un-equips the auto-equip Garage.buy() applies, so it can snap right back into the ' +
+      'same zone instead of finding it self-occupied',
+    () => {
+      // Station and zone sit far apart, so the first interact() is unambiguously a
+      // station pickup, not a zone one - both already correctly un-equip on their own.
+      const station = { id: 'machinegun', x: 50, z: 50 };
+      garage.buy('machinegun'); // auto-equips to 'roof' since the slot was free
+      expect(garage.equippedIn('roof')?.id).toBe('machinegun');
+      const { state: afterPickup, outcome } = interact(garage, createShoppingState(), {
+        avatarX: 50,
+        avatarZ: 50,
+        stations: [station],
+        range: 1,
+        zones: [roofZone],
+      });
+      expect(outcome).toEqual({ type: 'pickedUpFromStation', id: 'machinegun' });
+      expect(garage.equippedIn('roof')).toBeNull(); // carrying it means it's off the car
+      const { outcome: snapOutcome } = interact(garage, afterPickup, {
+        avatarX: 5,
+        avatarZ: 5,
+        stations: [station],
+        range: 1,
+        zones: [roofZone],
+      });
+      expect(snapOutcome).toEqual({ type: 'snapped', id: 'machinegun' });
+    }
+  );
+
+  it('snaps a carried passive part onto its category zone and tracks it as installed', () => {
+    garage.buy('armor');
+    const carrying = { heldId: 'armor', dropped: [], installed: [] };
+    const { state, outcome } = interact(garage, carrying, {
+      avatarX: -5,
+      avatarZ: -5,
+      stations: noStations,
+      range: 1,
+      zones: [armorZone],
+    });
+    expect(outcome).toEqual({ type: 'snapped', id: 'armor' });
+    expect(state.installed).toEqual(['armor']);
+  });
+
+  it('falls back to a plain drop when no valid zone is in reach while carrying', () => {
+    const carrying = { heldId: 'armor', dropped: [], installed: [] };
+    const { state, outcome } = interact(garage, carrying, {
+      avatarX: 100,
+      avatarZ: 100,
+      stations: noStations,
+      range: 1,
+      zones: [armorZone],
+    });
+    expect(outcome).toEqual({ type: 'dropped', id: 'armor' });
+    expect(state.dropped).toEqual([{ id: 'armor', x: 100, z: 100 }]);
+  });
+
+  it('never snaps onto an already-occupied zone - occupied zones are invisible to snapping', () => {
+    garage.buy('armor');
+    const alreadyInstalled = { heldId: 'armor', dropped: [], installed: ['armor'] };
+    // A second, different carried part of the SAME category has nowhere to go since the
+    // only armor zone is occupied - it should fall back to a plain drop instead.
+    const { outcome } = interact(garage, alreadyInstalled, {
+      avatarX: -5,
+      avatarZ: -5,
+      stations: noStations,
+      range: 1,
+      zones: [armorZone],
+    });
+    expect(outcome).toEqual({ type: 'dropped', id: 'armor' });
+  });
+
+  it('picks a snapped slotted part back up, unequipping it', () => {
+    garage.buy('machinegun');
+    const empty = createShoppingState();
+    const { state, outcome } = interact(garage, empty, {
+      avatarX: 5,
+      avatarZ: 5,
+      stations: noStations,
+      range: 1,
+      zones: [roofZone],
+    });
+    expect(outcome).toEqual({ type: 'pickedUpFromZone', id: 'machinegun' });
+    expect(state.heldId).toBe('machinegun');
+    expect(garage.equippedIn('roof')).toBeNull();
+  });
+
+  it('picks a snapped passive part back up, clearing it from installed', () => {
+    garage.buy('armor');
+    const installed = { heldId: null, dropped: [], installed: ['armor'] };
+    const { state, outcome } = interact(garage, installed, {
+      avatarX: -5,
+      avatarZ: -5,
+      stations: noStations,
+      range: 1,
+      zones: [armorZone],
+    });
+    expect(outcome).toEqual({ type: 'pickedUpFromZone', id: 'armor' });
+    expect(state.heldId).toBe('armor');
+    expect(state.installed).toEqual([]);
+  });
+
+  it('preview says snap when a valid empty zone is in reach, drop otherwise', () => {
+    const carrying = { heldId: 'armor', dropped: [], installed: [] };
+    expect(
+      previewInteract(garage, carrying, {
+        avatarX: -5,
+        avatarZ: -5,
+        stations: noStations,
+        range: 1,
+        zones: [armorZone],
+      })
+    ).toEqual({ type: 'snap', id: 'armor' });
+    expect(
+      previewInteract(garage, carrying, {
+        avatarX: 100,
+        avatarZ: 100,
+        stations: noStations,
+        range: 1,
+        zones: [armorZone],
+      })
+    ).toEqual({ type: 'drop', id: 'armor' });
+  });
+
+  it('preview says pickupZone when standing empty-handed at an occupied zone', () => {
+    garage.buy('armor');
+    const installed = { heldId: null, dropped: [], installed: ['armor'] };
+    expect(
+      previewInteract(garage, installed, {
+        avatarX: -5,
+        avatarZ: -5,
+        stations: noStations,
+        range: 1,
+        zones: [armorZone],
+      })
+    ).toEqual({ type: 'pickupZone', id: 'armor' });
   });
 });

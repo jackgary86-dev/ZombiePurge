@@ -586,11 +586,14 @@ export interface GameConfig {
   carDamage: CarDamageConfig;
   zombieMotion: ZombieMotionConfig;
   garage: GarageConfig;
+  /** R3: the car's physical attachment points for snapping a carried part on. */
+  snapZones: SnapZoneDef[];
 }
 
 /** R1: the walkable Garage scene - a player-controlled avatar around the car's build pad,
  *  replacing the old fixed camera orbit. R2 adds walk-up part shopping on top of this;
- *  R3-R4 will add snapping a carried part onto the car. */
+ *  R3 adds snapping a carried part onto the car via `snapZones` below; R4 will add
+ *  multi-zone placement choice and zone-swapping. */
 export interface GarageConfig {
   /** Avatar walk speed, m/s. */
   walkSpeed: number;
@@ -602,6 +605,23 @@ export interface GarageConfig {
   interactRange: number;
   /** R2: how far in from the walls the shopping stations sit. */
   stationInset: number;
+}
+
+/**
+ * R3: one physical attachment point on the car. A zone accepts a carried part either by its
+ * fixed weapon-mount `slot` (engine/engineType/weapon/ram/melee upgrades all have one) or,
+ * for passive upgrades with no slot (tires/health/armor/fuel/nitro/radar/headlights), by
+ * `category` - every such category has exactly one upgrade id sharing its name, so the
+ * category doubles as that id. Exactly one of `slot`/`category` is set per zone.
+ */
+export interface SnapZoneDef {
+  id: string;
+  slot?: WeaponSlot;
+  category?: UpgradeCategory;
+  /** Car-local offset, the same frame as the roof/front weapon mounts. */
+  offset: { x: number; y: number; z: number };
+  /** How close the avatar must stand for this zone to light up. */
+  radius: number;
 }
 
 export type DeepPartial<T> = {

@@ -41,10 +41,13 @@ function describe(
 ): string {
   const name = garage.get(preview.id)?.name ?? preview.id;
   switch (preview.type) {
+    case 'snap':
+      return `Snap on ${name}`;
     case 'drop':
       return `Drop ${name}`;
     case 'pickupDropped':
     case 'pickupStation':
+    case 'pickupZone':
       return `Pick up ${name}`;
     case 'buy': {
       const tier = garage.nextTier(preview.id);

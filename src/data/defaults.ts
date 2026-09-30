@@ -911,4 +911,26 @@ export const DEFAULT_CONFIG: GameConfig = {
     interactRange: 1.6,
     stationInset: 1.2,
   },
+  // R3: one zone per attachment point on the car. Slot-based zones (roof/front/engine) cover
+  // every weapon/engineType/ram/melee upgrade via its own fixed mount; category-based zones
+  // cover the passive upgrades that have no mount slot of their own.
+  snapZones: [
+    { id: 'roof', slot: 'roof', offset: { x: 0, y: 0.8, z: 0.2 }, radius: 0.9 },
+    { id: 'front', slot: 'front', offset: { x: 0, y: 0.1, z: 2.2 }, radius: 0.9 },
+    // The base 'engine' upgrade is a plain tiered stat bonus (no slot); swapping between
+    // engine *types* (V8/Turbo/Electric, category 'engineType') is the separate, sloted choice.
+    { id: 'engine_bay', category: 'engine', offset: { x: 0, y: 0.3, z: 1.6 }, radius: 0.8 },
+    { id: 'engine_bay_type', slot: 'engine', offset: { x: 0, y: 0.3, z: 1.6 }, radius: 0.8 },
+    { id: 'wheel_fl', category: 'tires', offset: { x: -0.9, y: -0.2, z: 1.5 }, radius: 0.6 },
+    { id: 'wheel_fr', category: 'tires', offset: { x: 0.9, y: -0.2, z: 1.5 }, radius: 0.6 },
+    { id: 'wheel_rl', category: 'tires', offset: { x: -0.9, y: -0.2, z: -1.5 }, radius: 0.6 },
+    { id: 'wheel_rr', category: 'tires', offset: { x: 0.9, y: -0.2, z: -1.5 }, radius: 0.6 },
+    { id: 'cabin', category: 'health', offset: { x: 0, y: 0.5, z: 0 }, radius: 0.7 },
+    { id: 'armor_left', category: 'armor', offset: { x: -0.9, y: 0, z: 0 }, radius: 0.7 },
+    { id: 'armor_right', category: 'armor', offset: { x: 0.9, y: 0, z: 0 }, radius: 0.7 },
+    { id: 'rear_fuel', category: 'fuel', offset: { x: 0, y: 0.2, z: -2.0 }, radius: 0.8 },
+    { id: 'rear_nitro', category: 'nitro', offset: { x: 0, y: 0.2, z: -2.0 }, radius: 0.8 },
+    { id: 'roof_radar', category: 'radar', offset: { x: 0, y: 0.9, z: -0.6 }, radius: 0.6 },
+    { id: 'headlight', category: 'headlights', offset: { x: 0, y: 0.1, z: 2.0 }, radius: 0.6 },
+  ],
 };

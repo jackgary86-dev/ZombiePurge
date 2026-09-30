@@ -7,6 +7,32 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - R3: Physical Garage - snap-zone vehicle attachment
+
+- **R3** The car now has 14 physical snap zones (new `snapZones` config), one per attachment
+  point: all 4 wheels, the engine bay (covering both the base engine's own tiers and the
+  separate V8/Turbo/Electric engine-_type_ choice, since only the latter has a mount slot),
+  both armor sides, a rear fuel/nitro pair, the roof and front weapon mounts, radar, and
+  headlights - every upgrade category has at least one, enforced by a test that checks the
+  real catalog against the real zone list rather than trusting the two stay in sync by hand.
+  Carrying a part near a zone that accepts it (by its fixed mount slot for weapon/engineType/
+  ram/melee upgrades, or by category for everything else) lights the zone bright green and the
+  live prompt offers to snap it on; pressing E there applies the exact same effect the old
+  menu-based equip flow always has - `Garage.equip()`/`unequip()` for slotted parts, and a new
+  `installed` list for passive ones (tires/health/armor/fuel/nitro/radar/headlights), which
+  never needed an "equipped" concept since owning them already applies their stats. A zone
+  already holding something never lights up for a different part instead - swapping an
+  occupied zone's contents is R4's job, not R3's - and a snapped part can be walked up to and
+  picked back up later, returning it to the carry state. New pure module `SnapZones.ts` (zone
+  acceptance, occupancy, nearest-valid/-occupied lookups) with no Three.js or DOM dependency,
+  fully unit tested alongside an extended `GarageStations.ts` interaction chain.
+  Bug found in verification: `Garage.buy()` has always auto-equipped a weapon the instant it's
+  first bought (existing behaviour, unrelated to R3) - but picking that same weapon straight
+  back up off its own station never undid the auto-equip, so it read as simultaneously
+  "carried" and "installed" and refused to snap back into the very zone it just came from;
+  picking up from a station now un-equips it first, exactly like picking up from a zone
+  already did.
+
 ## Unreleased - R2: Physical Garage - walk-up part shopping & pickup
 
 - **R2** Every top-level upgrade/weapon (`garage.upgrades`, one physical station each - not

@@ -1,10 +1,13 @@
 import {
   BoxGeometry,
   CapsuleGeometry,
+  DoubleSide,
   Group,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   PlaneGeometry,
+  RingGeometry,
   SphereGeometry,
 } from 'three';
 import type { GarageConfig } from '../../data/types';
@@ -111,4 +114,37 @@ export function buildCarriedMarker(): Mesh {
   const mesh = new Mesh(new BoxGeometry(0.22, 0.22, 0.22), carriedMaterial);
   mesh.position.y = 1.7;
   return mesh;
+}
+
+const zoneDimMaterial = new MeshBasicMaterial({
+  color: 0x8a8a8a,
+  transparent: true,
+  opacity: 0.35,
+  side: DoubleSide,
+});
+const zoneHighlightMaterial = new MeshBasicMaterial({
+  color: 0x5ad85a,
+  transparent: true,
+  opacity: 0.85,
+  side: DoubleSide,
+});
+
+/**
+ * R3: a flat ring marking one snap zone on the car, parented directly onto the car's own
+ * group so it automatically tracks the car's position/orientation with no per-frame
+ * transform of its own. Dim by default; `setHighlighted()` lights it up bright green while
+ * it's the live target for whatever the player is currently carrying (or standing at, to
+ * pick something back up) - the actual proximity/validity logic lives in `SnapZones.ts`.
+ */
+export class SnapZoneMarker {
+  readonly mesh: Mesh;
+
+  constructor(radius: number) {
+    this.mesh = new Mesh(new RingGeometry(radius * 0.6, radius, 24), zoneDimMaterial);
+    this.mesh.rotation.x = -Math.PI / 2;
+  }
+
+  setHighlighted(highlighted: boolean): void {
+    this.mesh.material = highlighted ? zoneHighlightMaterial : zoneDimMaterial;
+  }
 }
