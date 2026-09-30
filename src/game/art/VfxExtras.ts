@@ -1,4 +1,12 @@
-import { Group, Mesh, MeshBasicMaterial, PlaneGeometry, SphereGeometry, Vector3 } from 'three';
+import {
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  PlaneGeometry,
+  RingGeometry,
+  SphereGeometry,
+  Vector3,
+} from 'three';
 import type {
   DriveTrailConfig,
   MapConfig,
@@ -28,14 +36,20 @@ export function driveTrailColor(generator: MapConfig['generator']): number {
 }
 
 const muzzleGeometry = new SphereGeometry(1, 8, 6);
+const muzzleRingGeometry = new RingGeometry(0.6, 1, 12);
 
 /**
- * I9: a brief flash at the weapon mount on each shot fired. `trigger()` is called once per
+ * I9/S5: a brief flash at the weapon mount on each shot fired. `trigger()` is called once per
  * shot (from the fixed-step weapon update, alongside ShotTracers.add); `update()` fades it,
- * called every render frame like the other pooled VFX views.
+ * called every render frame like the other pooled VFX views. `mesh` is the core flash sphere
+ * (unchanged from I9); `group` also carries a flat expanding ring for more visual punch - it
+ * peaks bright and falls off fast, rather than the sphere's own slower linear fade, so the shot
+ * reads as a sharp pop instead of a soft blob.
  */
 export class MuzzleFlashView {
   readonly mesh: Mesh;
+  readonly ring: Mesh;
+  readonly group: Group;
   private life = Infinity;
 
   constructor(private readonly cfg: MuzzleFlashConfig) {
@@ -44,11 +58,25 @@ export class MuzzleFlashView {
       new MeshBasicMaterial({ color: 0xffe28a, transparent: true, opacity: 0, depthWrite: false })
     );
     this.mesh.visible = false;
+    this.ring = new Mesh(
+      muzzleRingGeometry,
+      new MeshBasicMaterial({ color: 0xfff2c0, transparent: true, opacity: 0, depthWrite: false })
+    );
+    this.ring.visible = false;
+    this.group = new Group();
+    this.group.add(this.mesh, this.ring);
   }
 
   trigger(origin: Vector3): void {
     this.mesh.position.copy(origin);
+    this.ring.position.copy(origin);
+    this.ring.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
     this.mesh.visible = true;
+    this.ring.visible = true;
     this.life = 0;
   }
 
@@ -58,12 +86,20 @@ export class MuzzleFlashView {
     const t = this.life / this.cfg.durationSeconds;
     if (t >= 1) {
       this.mesh.visible = false;
+      this.ring.visible = false;
       this.life = Infinity;
       (this.mesh.material as MeshBasicMaterial).opacity = 0;
+      (this.ring.material as MeshBasicMaterial).opacity = 0;
       return;
     }
-    (this.mesh.material as MeshBasicMaterial).opacity = 1 - t;
+    // A sharper peak-then-drop curve (brighter at the start, fading faster) than a plain linear
+    // fade - reads as a punchier pop rather than a soft glow.
+    (this.mesh.material as MeshBasicMaterial).opacity = (1 - t) * (1 - t);
     this.mesh.scale.setScalar(this.cfg.size * (1 - 0.4 * t));
+    // The ring expands outward and fades even faster than the core flash, like a shockwave.
+    const ringT = Math.min(1, t * 2.2);
+    (this.ring.material as MeshBasicMaterial).opacity = 0.8 * (1 - ringT);
+    this.ring.scale.setScalar(this.cfg.size * (0.6 + ringT * 1.8));
   }
 }
 
@@ -97,7 +133,7 @@ export class SkidMarkView {
         this.marks.splice(i, 1);
         this.ages.splice(i, 1);
       } else {
-        (this.marks[i].material as MeshBasicMaterial).opacity = 0.5 * (1 - t);
+        (this.marks[i].material as MeshBasicMaterial).opacity = 0.55 * (1 - t);
       }
     }
   }
@@ -109,12 +145,18 @@ export class SkidMarkView {
       this.group.remove(oldest);
       (oldest.material as MeshBasicMaterial).dispose();
     }
+    // S5: a slight per-mark colour/width jitter (charcoal rather than flat black, +/-15% wide)
+    // so a run of marks reads as real tyre rubber instead of identical stamped decals.
+    const shade = 0x14 + Math.floor(Math.random() * 10);
+    const color = shade * 0x010101;
     const mesh = new Mesh(
       skidGeometry,
-      new MeshBasicMaterial({ color: 0x1a1a1a, transparent: true, opacity: 0.5, depthWrite: false })
+      new MeshBasicMaterial({ color, transparent: true, opacity: 0.55, depthWrite: false })
     );
     mesh.position.copy(pos);
     mesh.position.y += 0.01; // avoid z-fighting with the ground
+    mesh.rotation.y = (Math.random() - 0.5) * 0.3;
+    mesh.scale.x = 0.85 + Math.random() * 0.3;
     this.group.add(mesh);
     this.marks.push(mesh);
     this.ages.push(0);
@@ -154,7 +196,10 @@ export class DriveTrailView {
         this.puffs.splice(i, 1);
         this.ages.splice(i, 1);
       } else {
-        mesh.scale.setScalar(1 + t * 1.6);
+        // S5: an ease-out growth curve (fast poof, then levels off) reads more like a real dust
+        // cloud billowing than a flat linear expansion.
+        const baseScale = (mesh.userData.baseScale as number) ?? 1;
+        mesh.scale.setScalar(baseScale * (1 + Math.sqrt(t) * 1.6));
         (mesh.material as MeshBasicMaterial).opacity = 0.35 * (1 - t);
       }
     }
@@ -171,7 +216,13 @@ export class DriveTrailView {
       puffGeometry,
       new MeshBasicMaterial({ color, transparent: true, opacity: 0.35, depthWrite: false })
     );
+    // S5: a small random offset and size per puff, so a trail of them reads as an organic cloud
+    // rather than a row of identical stamped spheres.
     mesh.position.copy(origin);
+    mesh.position.x += (Math.random() - 0.5) * 0.4;
+    mesh.position.z += (Math.random() - 0.5) * 0.4;
+    mesh.userData.baseScale = 0.8 + Math.random() * 0.4;
+    mesh.scale.setScalar(mesh.userData.baseScale as number);
     this.group.add(mesh);
     this.puffs.push(mesh);
     this.ages.push(0);

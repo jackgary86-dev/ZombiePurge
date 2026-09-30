@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S4)
+## M9 – Art pass & bug bash (in progress: S1-S5)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -259,6 +259,20 @@ Tick items in the PR that closes the milestone.
       inside a warehouse's own collider, so the car can't move from the start of a run there yet
       (see the follow-up ticket); the props themselves are still verifiable by looking around at
       spawn, or via `#debug`'s `tp` cheat once clear of the stuck spawn
+- [ ] Fire any hitscan weapon (machine gun/shotgun): the muzzle flash now shows a brief
+      expanding ring alongside the core flash, and reads as a sharper pop than before
+- [ ] Fire a rocket and let it hit something: the blast now shows a ground-hugging shockwave
+      ring racing outward alongside the fireball
+- [ ] Equip and fire the flamethrower: the jet now shows a brighter inner core and flickers more
+      (both the outer cone and inner core pulse slightly each frame, on top of the existing jitter)
+- [ ] Handbrake-turn or power-slide: skid marks vary slightly in tint and width mark to mark,
+      instead of every mark being an identical stamp
+- [ ] Drive fast enough to kick up the dust/snow trail: puffs now vary in size/offset and grow
+      with an eased "poof" rather than a flat linear expansion
+- [ ] Run over several zombies with Low Gore off: blood splatters on the car vary in size and
+      aspect ratio instead of all being the same square decal
+- [ ] None of the above changes any gameplay value - kill/hit behaviour, damage, and weapon
+      timing windows are unaffected (the existing balance/combat test suites cover this)
 
 ### Known quirks (non-blocking)
 

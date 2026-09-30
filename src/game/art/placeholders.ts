@@ -11,8 +11,10 @@ import {
   InstancedMesh,
   Matrix4,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   Quaternion,
+  RingGeometry,
   SphereGeometry,
   Vector3,
 } from 'three';
@@ -528,11 +530,15 @@ const rocketMaterial = new MeshStandardMaterial({
   roughness: 0.4,
 });
 const blastGeometry = new SphereGeometry(1, 12, 8);
+const shockwaveGeometry = new RingGeometry(0.6, 1, 20).rotateX(-Math.PI / 2);
 
-/** Rockets in flight plus short-lived expanding blast spheres. */
+/** Rockets in flight plus short-lived expanding blast spheres and a ground shockwave ring
+ *  (S5) for more visual punch on impact - purely cosmetic, the blast damage radius passed to
+ *  `explode()` is unchanged and untouched by any of this. */
 export class RocketViews {
   readonly rockets: Mesh[];
   readonly blasts: Mesh[];
+  readonly shockwaves: Mesh[];
   private readonly blastAges: number[];
 
   constructor(rocketCapacity = 12, blastCapacity = 8) {
@@ -549,6 +555,19 @@ export class RocketViews {
           emissive: 0xff5a1f,
           transparent: true,
           opacity: 0.8,
+        })
+      );
+      m.visible = false;
+      return m;
+    });
+    this.shockwaves = Array.from({ length: blastCapacity }, () => {
+      const m = new Mesh(
+        shockwaveGeometry,
+        new MeshBasicMaterial({
+          color: 0xffe0a0,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
         })
       );
       m.visible = false;
@@ -581,6 +600,9 @@ export class RocketViews {
     m.scale.setScalar(radius * 0.3);
     m.userData.radius = radius;
     m.visible = true;
+    const ring = this.shockwaves[i];
+    ring.position.set(position.x, position.y + 0.05, position.z);
+    ring.visible = true;
     this.blastAges[i] = 0;
   }
 
@@ -590,20 +612,34 @@ export class RocketViews {
       this.blastAges[i] += dt;
       const t = this.blastAges[i] / 0.45;
       const m = this.blasts[i];
+      const ring = this.shockwaves[i];
       if (t >= 1) {
         m.visible = false;
+        ring.visible = false;
         this.blastAges[i] = Infinity;
         continue;
       }
       m.scale.setScalar((m.userData.radius as number) * (0.3 + 0.7 * t));
       (m.material as MeshStandardMaterial).opacity = 0.8 * (1 - t);
+      // The shockwave ring races out ahead of the blast sphere and fades faster, reading as a
+      // ground-hugging pressure wave rather than just the fireball itself.
+      const ringT = Math.min(1, t * 1.8);
+      ring.scale.setScalar((m.userData.radius as number) * (0.5 + ringT * 1.5));
+      (ring.material as MeshBasicMaterial).opacity = 0.6 * (1 - ringT);
     }
   }
 }
 
-/** Flame cone shown at the front mount while the flamethrower fires. */
+/**
+ * S5: the flamethrower's jet, shown at the front mount while firing. `mesh` is the outer cone
+ * (unchanged colour/shape from I9); `core` is a brighter, narrower inner cone riding inside it
+ * for a hotter-looking centre, and both now pulse in scale each `sync()` call (on top of the
+ * existing rotation jitter) for a livelier flicker than a static cone.
+ */
 export class FlameView {
   readonly mesh: Mesh;
+  readonly core: Mesh;
+  readonly group: Group;
 
   constructor(range: number, cone: number) {
     // Visual is narrower and shorter than the gameplay cone so it reads as a jet, not a wall.
@@ -624,14 +660,37 @@ export class FlameView {
       })
     );
     this.mesh.visible = false;
+
+    const coreGeometry = new CylinderGeometry(radius * 0.4, 0.06, length * 0.7, 10, 1, true);
+    coreGeometry.rotateX(Math.PI / 2);
+    coreGeometry.translate(0, 0, (length * 0.7) / 2);
+    this.core = new Mesh(
+      coreGeometry,
+      new MeshStandardMaterial({
+        color: 0xfff0a0,
+        emissive: 0xffd060,
+        emissiveIntensity: 1.6,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+      })
+    );
+    this.group = new Group();
+    this.group.add(this.mesh, this.core);
+    this.group.visible = false;
   }
 
   sync(firing: boolean, origin: Vector3, direction: Vector3): void {
-    this.mesh.visible = firing;
+    this.group.visible = firing;
     if (!firing) return;
-    this.mesh.position.copy(origin);
-    this.mesh.lookAt(origin.x + direction.x, origin.y + direction.y, origin.z + direction.z);
-    this.mesh.rotation.z += Math.random() * 0.5;
+    this.group.position.copy(origin);
+    this.group.lookAt(origin.x + direction.x, origin.y + direction.y, origin.z + direction.z);
+    const jitter = Math.random() * 0.5;
+    this.mesh.rotation.z += jitter;
+    this.core.rotation.z -= jitter * 1.3;
+    const pulse = 0.9 + Math.random() * 0.2;
+    this.mesh.scale.set(pulse, pulse, 0.95 + Math.random() * 0.1);
+    this.core.scale.set(pulse, pulse, 0.9 + Math.random() * 0.2);
   }
 }
 

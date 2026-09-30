@@ -7,6 +7,24 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - S5: Art pass - VFX polish
+
+- **S5** More visual punch for the existing particle/VFX systems - purely visual, no gameplay
+  value (damage, timing windows, hit detection) touched anywhere, confirmed by the existing
+  balance/combat test suites passing unmodified. Muzzle flash: a new secondary expanding ring
+  rides alongside the existing flash sphere (`MuzzleFlashView.ring`, both now in a `.group`),
+  and the flash's own fade curve is sharper (peaks brighter, drops off faster) so a shot reads
+  as a punchy pop instead of a soft glow. Rocket explosions: a new ground-hugging shockwave ring
+  (`RocketViews.shockwaves`) races out ahead of the existing blast sphere and fades faster, on
+  top of the sphere's own unchanged expansion/fade. Flamethrower: a brighter, narrower inner
+  "hot core" cone rides inside the existing outer flame cone (`FlameView.core`, both now in a
+  `.group`), and both now pulse in scale each frame on top of the existing rotation jitter, for
+  more flicker. Skid marks, dust/snow drive-trail puffs, and blood splatters: per-instance random
+  size/colour/rotation jitter (skid marks vary in tint and width; drive-trail puffs get a random
+  offset, size, and an ease-out "poof" growth curve instead of linear; blood splatters vary in
+  size and aspect ratio) so a build-up of any of them reads as organic rather than a grid of
+  identical stamped decals.
+
 ## Unreleased - S4: Art pass - per-map environment props
 
 - **S4** Gave each story map's placeholder kit-piece props more theme-appropriate detail, on top
