@@ -37,8 +37,10 @@ describe('E7/I7 Frozen Mountain Forest map', () => {
   it('builds one mesh per piece plus two per tree, one per road, and the ground', () => {
     const layout = generateFrozenForest(13, 1400);
     const group = buildFrozenForestMeshes(layout);
+    // S4: every boulder gets a snow cap (1 extra mesh) - a purely visual add-on.
+    const boulders = layout.pieces.filter((p) => p.kind === 'boulder').length;
     expect(group.children).toHaveLength(
-      1 + layout.pieces.length + layout.trees.length * 2 + layout.roads.length
+      1 + layout.pieces.length + layout.trees.length * 2 + layout.roads.length + boulders
     );
     expect(group.getObjectByName('ground')).toBeDefined();
   });

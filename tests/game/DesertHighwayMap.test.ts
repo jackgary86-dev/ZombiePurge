@@ -44,7 +44,15 @@ describe('E5/I7 Desert Highway map', () => {
   it('builds one mesh per piece plus two per prop-tree(none) and the ground', () => {
     const layout = generateDesertHighway(5, 1600);
     const group = buildDesertHighwayMeshes(layout);
-    expect(group.children).toHaveLength(1 + layout.pieces.length + layout.roads.length);
+    // S4: stations get a roof overhang + sign pole + sign (3 extra meshes each), pumps get a
+    // nozzle (1 extra), and cacti get two side arms (2 extra) - all purely visual add-ons.
+    const stations = layout.pieces.filter((p) => p.kind === 'station').length;
+    const pumps = layout.pieces.filter((p) => p.kind === 'pump').length;
+    const cacti = layout.pieces.filter((p) => p.kind === 'cactus').length;
+    const decorationExtras = stations * 3 + pumps * 1 + cacti * 2;
+    expect(group.children).toHaveLength(
+      1 + layout.pieces.length + layout.roads.length + decorationExtras
+    );
     expect(group.getObjectByName('ground')).toBeDefined();
     expect(group.getObjectByName('station')).toBeDefined();
   });

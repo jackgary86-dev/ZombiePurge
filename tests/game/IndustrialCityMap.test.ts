@@ -38,7 +38,15 @@ describe('E6/I7 Industrial City map', () => {
   it('builds one mesh per piece plus one per road and the ground', () => {
     const layout = generateIndustrialCity(11, 1100);
     const group = buildIndustrialCityMeshes(layout);
-    expect(group.children).toHaveLength(1 + layout.pieces.length + layout.roads.length);
+    // S4: warehouses get a roof cap + vent (2 extra meshes each), crates get a strap (1 extra),
+    // and gates get a lamp (1 extra) - all purely visual add-ons.
+    const warehouses = layout.pieces.filter((p) => p.kind === 'warehouse').length;
+    const crates = layout.pieces.filter((p) => p.kind === 'crate').length;
+    const gates = layout.pieces.filter((p) => p.kind === 'gate').length;
+    const decorationExtras = warehouses * 2 + crates * 1 + gates * 1;
+    expect(group.children).toHaveLength(
+      1 + layout.pieces.length + layout.roads.length + decorationExtras
+    );
     expect(group.getObjectByName('warehouse')).toBeDefined();
   });
 

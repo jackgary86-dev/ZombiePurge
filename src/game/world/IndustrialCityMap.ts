@@ -1,9 +1,10 @@
-import { Group } from 'three';
+import { BoxGeometry, CylinderGeometry, Group, Mesh, SphereGeometry } from 'three';
 import type { PhysicsWorld } from '../physics/PhysicsWorld';
 import {
   buildKitColliders,
   buildKitMeshes,
   mulberry32,
+  type KitDecorator,
   type KitLayout,
   type KitPiece,
 } from './PlaceholderMapKit';
@@ -119,8 +120,59 @@ export function buildIndustrialCityColliders(physics: PhysicsWorld, layout: KitL
   return buildKitColliders(physics, layout);
 }
 
+/** S4: purely visual toppers per piece kind - `buildKitColliders` never sees any of this. */
+const decorate: KitDecorator = (piece, _mesh, group, material) => {
+  switch (piece.kind) {
+    case 'warehouse': {
+      const roofCap = new Mesh(
+        new BoxGeometry(piece.halfExtents.x * 2.1, 0.4, piece.halfExtents.z * 2.1),
+        material('roof-cap', 0x4a4038, 0.7)
+      );
+      roofCap.position.set(
+        piece.position.x,
+        piece.position.y + piece.halfExtents.y + 0.2,
+        piece.position.z
+      );
+      roofCap.castShadow = true;
+      group.add(roofCap);
+
+      const vent = new Mesh(new CylinderGeometry(0.6, 0.6, 1, 8), material('vent', 0x8a8a8a, 0.5));
+      vent.position.set(
+        piece.position.x + piece.halfExtents.x * 0.4,
+        piece.position.y + piece.halfExtents.y + 0.9,
+        piece.position.z - piece.halfExtents.z * 0.3
+      );
+      vent.castShadow = true;
+      group.add(vent);
+      break;
+    }
+    case 'crate': {
+      const strap = new Mesh(
+        new BoxGeometry(piece.halfExtents.x * 2.05, 0.15, piece.halfExtents.z * 2.05),
+        material('crate-strap', 0x2a2418, 0.8)
+      );
+      strap.position.set(piece.position.x, piece.position.y, piece.position.z);
+      strap.castShadow = true;
+      group.add(strap);
+      break;
+    }
+    case 'gate': {
+      const lamp = new Mesh(new SphereGeometry(0.35, 8, 6), material('gate-lamp', 0xffee88, 0.3));
+      lamp.position.set(
+        piece.position.x,
+        piece.position.y + piece.halfExtents.y + 0.35,
+        piece.position.z
+      );
+      group.add(lamp);
+      break;
+    }
+    default:
+      break;
+  }
+};
+
 export function buildIndustrialCityMeshes(layout: KitLayout): Group {
-  const group = buildKitMeshes(layout, PALETTE);
+  const group = buildKitMeshes(layout, PALETTE, decorate);
   group.name = 'industrial-city';
   return group;
 }

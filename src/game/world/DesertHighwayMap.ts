@@ -1,9 +1,10 @@
-import { Group } from 'three';
+import { BoxGeometry, CylinderGeometry, Group, Mesh } from 'three';
 import type { PhysicsWorld } from '../physics/PhysicsWorld';
 import {
   buildKitColliders,
   buildKitMeshes,
   mulberry32,
+  type KitDecorator,
   type KitLayout,
   type KitPiece,
 } from './PlaceholderMapKit';
@@ -134,8 +135,88 @@ export function buildDesertHighwayColliders(physics: PhysicsWorld, layout: KitLa
   return buildKitColliders(physics, layout);
 }
 
+/**
+ * S4: a decorator per piece kind, all purely visual add-ons on top of the shared box mesh -
+ * none of it touches `buildKitColliders`, which only ever reads a piece's own halfExtents.
+ */
+const decorate: KitDecorator = (piece, _mesh, group, material) => {
+  switch (piece.kind) {
+    case 'station': {
+      const overhang = new Mesh(
+        new BoxGeometry(piece.halfExtents.x * 2.6, 0.3, piece.halfExtents.z * 1.6),
+        material('station-roof', 0xc8402e, 0.6)
+      );
+      overhang.position.set(
+        piece.position.x,
+        piece.position.y + piece.halfExtents.y + 0.15,
+        piece.position.z
+      );
+      overhang.castShadow = true;
+      group.add(overhang);
+
+      const pole = new Mesh(
+        new CylinderGeometry(0.15, 0.15, 3, 8),
+        material('sign-pole', 0x8a8a8a)
+      );
+      pole.position.set(
+        piece.position.x,
+        piece.position.y + piece.halfExtents.y + 1.8,
+        piece.position.z
+      );
+      const sign = new Mesh(new BoxGeometry(2, 1, 0.15), material('sign', 0xffcc33));
+      sign.position.set(
+        piece.position.x,
+        piece.position.y + piece.halfExtents.y + 3.4,
+        piece.position.z
+      );
+      pole.castShadow = sign.castShadow = true;
+      group.add(pole, sign);
+      break;
+    }
+    case 'pump': {
+      const nozzle = new Mesh(
+        new CylinderGeometry(0.12, 0.12, 0.5, 8),
+        material('nozzle', 0x2a2a2a)
+      );
+      nozzle.position.set(
+        piece.position.x,
+        piece.position.y + piece.halfExtents.y + 0.25,
+        piece.position.z
+      );
+      nozzle.castShadow = true;
+      group.add(nozzle);
+      break;
+    }
+    case 'cactus': {
+      // Two stubby side arms, offset up the trunk and rotated apart, for a saguaro silhouette.
+      for (const sign of [-1, 1]) {
+        const arm = new Mesh(
+          new CylinderGeometry(
+            piece.halfExtents.x * 0.5,
+            piece.halfExtents.x * 0.5,
+            piece.halfExtents.y * 0.7,
+            6
+          ),
+          material('cactus', 0x4a7a3a)
+        );
+        arm.position.set(
+          piece.position.x + sign * piece.halfExtents.x * 1.4,
+          piece.position.y + piece.halfExtents.y * 0.15,
+          piece.position.z
+        );
+        arm.rotation.z = sign * 0.5;
+        arm.castShadow = true;
+        group.add(arm);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+};
+
 export function buildDesertHighwayMeshes(layout: KitLayout): Group {
-  const group = buildKitMeshes(layout, PALETTE);
+  const group = buildKitMeshes(layout, PALETTE, decorate);
   group.name = 'desert-highway';
   return group;
 }

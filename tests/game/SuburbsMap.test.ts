@@ -50,9 +50,17 @@ describe('E4/I6 Suburbs map', () => {
     const group = buildSuburbsMeshes(layout);
     const houses = layout.pieces.filter((p) => p.kind === 'house').length;
     const fountains = layout.pieces.filter((p) => p.kind === 'fountain').length;
-    // ground + 1 mesh/piece + 1 roof/house + 1 water plane/fountain + 2 meshes/tree + 1/road.
+    const cars = layout.pieces.filter((p) => p.kind === 'car').length; // S4: +1 cabin bump each
+    // ground + 1 mesh/piece + 1 roof/house + 1 water plane/fountain + 1 cabin/car
+    // + 2 meshes/tree + 1/road.
     expect(group.children).toHaveLength(
-      1 + layout.pieces.length + houses + fountains + layout.trees.length * 2 + layout.roads.length
+      1 +
+        layout.pieces.length +
+        houses +
+        fountains +
+        cars +
+        layout.trees.length * 2 +
+        layout.roads.length
     );
     expect(group.getObjectByName('ground')).toBeDefined();
     expect(group.getObjectByName('house')).toBeDefined();
