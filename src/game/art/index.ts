@@ -8,3 +8,4 @@ export * from './AssetLoader';
 export * from './CarDamage';
 export * from './VfxExtras';
 export * from './GarageScene';
+export * from './PostFX';

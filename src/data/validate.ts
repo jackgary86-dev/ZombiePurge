@@ -259,6 +259,21 @@ export function collectConfigProblems(config: GameConfig): string[] {
     );
   }
 
+  const postFx = config.postFx;
+  nonNegative(postFx.bloomStrength, 'postFx.bloomStrength', problems);
+  nonNegative(postFx.bloomRadius, 'postFx.bloomRadius', problems);
+  if (postFx.bloomThreshold < 0 || postFx.bloomThreshold > 1) {
+    problems.push(
+      `postFx.bloomThreshold must be between 0 and 1 (got ${String(postFx.bloomThreshold)})`
+    );
+  }
+  if (postFx.vignetteDarkness < 0 || postFx.vignetteDarkness > 1) {
+    problems.push(
+      `postFx.vignetteDarkness must be between 0 and 1 (got ${String(postFx.vignetteDarkness)})`
+    );
+  }
+  nonNegative(postFx.vignetteOffset, 'postFx.vignetteOffset', problems);
+
   const engineAudio = config.audio.engine;
   nonNegative(engineAudio.idleHz, 'audio.engine.idleHz', problems);
   positive(engineAudio.maxHz, 'audio.engine.maxHz', problems);
