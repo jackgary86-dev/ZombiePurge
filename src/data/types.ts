@@ -59,6 +59,21 @@ export interface VehicleConfig {
      *  swing (tuning = ±1) shifts from one stat to the other, e.g. 0.5 = up to a 50% swing. */
     swingFactor: number;
   };
+  /** P1: resists tipping onto the car's side/roof from ordinary driving (hard turns, curb
+   *  clips, glancing hits) without making the car impossible to flip - a hit hard enough to
+   *  push past maxCorrectedAngle still completes a real flip. */
+  stability: {
+    /** Corrective torque per radian of tilt away from upright (N*m/rad). */
+    uprightSpringTorque: number;
+    /** Corrective torque per rad/s of tipping angular velocity (N*m per rad/s) - damps rocking
+     *  so the car settles upright instead of oscillating. */
+    uprightDamping: number;
+    /** Hard cap on the corrective torque's magnitude (N*m). */
+    maxUprightTorque: number;
+    /** Past this tilt angle (radians) the correction stops entirely, so a real flip completes
+     *  naturally instead of hanging at a strange angle. */
+    maxCorrectedAngle: number;
+  };
 }
 
 export interface RangedAttackConfig {

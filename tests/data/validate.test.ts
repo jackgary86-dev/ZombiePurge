@@ -75,6 +75,25 @@ describe('config validation (H3): every field DEFAULT_CONFIG must keep valid', (
     expect(problems((c) => (c.vehicle.engineTuning.swingFactor = 1))).toEqual([]);
   });
 
+  it('vehicle: P1 stability assist bounds', () => {
+    expect(problems((c) => (c.vehicle.stability.uprightSpringTorque = -1))).toContain(
+      'vehicle.stability.uprightSpringTorque must be zero or greater (got -1)'
+    );
+    expect(problems((c) => (c.vehicle.stability.uprightDamping = -1))).toContain(
+      'vehicle.stability.uprightDamping must be zero or greater (got -1)'
+    );
+    expect(problems((c) => (c.vehicle.stability.maxUprightTorque = 0))).toContain(
+      'vehicle.stability.maxUprightTorque must be a positive number (got 0)'
+    );
+    expect(problems((c) => (c.vehicle.stability.maxCorrectedAngle = 0))).toContain(
+      'vehicle.stability.maxCorrectedAngle must be in (0, PI] (got 0)'
+    );
+    expect(problems((c) => (c.vehicle.stability.maxCorrectedAngle = Math.PI * 1.1))).toContain(
+      `vehicle.stability.maxCorrectedAngle must be in (0, PI] (got ${Math.PI * 1.1})`
+    );
+    expect(problems((c) => (c.vehicle.stability.maxCorrectedAngle = Math.PI))).toEqual([]);
+  });
+
   it('camera', () => {
     expect(problems((c) => (c.camera.distance = 0))).toContain(
       'camera.distance must be a positive number (got 0)'

@@ -75,6 +75,14 @@ export function collectConfigProblems(config: GameConfig): string[] {
       `vehicle.engineTuning.swingFactor must be in [0, 1] (got ${String(v.engineTuning.swingFactor)})`
     );
   }
+  nonNegative(v.stability.uprightSpringTorque, 'vehicle.stability.uprightSpringTorque', problems);
+  nonNegative(v.stability.uprightDamping, 'vehicle.stability.uprightDamping', problems);
+  positive(v.stability.maxUprightTorque, 'vehicle.stability.maxUprightTorque', problems);
+  if (v.stability.maxCorrectedAngle <= 0 || v.stability.maxCorrectedAngle > Math.PI) {
+    problems.push(
+      `vehicle.stability.maxCorrectedAngle must be in (0, PI] (got ${String(v.stability.maxCorrectedAngle)})`
+    );
+  }
 
   const c = config.camera;
   positive(c.distance, 'camera.distance', problems);

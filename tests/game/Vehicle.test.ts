@@ -103,6 +103,44 @@ describe('Vehicle', () => {
     expect(car.getSteerAngle()).toBe(0);
   });
 
+  it('P1: rights itself from a moderate roll disturbance (a hard turn, a curb clip) without flipping', () => {
+    run(physics, car, 1); // settle grounded first
+    // A curb clip or hard lateral hit: a real angular kick, not a teleported rotation, so the
+    // suspension/ground contact stays exactly as it would mid-drive.
+    car.body.setAngvel({ x: 0, y: 0, z: 4 }, true);
+    let sawUpsideDown = false;
+    let maxTilt = 0;
+    for (let i = 0; i < 180; i++) {
+      // 3 s
+      car.update(NEUTRAL_INPUT, DT);
+      physics.step();
+      if (car.isUpsideDown()) sawUpsideDown = true;
+      const up = new Vector3(0, 1, 0).applyQuaternion(car.getQuaternion());
+      maxTilt = Math.max(
+        maxTilt,
+        Math.acos(Math.min(1, Math.max(-1, up.dot(new Vector3(0, 1, 0)))))
+      );
+    }
+    expect(sawUpsideDown).toBe(false);
+    expect(maxTilt).toBeLessThan(getConfig().vehicle.stability.maxCorrectedAngle);
+    const finalUp = new Vector3(0, 1, 0).applyQuaternion(car.getQuaternion());
+    expect(finalUp.dot(new Vector3(0, 1, 0))).toBeGreaterThan(0.98); // settled back near upright
+  });
+
+  it('P1: a hard enough hit still flips the car despite the stability assist', () => {
+    run(physics, car, 1);
+    // Far beyond an ordinary driving disturbance - a real T-bone/ram-style hit.
+    car.body.setAngvel({ x: 0, y: 0, z: 20 }, true);
+    let sawUpsideDown = false;
+    for (let i = 0; i < 90; i++) {
+      // 1.5 s
+      car.update(NEUTRAL_INPUT, DT);
+      physics.step();
+      if (car.isUpsideDown()) sawUpsideDown = true;
+    }
+    expect(sawUpsideDown).toBe(true);
+  });
+
   it('detects upside down and rights itself on flip reset', () => {
     const flipped = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI);
     car.body.setRotation({ x: flipped.x, y: flipped.y, z: flipped.z, w: flipped.w }, true);

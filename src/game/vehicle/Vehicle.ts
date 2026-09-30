@@ -72,6 +72,8 @@ export class Vehicle {
   private readonly wheelRight = new Vector3();
   private readonly force = new Vector3();
   private readonly tmp = new Vector3();
+  private readonly chassisUp = new Vector3();
+  private readonly tiltAxis = new Vector3();
   private readonly ray = new RAPIER.Ray({ x: 0, y: 0, z: 0 }, { x: 0, y: -1, z: 0 });
 
   constructor(
@@ -272,6 +274,34 @@ export class Vehicle {
         .multiplyScalar(longForce)
         .addScaledVector(this.wheelRight, latForce);
       this.body.addForceAtPoint(this.force, this.contact, true);
+    }
+
+    // P1: a corrective torque that resists tipping onto the car's side/roof from ordinary
+    // driving (hard turns, curb clips, glancing hits). It only acts while at least one wheel
+    // has grip (so it never fights an intentional jump), fades to nothing as the tilt grows,
+    // and is capped, so a hit hard enough to push past maxCorrectedAngle still completes a
+    // real flip instead of being silently held upright.
+    if (groundedWheels > 0) {
+      const stab = this.cfg.stability;
+      this.chassisUp.copy(UP).applyQuaternion(this.q);
+      const tiltAngle = Math.acos(Math.min(1, Math.max(-1, this.chassisUp.dot(UP))));
+      if (tiltAngle > 1e-4 && tiltAngle < stab.maxCorrectedAngle) {
+        this.tiltAxis.copy(this.chassisUp).cross(UP);
+        const axisLength = this.tiltAxis.length();
+        if (axisLength > 1e-6) {
+          this.tiltAxis.divideScalar(axisLength);
+          const tipRate = this.angvel.dot(this.tiltAxis);
+          const torqueMag = Math.max(
+            0,
+            Math.min(
+              stab.maxUprightTorque,
+              stab.uprightSpringTorque * tiltAngle - stab.uprightDamping * tipRate
+            )
+          );
+          this.force.copy(this.tiltAxis).multiplyScalar(torqueMag);
+          this.body.addTorque(this.force, true);
+        }
+      }
     }
 
     // Aerodynamic drag on the chassis.
