@@ -10,6 +10,8 @@ const CFG: GarageConfig = {
   walkSpeed: 2,
   bounds: { x: 5, z: 5 },
   cameraLerp: 4,
+  interactRange: 1.6,
+  stationInset: 1.2,
 };
 
 const START: GarageAvatarState = { x: 0, z: 0, facing: 0 };

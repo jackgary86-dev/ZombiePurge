@@ -158,7 +158,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy/upgrade the regular Engine tier ladder (D3/N1) while an engine type is equipped: both bonuses stack - top speed/acceleration are higher than either one alone
 - [ ] With the V8 equipped, ram a zombie or wall: the car feels heavier/punchier than stock; with Electric equipped, it feels lighter - the `acceleration` stat itself (how fast 0-to-top-speed feels) stays consistent with what the Engine Tuning slider and tier cards show, regardless of which type is equipped
 
-## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1, R1)
+## M8 – Vehicle & Garage Overhaul (in progress: P1, Q1, R1, R2)
 
 - [ ] Corner hard, clip a curb, or take a glancing zombie hit: the car leans but no longer
       tips onto its side/roof from ordinary driving
@@ -185,6 +185,17 @@ Tick items in the PR that closes the milestone.
       face the direction you're walking
 - [ ] Walk into any of the four walls: the avatar stops right at it - it never clips through
 - [ ] The Garage's buy/equip UI on the left still works exactly as before while walking around
+- [ ] Walk up to a pedestal along either wall: a prompt appears at the bottom of the screen
+      naming the part and, if you don't own it yet, its price
+- [ ] Press E on an unowned pedestal with enough coins: it's bought (coins deducted, matching
+      the menu's own price) and the prompt now offers to pick it up
+- [ ] Press E on an unowned pedestal without enough coins: nothing is bought, the prompt stays
+- [ ] Press E again to pick the part up: a small marker appears above the avatar's head and the
+      prompt now offers to drop it
+- [ ] Walk elsewhere and press E: the part drops at your feet, appears as a small prop on the
+      floor, and can be walked up to and picked back up the same way
+- [ ] While carrying a part, walking up to a different pedestal and pressing E always drops
+      the carried part instead of buying/picking up the other one - only one at a time
 
 ### Known quirks (non-blocking)
 

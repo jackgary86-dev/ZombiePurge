@@ -21,6 +21,7 @@ const ACTION_LABELS: Record<GameAction, string> = {
   nitro: 'Nitro',
   fire: 'Fire',
   pause: 'Pause',
+  interact: 'Interact',
 };
 
 function keyName(code: string): string {

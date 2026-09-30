@@ -7,6 +7,26 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - R2: Physical Garage - walk-up part shopping & pickup
+
+- **R2** Every top-level upgrade/weapon (`garage.upgrades`, one physical station each - not
+  every individual cosmetic colour/style variant, a scope decision made with the user given
+  the catalog's size) now has a walk-up station in the Garage room, laid out evenly along its
+  two long walls purely from the room's own `bounds`/`stationInset` config - no hand-authored
+  per-item coordinates. A new `interact` input action (`E` / gamepad B, rebindable through the
+  existing Settings screen and added to the Controls legend) drives it: walking into range
+  shows a live prompt describing exactly what the next press does - buy an unowned part
+  (spending real coins through the same `Garage.buy()` the menu already uses, gated on coins
+  and story-map unlocks the same way), or pick up an owned one. Only one part can be carried at
+  a time; carrying always takes priority on the next `E`-press, dropping it at the avatar's
+  current position, where it becomes its own walk-up-able prop (pick it back up the same way).
+  All of the new interaction logic (station layout, proximity lookups, the buy/pick-up/drop
+  state machine, and the side-effect-free preview that drives the live prompt) lives in a pure,
+  fully unit-tested module (`GarageStations.ts`) with no Three.js or DOM dependency. New config:
+  `garage.interactRange`, `garage.stationInset`. Verified with a headless Playwright pass
+  through the real Garage UI: buy a station part, pick it up, drop it, walk back and pick it up
+  again from the ground - the prompt text and station colouring stayed correct throughout.
+
 ## Unreleased - R1: Physical Garage - walkable avatar & build pad
 
 - **R1** First piece of the Physical Garage overhaul (R1-R4): the Garage screen now has a

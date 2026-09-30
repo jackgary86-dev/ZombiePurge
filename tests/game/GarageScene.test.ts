@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildGarageRoom, GarageAvatarView } from '../../src/game/art/GarageScene';
+import {
+  buildCarriedMarker,
+  buildGarageRoom,
+  GarageAvatarView,
+  GarageStationMarker,
+} from '../../src/game/art/GarageScene';
 import { stepGarageAvatar } from '../../src/game/garageScene/GarageAvatar';
 import type { GarageConfig } from '../../src/data/types';
 
@@ -7,6 +12,8 @@ const CFG: GarageConfig = {
   walkSpeed: 3,
   bounds: { x: 8, z: 6 },
   cameraLerp: 4,
+  interactRange: 1.6,
+  stationInset: 1.2,
 };
 
 describe('R1 Garage room + avatar view', () => {
@@ -43,5 +50,21 @@ describe('R1 Garage room + avatar view', () => {
     const state = stepGarageAvatar({ x: 0, z: 0, facing: 0 }, 1, 1, 100, CFG); // absurdly long dt
     expect(Math.abs(state.x)).toBeLessThanOrEqual(CFG.bounds.x);
     expect(Math.abs(state.z)).toBeLessThanOrEqual(CFG.bounds.z);
+  });
+});
+
+describe('R2 station marker + carried marker', () => {
+  it('a station marker changes material when its owned state toggles', () => {
+    const marker = new GarageStationMarker();
+    const unowned = marker.mesh.material;
+    marker.setOwned(true);
+    expect(marker.mesh.material).not.toBe(unowned);
+    marker.setOwned(false);
+    expect(marker.mesh.material).toBe(unowned);
+  });
+
+  it('the carried marker sits above head height, ready to parent onto the avatar', () => {
+    const marker = buildCarriedMarker();
+    expect(marker.position.y).toBeGreaterThan(1);
   });
 });
