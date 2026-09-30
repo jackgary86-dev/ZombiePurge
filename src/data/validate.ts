@@ -335,6 +335,12 @@ export function collectConfigProblems(config: GameConfig): string[] {
   nonNegative(motion.attackLungeDistance, 'zombieMotion.attackLungeDistance', problems);
   positive(motion.attackLungeSeconds, 'zombieMotion.attackLungeSeconds', problems);
 
+  const garage = config.garage;
+  positive(garage.walkSpeed, 'garage.walkSpeed', problems);
+  positive(garage.bounds.x, 'garage.bounds.x', problems);
+  positive(garage.bounds.z, 'garage.bounds.z', problems);
+  positive(garage.cameraLerp, 'garage.cameraLerp', problems);
+
   const upgradeIds = new Set<string>();
   const categories: UpgradeCategory[] = [
     'engine',

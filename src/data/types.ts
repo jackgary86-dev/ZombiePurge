@@ -585,6 +585,19 @@ export interface GameConfig {
   assetBudget: AssetBudgetConfig;
   carDamage: CarDamageConfig;
   zombieMotion: ZombieMotionConfig;
+  garage: GarageConfig;
+}
+
+/** R1: the walkable Garage scene - a player-controlled avatar around the car's build pad,
+ *  replacing the old fixed camera orbit. R2-R4 build the actual shopping/snap-on interaction
+ *  on top of this. */
+export interface GarageConfig {
+  /** Avatar walk speed, m/s. */
+  walkSpeed: number;
+  /** Half-extents of the walkable area around the build pad (the car's spawn point). */
+  bounds: { x: number; z: number };
+  /** How quickly the follow camera catches up to the avatar; higher is snappier. */
+  cameraLerp: number;
 }
 
 export type DeepPartial<T> = {

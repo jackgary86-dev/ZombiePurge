@@ -26,12 +26,14 @@ import {
 import type { MapConfig, VehicleConfig } from './data/types';
 import {
   BloodSplatterView,
+  buildGarageRoom,
   buildPlaceholderCar,
   CarDamageView,
   DetectionRings,
   DriveTrailView,
   driveTrailColor,
   FlameView,
+  GarageAvatarView,
   HammerView,
   MuzzleFlashView,
   PickupViews,
@@ -60,6 +62,7 @@ import {
   WeaponMount,
 } from './game/combat';
 import { RunStats, Wallet } from './game/economy';
+import { GARAGE_AVATAR_START, stepGarageAvatar, type GarageAvatarState } from './game/garageScene';
 import { initPhysics, PhysicsWorld, RAPIER } from './game/physics/PhysicsWorld';
 import { Garage, repairInGarage, repairPrice, type CoinSource } from './game/shop';
 import {
@@ -261,6 +264,22 @@ async function boot(): Promise<void> {
   scene.add(carView.group);
   lights.sun.target = carView.group;
 
+  // ---------- R1: walkable Garage scene ----------
+  const garageRoom = buildGarageRoom(cfg.garage);
+  // Ground level, not spawn.y - that's the car's suspension ride height, not the floor.
+  garageRoom.position.set(spawn.x, 0, spawn.z);
+  garageRoom.visible = false;
+  scene.add(garageRoom);
+  const garageAvatarView = new GarageAvatarView();
+  garageAvatarView.group.visible = false;
+  scene.add(garageAvatarView.group);
+  let garageAvatarState: GarageAvatarState = { ...GARAGE_AVATAR_START };
+  function resetGarageAvatar(): void {
+    garageAvatarState = { ...GARAGE_AVATAR_START };
+    garageAvatarView.sync(garageAvatarState, spawn.x, spawn.z);
+  }
+  resetGarageAvatar();
+
   const pool = new ZombiePool(physics, ZOMBIE_CAPACITY, cfg.zombies);
   const zombieInstances = new ZombieInstances(ZOMBIE_CAPACITY, cfg.zombieMotion);
   scene.add(zombieInstances.bodies, zombieInstances.heads);
@@ -444,8 +463,15 @@ async function boot(): Promise<void> {
       tank.fill();
       applyGarage();
       garageMenu.open();
+      resetGarageAvatar();
+      garageRoom.visible = true;
+      garageAvatarView.group.visible = true;
     },
-    onLeave: () => garageMenu.close(),
+    onLeave: () => {
+      garageMenu.close();
+      garageRoom.visible = false;
+      garageAvatarView.group.visible = false;
+    },
   };
   const mainMenu = createMainMenu({
     canContinue: () => ['sandbox', 'slaughter'].includes(localStorage.getItem(LAST_MODE_KEY) ?? ''),
@@ -1111,13 +1137,28 @@ async function boot(): Promise<void> {
     audio.stopEngine();
   });
   loop.registerStateHandler(GameState.GameOver, menuState);
-  loop.registerStateHandler(GameState.Garage, menuState);
+  loop.registerStateHandler(GameState.Garage, () => {
+    menuState();
+    // R1: the same WASD/gamepad axes the car itself drives with, reused to walk the avatar
+    // around the build pad instead - no new bindings needed.
+    const moveX = input.axis('steer');
+    const moveZ = input.value('throttle') - input.value('brake');
+    garageAvatarState = stepGarageAvatar(
+      garageAvatarState,
+      moveX,
+      moveZ,
+      cfg.physics.fixedTimeStep,
+      cfg.garage
+    );
+  });
   loop.registerStateHandler(GameState.MainMenu, menuState);
   loop.registerStateHandler(GameState.MapComplete, menuState);
 
   // ---------- render ----------
   const projected = new Vector3();
   const rearTrailOrigin = new Vector3();
+  const garageCamTarget = new Vector3();
+  const garageLookAt = new Vector3();
   const project = (p: { x: number; y: number; z: number }) => {
     projected.set(p.x, p.y + 1.5, p.z).project(camera);
     if (projected.z > 1) return null;
@@ -1156,8 +1197,21 @@ async function boot(): Promise<void> {
     driveTrail.update(deltaTime, senses.carSpeed, rearTrailOrigin, driveTrailColor(map.generator));
 
     const state = loop.getState();
-    if (state === GameState.Garage || state === GameState.MainMenu) {
-      // Slow turntable around the car behind the garage and the title screen.
+    if (state === GameState.Garage) {
+      // R1: third-person follow, a fixed offset behind the avatar's own facing.
+      garageAvatarView.sync(garageAvatarState, spawn.x, spawn.z);
+      const ax = spawn.x + garageAvatarState.x;
+      const az = spawn.z + garageAvatarState.z;
+      garageCamTarget.set(
+        ax - Math.sin(garageAvatarState.facing) * 5,
+        3.2,
+        az - Math.cos(garageAvatarState.facing) * 5
+      );
+      camera.position.lerp(garageCamTarget, Math.min(1, cfg.garage.cameraLerp * deltaTime));
+      garageLookAt.set(ax, 1, az);
+      camera.lookAt(garageLookAt);
+    } else if (state === GameState.MainMenu) {
+      // Slow turntable around the car behind the title screen.
       const t = elapsedTime * 0.35;
       camera.position.set(
         target.position.x + Math.sin(t) * 7,

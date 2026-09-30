@@ -904,4 +904,9 @@ export const DEFAULT_CONFIG: GameConfig = {
     attackLungeDistance: 0.35,
     attackLungeSeconds: 0.3,
   },
+  garage: {
+    walkSpeed: 3.2,
+    bounds: { x: 9, z: 9 },
+    cameraLerp: 4,
+  },
 };

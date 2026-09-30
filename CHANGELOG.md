@@ -7,6 +7,23 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - R1: Physical Garage - walkable avatar & build pad
+
+- **R1** First piece of the Physical Garage overhaul (R1-R4): the Garage screen now has a
+  player-controlled avatar walking around the car's build pad instead of just a fixed camera
+  orbit. The room (a floor patch and four walls sized to a new `garage.bounds` config) is built
+  once at boot at the map's spawn point and toggled visible only while `GameState.Garage` is
+  active; the avatar reuses the same input axes already bound to driving (`steer` for
+  left/right, `throttle`/`brake` for forward/back) so no new bindings were needed. The avatar
+  itself is intentionally not a physics body - just `{x, z, facing}` state, clamped to
+  `garage.bounds` in `stepGarageAvatar()`, since R2-R4 will only need simple proximity checks
+  against it, not real collision. A lerped third-person camera follows a fixed offset behind
+  the avatar's own facing, replacing the turntable only for `GameState.Garage` (the main menu's
+  turntable is untouched). New config: `garage.walkSpeed`, `garage.bounds`, `garage.cameraLerp`.
+  Verified with new unit tests (`GarageAvatar.test.ts`, `GarageScene.test.ts`) and a headless
+  Playwright pass through the real Garage UI - room and avatar visible, camera following while
+  walking and strafing, movement correctly clamped at the walls.
+
 ## Unreleased - Q1: Slaughtermode
 
 - **Q1** A third game mode, alongside Story and Sandbox: build your car in the Garage, then
