@@ -181,6 +181,12 @@ const carriedMaterial = new MeshStandardMaterial({
   emissive: 0x443000,
   roughness: 0.4,
 });
+// T7: shared, like the materials above - `syncDroppedMarkers()` (main.ts) rebuilds a fresh set
+// of these markers every time a part is dropped/picked up, and `Object3D.clear()` only detaches
+// the old meshes, it never disposes their geometry. A per-instance `new BoxGeometry(...)` would
+// leak GPU buffer memory on every rebuild across a long session's worth of repeated Garage
+// shopping; every marker is the same size, so one shared geometry removes the leak entirely.
+const stationMarkerGeometry = new BoxGeometry(0.6, 0.9, 0.6);
 
 /**
  * R2: a simple pedestal marking one walk-up shopping station (or a dropped part sitting on
@@ -191,7 +197,7 @@ export class GarageStationMarker {
   readonly mesh: Mesh;
 
   constructor() {
-    this.mesh = new Mesh(new BoxGeometry(0.6, 0.9, 0.6), stationUnownedMaterial);
+    this.mesh = new Mesh(stationMarkerGeometry, stationUnownedMaterial);
     this.mesh.position.y = 0.45;
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;

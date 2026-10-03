@@ -227,5 +227,16 @@ describe('D10 flamethrower and D11 shotgun / rockets', () => {
       }
       expect(sawAnotherSwing).toBe(true);
     });
+
+    it('T7: while on cooldown, returns the same shared result object every tick instead of allocating a fresh one', () => {
+      const stats = getConfig().combat.hammer[0];
+      const hammer = new HammerSwing(pool, stats);
+      const carPos = new Vector3(0, 1, 0);
+      hammer.update(DT, carPos); // first tick swings and starts the cooldown
+      const a = hammer.update(DT, carPos);
+      const b = hammer.update(DT, carPos);
+      expect(a.swung).toBe(false);
+      expect(a).toBe(b); // same object reference, not just equal values
+    });
   });
 });

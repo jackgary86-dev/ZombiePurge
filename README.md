@@ -96,7 +96,7 @@ assets/            # 3D models, textures, sounds
 | **M6** | Polish & Release                              | 🔶 In progress (G1–G3, H1–H5, I1, I2, I9, J13 done; I3/I5 placeholder-art extensions — real 3D assets still pending; I4 already covered by D14 + I2) |
 | **M7** | Car Customization & Combat Expansion          | ✅ Done (L1-L8, O1, M1-M5, N1-N2)                                                                                                                    |
 | **M8** | Vehicle & Garage Overhaul                     | ✅ Done (P1, Q1, R1-R4)                                                                                                                              |
-| **M9** | Art pass & bug bash                           | 🔶 In progress (S1-S7 done - full art epic complete; T1-T6 done; T7 pending)                                                                         |
+| **M9** | Art pass & bug bash                           | ✅ Done (S1-S7 art epic + T1-T7 bug bash all complete)                                                                                               |
 
 ## What's Built So Far
 
