@@ -183,4 +183,36 @@ describe('Wallet (C5 persistence)', () => {
     expect(w.balance).toBe(0);
     expect(w.lifetime).toBe(0);
   });
+
+  it("T3: NaN/Infinity can't corrupt the balance or bypass future price checks", () => {
+    const w = new Wallet(getConfig().rewards, new MemoryStorage());
+    w.add(100);
+    w.add(NaN);
+    expect(w.balance).toBe(100); // not corrupted to NaN
+    w.add(Infinity);
+    expect(w.balance).toBe(100);
+    expect(w.spend(NaN)).toBe(false); // would otherwise pass both guard comparisons and "succeed"
+    expect(w.balance).toBe(100);
+    expect(w.spend(Infinity)).toBe(false);
+    expect(w.balance).toBe(100);
+    // A real purchase still works normally afterwards - the guard doesn't wedge the wallet shut.
+    expect(w.spend(40)).toBe(true);
+    expect(w.balance).toBe(60);
+  });
+
+  it("T3: a throwing storage (quota exceeded, Safari private browsing) doesn't lose the in-memory balance", () => {
+    class ThrowingStorage implements WalletStorage {
+      getItem() {
+        return null;
+      }
+      setItem(): never {
+        throw new DOMException('QuotaExceededError');
+      }
+    }
+    const w = new Wallet(getConfig().rewards, new ThrowingStorage());
+    expect(() => w.add(50)).not.toThrow();
+    expect(w.balance).toBe(50);
+    expect(() => w.spend(20)).not.toThrow();
+    expect(w.balance).toBe(30);
+  });
 });

@@ -43,7 +43,11 @@ export class Wallet {
   }
 
   add(amount: number): void {
-    if (amount <= 0) return;
+    // T3: NaN/Infinity fail every `<=`/`>` comparison, so without this guard they'd sail past
+    // the checks below - a NaN add corrupts `coins` to NaN forever, after which every future
+    // spend()'s own `amount > this.coins` check is also always false, bypassing every price
+    // check from then on.
+    if (!Number.isFinite(amount) || amount <= 0) return;
     this.coins += Math.floor(amount);
     this.lifetimeCoins += Math.floor(amount);
     this.save();
@@ -51,7 +55,7 @@ export class Wallet {
 
   /** Returns false (and changes nothing) when the balance can't cover the price. */
   spend(amount: number): boolean {
-    if (amount < 0 || amount > this.coins) return false;
+    if (!Number.isFinite(amount) || amount < 0 || amount > this.coins) return false;
     this.coins -= amount;
     this.save();
     return true;
@@ -94,6 +98,12 @@ export class Wallet {
       coins: this.coins,
       lifetimeCoins: this.lifetimeCoins,
     };
-    this.storage?.setItem(WALLET_STORAGE_KEY, JSON.stringify(save));
+    // T3: setItem can throw (quota exceeded, or Safari private browsing rejects every write) -
+    // the in-memory balance this call already updated must survive even if persisting it fails.
+    try {
+      this.storage?.setItem(WALLET_STORAGE_KEY, JSON.stringify(save));
+    } catch {
+      // Not persisted this time; the in-memory balance is still correct for the rest of the session.
+    }
   }
 }

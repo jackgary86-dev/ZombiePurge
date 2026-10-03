@@ -56,7 +56,13 @@ function readIndex(storage: SaveStorage): SlotIndex {
 }
 
 function writeIndex(storage: SaveStorage, index: SlotIndex): void {
-  storage.setItem(SLOT_INDEX_KEY, JSON.stringify(index));
+  // T3: setItem can throw (quota exceeded, or Safari private browsing rejects every write) -
+  // never let a slot-management action (create/rename/touch/delete) throw out to the caller.
+  try {
+    storage.setItem(SLOT_INDEX_KEY, JSON.stringify(index));
+  } catch {
+    // Not persisted this time; the caller's own in-memory view (if any) is unaffected.
+  }
 }
 
 function newSlotId(): string {
@@ -181,7 +187,12 @@ export function saveStoryProgress(
 ): void {
   const scoped = storage ? slotStorage(slotId, storage) : null;
   const save: StoryProgressSave = { version: SAVE_VERSION, data };
-  scoped?.setItem('story', JSON.stringify(save));
+  try {
+    scoped?.setItem('story', JSON.stringify(save));
+  } catch {
+    // Not persisted this time (quota exceeded, or storage rejects writes); story progress in
+    // memory for the rest of this session is unaffected.
+  }
 }
 
 export function loadPlayTime(
@@ -209,6 +220,10 @@ export function addPlayTime(
   const scoped = storage ? slotStorage(slotId, storage) : null;
   const total = loadPlayTime(slotId, storage) + Math.max(0, seconds);
   const save: PlayTimeSave = { version: SAVE_VERSION, seconds: total };
-  scoped?.setItem('playTime', JSON.stringify(save));
+  try {
+    scoped?.setItem('playTime', JSON.stringify(save));
+  } catch {
+    // Not persisted this time; the returned total is still correct for the caller's own display.
+  }
   return total;
 }

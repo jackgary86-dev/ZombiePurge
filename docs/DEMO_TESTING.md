@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T2 done)
+## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T3 done)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -311,6 +311,11 @@ Tick items in the PR that closes the milestone.
 - [ ] Run over a zombie, then keep driving through where its corpse landed: the corpse can still
       be nudged by the car for a few seconds (ragdoll), but never damages the car or gets
       re-killed for coins/score
+- [ ] Earn coins (kills/distance/pickups), reload the page: the balance persists exactly, never
+      shows "NaN" or resets unexpectedly
+- [ ] Buy/equip garage parts, reload the page: ownership and loadout persist exactly
+- [ ] Open the Story Mode save-slot picker with no saves yet: shows "No saves yet - start a new
+      game" and a working "+ New Game" button, no console errors
 
 ### Known quirks (non-blocking)
 

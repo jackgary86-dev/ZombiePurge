@@ -277,6 +277,21 @@ describe('D2 Garage purchase & equip logic', () => {
     expect(clamped.equippedIn('roof')).toBeNull(); // tires can't be mounted
   });
 
+  it("T3: a throwing storage (quota exceeded, Safari private browsing) doesn't lose in-memory purchases", () => {
+    class ThrowingStorage implements GarageStorage {
+      getItem() {
+        return null;
+      }
+      setItem(): never {
+        throw new DOMException('QuotaExceededError');
+      }
+    }
+    wallet.add(5000);
+    const g = new Garage(getConfig().upgrades, wallet, 1, new ThrowingStorage());
+    expect(() => g.buy('tires')).not.toThrow();
+    expect(g.ownedTier('tires')).toBe(1); // the purchase still took effect in memory
+  });
+
   it('unlockAll owns everything for the debug console', () => {
     garage.unlockAll();
     expect(garage.ownedTier('rockets')).toBe(2);
