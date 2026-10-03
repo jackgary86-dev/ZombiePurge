@@ -798,11 +798,14 @@ async function boot(): Promise<void> {
   }
 
   // ---------- run lifecycle ----------
-  /** Draws litres from the tank for the flamethrower; returns what was actually drawn. */
+  /** Draws litres from the tank for the flamethrower; returns what was actually drawn.
+   *  T4: this used to simulate the draw via `tank.update(litres / 0.6, 1, 1)`, assuming
+   *  full-throttle burn was exactly 0.6 L/s - but `update()`'s burn rate also always adds
+   *  `idleBurnPerSecond`, so that actually burned 0.63 L/s, over-draining the flamethrower's
+   *  fuel by 5% versus what `stats.fuelPerSecond` specifies. `FuelTank.burn()` draws the exact
+   *  amount directly instead. */
   function drain(litres: number): number {
-    const before = tank.level;
-    tank.update(litres / 0.6, 1, 1); // 0.6 L/s at full burn, so this many "seconds" of it
-    return before - tank.level;
+    return tank.burn(litres);
   }
 
   /** D2/D3-D7: push the garage's effective stats into the live systems. */

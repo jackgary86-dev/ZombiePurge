@@ -36,6 +36,17 @@ describe('D6 fuel tank', () => {
     expect(tank.fraction).toBeCloseTo((60 - 0.63) / 60, 3);
   });
 
+  it("T4: burn() draws an exact amount directly, unlike update()'s throttle/speed burn-rate model", () => {
+    const tank = new FuelTank(60);
+    expect(tank.burn(10)).toBe(10);
+    expect(tank.level).toBe(50);
+    expect(tank.burn(-5)).toBe(0); // never adds fuel
+    expect(tank.level).toBe(50);
+    expect(tank.burn(1000)).toBe(50); // clamps at empty, returns only what was actually drawn
+    expect(tank.level).toBe(0);
+    expect(tank.isEmpty()).toBe(true);
+  });
+
   it('fill() tops the tank off instantly, ignoring the current level', () => {
     const tank = new FuelTank(60);
     for (let i = 0; i < 60 * 10; i++) tank.update(1 / 60, 1, 1);
