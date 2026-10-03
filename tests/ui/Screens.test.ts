@@ -187,4 +187,27 @@ describe('M3 menu screens', () => {
     expect(bindings.keyboard.handbrake).toEqual(['KeyB']);
     expect(keyButtons[4].textContent).toBe('B');
   });
+
+  it('T5: clicking a different rebind button while one is still listening cancels the first, instead of both reacting to the next keypress', () => {
+    const store = new SettingsStore(new MemoryStorage());
+    let bindings: Bindings = JSON.parse(JSON.stringify(DEFAULT_BINDINGS));
+    const screen = createSettingsMenu({
+      store,
+      getBindings: () => bindings,
+      setBindings: (b) => (bindings = b),
+      onBack: () => undefined,
+    });
+    screen.onEnter!();
+    const keyButtons = [...screen.el.querySelectorAll<HTMLButtonElement>('button.key')];
+    const handbrakeBefore = bindings.keyboard.handbrake;
+
+    keyButtons[4].click(); // start listening for handbrake...
+    keyButtons[5].click(); // ...then change your mind and start listening for flipReset instead
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyB' }));
+
+    // Only flipReset should have picked up the new key; handbrake must be untouched, not wiped.
+    expect(bindings.keyboard.flipReset).toEqual(['KeyB']);
+    expect(bindings.keyboard.handbrake).toEqual(handbrakeBefore);
+    expect(keyButtons[4].textContent).not.toBe('—');
+  });
 });

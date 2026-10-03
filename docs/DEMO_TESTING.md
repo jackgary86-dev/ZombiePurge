@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T4 done)
+## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T5 done)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -319,6 +319,14 @@ Tick items in the PR that closes the milestone.
 - [ ] Equip the flamethrower, burn through a full tank, and compare against the fuel-per-second
       stat shown in the Garage: the tank now drains at exactly the configured rate (previously
       ~5% faster)
+- [ ] From the Main Menu, open the Garage, then press Escape (or gamepad B): lands back on the
+      Main Menu with its own turntable camera, not a frozen/glued garage view - then open
+      Settings again right after to confirm the menu is still fully responsive
+- [ ] In Settings, Tab to "Graphics quality" (or any other dropdown) and press Left/Right: the
+      selection changes directly, without needing a mouse click - same for a gamepad d-pad/stick
+- [ ] In Settings, click "press a key…" on one action, then immediately click it on a second
+      action before pressing anything: the first action's binding is unaffected, only the second
+      one starts listening
 
 ### Known quirks (non-blocking)
 

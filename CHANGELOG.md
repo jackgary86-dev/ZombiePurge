@@ -7,6 +7,35 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - T5: Bug bash - UI & menu navigation
+
+- **T5** Fixed a GameState desync: entering the Garage from the Main Menu (`push`) and then
+  backing out (Escape/gamepad B) correctly popped the menu stack back to the Main Menu panel,
+  but nothing restored `GameState` away from `GameState.Garage` - the per-frame Garage state
+  handler kept running underneath the visible Main Menu (the walk-up avatar kept taking input,
+  including `interact`, and the camera stayed glued to the garage follow-cam instead of the Main
+  Menu's turntable). `garageScreen` now has an `onBack` that restores `GameState.MainMenu` when
+  the pop will actually succeed, and vetoes the back action (matching every other root screen's
+  existing behaviour) when Garage is the stack's root, so state is never set without the
+  corresponding screen transition actually completing.
+- Fixed a key-rebinding bug: clicking a different "press a key…" button while one was already
+  waiting for a keypress left the first listener attached too. The next keypress fired both, in
+  order - the first set the new action's binding, and the second then re-read the (already
+  updated) bindings and stripped that same key right back out of the first action, silently
+  leaving it with **no** key bound at all, with no conflict warning. `SettingsMenu` now cancels
+  any pending rebind before starting a new one.
+- Fixed a keyboard/gamepad navigation gap: a focused `<select>` (Settings' graphics quality,
+  Sandbox's map picker) was unreachable by keyboard or gamepad - Left/Right fell through to
+  moving focus to the next control instead of changing the selection, and a synthetic click from
+  Enter/A doesn't open a native dropdown in real browsers. `MenuStack`'s Left/Right now steps a
+  focused `<select>`'s value directly, the same shape sliders already used.
+- Reviewed, not changed: the save-slot screen has no rename control wired up anywhere in the UI
+  (`renameSaveSlot` in `save.ts` has no caller) - a missing feature rather than a regression, and
+  out of scope for a bug-fix pass. The Controls reference screen is a static table rather than
+  reflecting live rebinds, which may be intentional ("basic tips", not a live reference). A
+  window resize mid-menu-transition was checked and found no reproducible bug - menu layout uses
+  flex/vw/vh, not cached pixel positions.
+
 ## Unreleased - T4: Bug bash - weapon systems
 
 - **T4** Fixed the flamethrower over-draining fuel by 5%: it drew litres from the tank by

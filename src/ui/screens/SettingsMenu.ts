@@ -84,6 +84,8 @@ export function createSettingsMenu(
   keys.appendChild(heading);
   const keyButtons = new Map<GameAction, HTMLButtonElement>();
   let listening: GameAction | null = null;
+  // T5: cancels whichever rebind is currently waiting for a keypress, if any.
+  let cancelRebind: (() => void) | null = null;
   for (const action of GAME_ACTIONS) {
     const btn = menuButton('', () => beginRebind(action), 'key');
     keyButtons.set(action, btn);
@@ -109,16 +111,26 @@ export function createSettingsMenu(
   }
 
   function beginRebind(action: GameAction): void {
+    // T5: clicking a different "press a key…" button while one was already waiting used to
+    // leave that first listener attached too - the next keypress fired both, in order, and the
+    // second one re-read the (already-updated) bindings and stripped the key right back out of
+    // the first action, silently leaving it with none bound. Cancel any pending listen first.
+    cancelRebind?.();
     listening = action;
     refreshKeys();
     const onKey = (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
       window.removeEventListener('keydown', onKey, true);
+      cancelRebind = null;
       if (e.code !== 'Escape')
         actions.setBindings(rebindKeyboard(actions.getBindings(), action, [e.code]));
       listening = null;
       refreshKeys();
+    };
+    cancelRebind = () => {
+      window.removeEventListener('keydown', onKey, true);
+      listening = null;
     };
     window.addEventListener('keydown', onKey, true);
   }
