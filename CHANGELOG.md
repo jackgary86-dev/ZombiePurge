@@ -7,6 +7,28 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - T6: Bug bash - Physical Garage (R1/R2) systems
+
+- **T6** Fixed walking in the Garage silently mutating the GarageMenu overlay underneath it: the
+  overlay is always open while the avatar walks around (not a sequential mode), and its own
+  arrow-key handling (nudging a focused range input, cycling focus) listens on the very same
+  window keydown events the avatar reads for movement - so every WASD/arrow press could also
+  drag whatever menu control currently had DOM focus, most harmfully the N1 Engine Tuning
+  slider (auto-focused the instant the Garage opens). A capture-phase keydown listener now
+  blurs any focused GarageMenu control the moment a movement-bound key is pressed, before the
+  menu's own (bubble-phase) handler can act on that same keydown - closing the race for the
+  very first keypress of a walk, not just repeats, without touching the menu's own keyboard
+  accessibility when the player has deliberately tabbed into a control and isn't walking.
+- Systematically exercised the rest of the ticket's edge cases (avatar movement clamping into
+  every wall/corner, camera behaviour at extreme facing/speed, walk-up shopping at zero/
+  insufficient coins, E-mashing a station, carrying a part into a wall, repeated drop/re-pick-up)
+  via a background research pass plus direct code verification; no other reproducible bug turned
+  up. The room is a plain axis-aligned rectangle with independently-clamped x/z bounds (correct
+  for all four walls/corners), the camera's facing only updates from a finite, pre-normalized
+  vector, `interact()` is edge-triggered and synchronous (no E-mash race is possible in a
+  single-threaded frame loop), and the carried-part marker is parented to the avatar's own
+  already-clamped transform (can't visually escape the room).
+
 ## Unreleased - T5: Bug bash - UI & menu navigation
 
 - **T5** Fixed a GameState desync: entering the Garage from the Main Menu (`push`) and then

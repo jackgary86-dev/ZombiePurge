@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T5 done)
+## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T6 done)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -327,6 +327,11 @@ Tick items in the PR that closes the milestone.
 - [ ] In Settings, click "press a key…" on one action, then immediately click it on a second
       action before pressing anything: the first action's binding is unaffected, only the second
       one starts listening
+- [ ] Enter the Garage, open the Engine category, Tab into the Engine Tuning slider so it has
+      focus, then walk around with WASD/arrows: the slider stays exactly where it was - walking
+      no longer drags it
+- [ ] Walk the avatar into every wall and corner of the Garage room: it stops cleanly at the
+      wall, never clips through
 
 ### Known quirks (non-blocking)
 
