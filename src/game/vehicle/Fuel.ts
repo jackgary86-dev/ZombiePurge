@@ -52,6 +52,15 @@ export class FuelTank {
     return this.litres - before;
   }
 
+  /** T4: draws an exact amount of fuel directly (e.g. the flamethrower's own draw, independent
+   *  of driving) rather than through `update()`'s throttle/speed burn-rate model; returns
+   *  litres actually drawn. */
+  burn(litres: number): number {
+    const before = this.litres;
+    this.litres = Math.max(0, this.litres - Math.max(0, litres));
+    return before - this.litres;
+  }
+
   fill(): void {
     this.litres = this.capacity;
   }

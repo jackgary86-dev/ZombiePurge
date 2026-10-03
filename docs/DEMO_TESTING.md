@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T3 done)
+## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T4 done)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -316,6 +316,9 @@ Tick items in the PR that closes the milestone.
 - [ ] Buy/equip garage parts, reload the page: ownership and loadout persist exactly
 - [ ] Open the Story Mode save-slot picker with no saves yet: shows "No saves yet - start a new
       game" and a working "+ New Game" button, no console errors
+- [ ] Equip the flamethrower, burn through a full tank, and compare against the fuel-per-second
+      stat shown in the Garage: the tank now drains at exactly the configured rate (previously
+      ~5% faster)
 
 ### Known quirks (non-blocking)
 
@@ -324,3 +327,9 @@ Tick items in the PR that closes the milestone.
   physics settling asymmetrically, not a bug introduced by any milestone's own work. Noticeable
   mainly in scripted/headless testing (holding W for 5+ seconds unattended); a human driver
   correcting with the stick never notices it.
+- Debug-console only (`#debug`, `unlockall`): firing it while the rocket launcher has rockets
+  mid-flight silently discards those rockets with no explosion, since the cheat force-equips the
+  machine gun (`Garage.unlockAll()`). Not reachable through any normal-play path - no other
+  action changes the equipped weapon mid-run - so it has zero effect on real players; written up
+  rather than fixed in T4 since a correct fix means threading a new force-explode path through
+  the same reward/visual pipeline normal rocket impacts use.

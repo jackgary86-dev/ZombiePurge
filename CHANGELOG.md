@@ -7,6 +7,30 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - T4: Bug bash - weapon systems
+
+- **T4** Fixed the flamethrower over-draining fuel by 5%: it drew litres from the tank by
+  simulating them through `FuelTank.update()`'s throttle/speed burn-rate model (`tank.update(
+litres / 0.6, 1, 1)`, on the assumption that full-throttle burn was exactly 0.6 L/s) - but
+  `update()`'s burn rate also always adds a flat idle-burn term on top, so a full-throttle "second"
+  there actually burns 0.63 L/s, not 0.6. `FuelTank` gained a `burn(litres)` method that draws an
+  exact amount directly (mirroring the existing `refill()`), and the flamethrower now calls that
+  instead of simulating a fake driving second.
+- Systematically exercised the rest of the ticket's edge cases (machine gun heat/overheat
+  boundary, shotgun magazine/reload timing, rocket splash falloff, melee weapons, ammo/fuel/heat
+  running out mid-action, auto-aim at extreme ranges) via a background research pass plus direct
+  code verification; no other reproducible player-facing bug turned up. One debug-console-only
+  issue was found and written up rather than fixed in this pass: the `unlockall` cheat command
+  unconditionally force-equips the machine gun (`Garage.unlockAll()`), so firing it while the
+  rocket launcher has rockets mid-flight silently discards those rockets with no explosion -
+  not reachable through any normal-play path (no other action changes the equipped weapon while
+  actively in a run), and correctly fixing it means threading a new `explodeAll()` path through
+  the same reward/visual pipeline `rockets.update()`'s normal blasts use, which was judged too
+  large a reach for this pass given it has zero impact on real players. Splash damage's floor at
+  40% of base damage at the edge of its radius (rather than falling to 0) was reviewed and looks
+  like a deliberate design choice (keeps splash weapons impactful at the edge of their radius),
+  not a bug - left unchanged.
+
 ## Unreleased - T3: Bug bash - economy & save system
 
 - **T3** Fixed a NaN-corruption bug in `Wallet`: `add()`/`spend()` both guarded against negative
