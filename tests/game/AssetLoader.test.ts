@@ -38,4 +38,38 @@ describe('AssetLoader (I2)', () => {
     const gltfLoader = _sharedLoaderForTests();
     expect(gltfLoader.ktx2Loader).toBeInstanceOf(KTX2Loader);
   });
+
+  it('T2(I2): the Draco/meshopt-wired shared loader actually parses a real glTF binary end-to-end, not just a loader with the right properties attached', () => {
+    // A genuinely valid, minimal .glb - not a real game asset, just enough structure (header +
+    // one JSON chunk, no BIN chunk needed for an empty scene) to prove the parse pipeline this
+    // loader instance actually runs works on real bytes. Draco/meshopt compression need a real
+    // encoded mesh to exercise the decode branch itself, which no synthetic fixture can honestly
+    // stand in for - this closes the "never actually parses anything" gap in loader coverage,
+    // while that part stays blocked on a real delivered asset, same as `loadModel()` itself.
+    const json = JSON.stringify({
+      asset: { version: '2.0' },
+      scene: 0,
+      scenes: [{ nodes: [] }],
+    });
+    const jsonBytes = new TextEncoder().encode(json);
+    const paddedLength = Math.ceil(jsonBytes.length / 4) * 4;
+    const jsonChunk = new Uint8Array(paddedLength).fill(0x20); // glTF pads JSON with spaces
+    jsonChunk.set(jsonBytes);
+
+    const totalLength = 12 + 8 + jsonChunk.length; // header + chunk header + chunk data
+    const glb = new DataView(new ArrayBuffer(totalLength));
+    glb.setUint32(0, 0x46546c67, true); // magic "glTF"
+    glb.setUint32(4, 2, true); // version
+    glb.setUint32(8, totalLength, true);
+    glb.setUint32(12, jsonChunk.length, true); // chunk length
+    glb.setUint32(16, 0x4e4f534a, true); // chunk type "JSON"
+    new Uint8Array(glb.buffer).set(jsonChunk, 20);
+
+    return _sharedLoaderForTests()
+      .parseAsync(glb.buffer, '')
+      .then((gltf) => {
+        expect(gltf.scene).toBeDefined();
+        expect(gltf.scene.children).toHaveLength(0);
+      });
+  });
 });

@@ -7,6 +7,39 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - I2: Asset pipeline wiring follow-up
+
+- **I2** Closed the two remaining gaps flagged on the original I2 pass (jackgary86-dev/ZombiePurge#184):
+  the "Draco/meshopt not wired in yet" note in that PR's own tracking comment was actually already
+  resolved in a later follow-up (confirmed by reading `AssetLoader.ts` directly - both are
+  unconditionally attached in `getLoader()`); what was genuinely still missing was `configureKTX2()`
+  never being called anywhere outside tests, so KTX2 (Basis Universal) texture support was never
+  actually detected against a real `WebGLRenderer` at runtime. It's now called once at boot, right
+  after the renderer exists, exactly as its own doc comment already specified.
+- Added a real end-to-end parse test for `AssetLoader`: previous coverage only checked that the
+  shared loader _had_ a `DRACOLoader`/`KTX2Loader` attached, never that it could actually parse a
+  glTF binary. The new test builds a minimal (not a real game asset - just enough binary structure
+  to be valid) `.glb` and runs it through the Draco/meshopt-wired loader's real `parseAsync()`,
+  closing the "never actually parses anything" gap in loader coverage. Exercising the Draco/KTX2
+  _decode_ branches themselves still needs a real compressed asset, same blocker as before.
+- **Bundle-size cost, measured and worth flagging**: calling `configureKTX2()` makes `AssetLoader`'s
+  code (and its `GLTFLoader`/`DRACOLoader`/`KTX2Loader`/`MeshoptDecoder` imports) genuinely reachable
+  from the app's entry point for the first time, so Vite/Rollup can no longer tree-shake the whole
+  module out of the production bundle the way it previously could (nothing live ever called into it
+  before). Measured before/after: the main JS chunk grows 231.02 kB → 291.02 kB (71.04 kB → 95.87 kB
+  gzip), and the `three` vendor chunk grows 533.83 kB → 539.87 kB (133.47 kB → 135.72 kB gzip) - a
+  combined **+27 kB gzip**, shipped to every player today for a pipeline that currently has nothing
+  to decode (no real assets exist under `assets/` yet). The heavy Draco/Basis WASM payloads
+  themselves stay in their own separate, only-fetched-on-demand chunks either way - this is just the
+  loader/orchestration JS. Judged an acceptable, intentional cost for finishing this ticket's own
+  explicitly-flagged scope (vs. the ~1.6 MB gzip Rapier chunk already shipped), but noted here rather
+  than left as a silent side effect.
+- Not changed: `loadModel()` itself is still not called from any of the car/zombie/upgrade-part
+  construction sites (`placeholders.ts` etc.) - that wiring is deliberately left for I3/I4/I5 to do
+  themselves once each delivers its own real asset, per `AssetLoader.ts`'s own existing doc
+  comments. Wiring those call sites now, with nothing real to load there yet, would add complexity
+  with no way to verify it against anything real.
+
 ## Unreleased - T7: Bug bash - performance & memory
 
 - **T7** Re-profiled everything shipped since H1's original performance budget (weapons,

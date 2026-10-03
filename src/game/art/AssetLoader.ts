@@ -48,10 +48,11 @@ function getLoader(): GLTFLoader {
 /**
  * I2: call once at boot, after the renderer exists, to enable KTX2 (Basis Universal) texture
  * decoding. Safe to call before or after the first loadModel() - either wires the KTX2 loader
- * into the shared GLTFLoader. Not called anywhere yet since nothing under assets/ uses KTX2
- * textures in this session; ready for I3/I4/I5 to call once real KTX2-textured models land. A
- * glTF that references a KTX2 texture before this has been called simply fails to load - caught
- * by loadModel()'s try/catch below, same as any other missing/malformed asset.
+ * into the shared GLTFLoader. Called once from main.ts's boot(), right after the renderer is
+ * created; a no-op in terms of visible behaviour today since nothing under assets/ uses KTX2
+ * textures yet, but it means any future KTX2-textured asset just works without another code
+ * change. A glTF that references a KTX2 texture before this has been called simply fails to
+ * load - caught by loadModel()'s try/catch below, same as any other missing/malformed asset.
  */
 export function configureKTX2(renderer: WebGLRenderer): void {
   sharedKTX2Loader ??= new KTX2Loader();
