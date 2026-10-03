@@ -7,6 +7,30 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - T3: Bug bash - economy & save system
+
+- **T3** Fixed a NaN-corruption bug in `Wallet`: `add()`/`spend()` both guarded against negative
+  amounts but not against `NaN`/`Infinity`, which fail every `<`/`<=`/`>` comparison. A single
+  `add(NaN)` permanently corrupted the balance to `NaN`; once that happened, every future
+  `spend()`'s own `amount > this.coins` check was also always `false`, silently bypassing every
+  price check from then on (any purchase would "succeed" regardless of price). Both methods now
+  reject non-finite amounts outright via `Number.isFinite()`.
+- Fixed five unguarded `localStorage.setItem()` calls that could throw uncaught (storage quota
+  exceeded, or Safari private browsing rejects every write) and crash whatever gameplay action
+  triggered them: `Wallet.save()`, `Garage.save()`, and `save.ts`'s `writeIndex()`/
+  `saveStoryProgress()`/`addPlayTime()`. Every load-side `JSON.parse` already had this same
+  try/catch protection; the write side didn't. All five now degrade to "not persisted this time"
+  rather than throwing - the in-memory state the caller just updated (a purchase, a coin pickup,
+  story progress) stays correct for the rest of the session either way.
+- Verified, no bug found: mid-run save-slot switching isn't reachable (the slot picker is only
+  reachable from the main menu, which requires leaving gameplay first, and each story slot gets
+  its own fresh `Wallet`/`Garage` instance rather than mutating shared state). Sandbox's
+  infinite-money flag, Slaughtermode's `died`-flag coin banking, and Story mode's normal banking
+  are mutually exclusive code paths with no overlap - no double-banking or leaked infinite money
+  found. Version-mismatch handling (`WALLET_VERSION`/`GARAGE_VERSION`/`SAVE_VERSION`) is a
+  consistent "wipe to defaults" everywhere rather than a migration, which is an existing,
+  deliberate, uniform design choice, not a bug.
+
 ## Unreleased - T2: Bug bash - zombie AI & spawner
 
 - **T2** Fixed a horde-spawner bug: cluster members were placed at an unclamped random offset

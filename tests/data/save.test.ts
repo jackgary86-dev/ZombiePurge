@@ -149,6 +149,27 @@ describe('F3 save slots', () => {
     expect(listSaveSlots(storage).map((s) => s.id)).toEqual([b.id]);
   });
 
+  it('T3: a throwing storage (quota exceeded, Safari private browsing) degrades to a no-op, not a crash', () => {
+    class ThrowingStorage implements SaveStorage {
+      getItem() {
+        return null;
+      }
+      setItem(): never {
+        throw new DOMException('QuotaExceededError');
+      }
+      removeItem() {
+        /* no-op */
+      }
+    }
+    const throwing = new ThrowingStorage();
+    expect(() => createSaveSlot('Alice', throwing)).not.toThrow();
+    expect(() =>
+      saveStoryProgress('slot-x', { unlocked: [], completed: [] }, throwing)
+    ).not.toThrow();
+    expect(() => addPlayTime('slot-x', 30, throwing)).not.toThrow();
+    expect(addPlayTime('slot-x', 30, throwing)).toBe(30); // still returns the correct total
+  });
+
   it('a missing storage backend (no localStorage) degrades to a no-op, not a crash', () => {
     expect(() => createSaveSlot('x', null)).not.toThrow();
     expect(listSaveSlots(null)).toEqual([]);

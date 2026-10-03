@@ -381,6 +381,12 @@ export class Garage {
       cosmeticsSelected: Object.fromEntries(this.selectedCosmetics),
       engineTuning: this.tuning,
     };
-    this.storage?.setItem(GARAGE_STORAGE_KEY, JSON.stringify(save));
+    // T3: setItem can throw (quota exceeded, or Safari private browsing rejects every write) -
+    // the in-memory garage state this call already updated must survive even if persisting fails.
+    try {
+      this.storage?.setItem(GARAGE_STORAGE_KEY, JSON.stringify(save));
+    } catch {
+      // Not persisted this time; the in-memory state is still correct for the rest of the session.
+    }
   }
 }
