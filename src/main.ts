@@ -30,6 +30,7 @@ import {
   buildGarageRoom,
   buildPlaceholderCar,
   CarDamageView,
+  configureKTX2,
   DetectionRings,
   DriveTrailView,
   driveTrailColor,
@@ -210,6 +211,11 @@ async function boot(): Promise<void> {
   const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  // I2: detects which compressed-texture formats this GPU supports, enabling KTX2 (Basis
+  // Universal) texture decoding for any future delivered asset that uses it. A no-op today -
+  // nothing under assets/ references a KTX2 texture yet - but it needs the real renderer, so
+  // it has to happen here rather than at AssetLoader module-load time.
+  configureKTX2(renderer);
   const scene = new Scene();
   const lights = createLights(scene);
   let viewDistance = map.fogDistance;

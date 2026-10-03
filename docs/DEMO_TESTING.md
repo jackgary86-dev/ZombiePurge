@@ -108,6 +108,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Take repeated damage from zombies without repairing: the car body visibly tints darker and picks up dent decals in two stages (dented, then wrecked) as HP drops; repairing in the garage restores the clean look (I3)
 - [ ] Look at a horde of the same zombie rank: individual zombies show slightly different shades rather than being identical clones, and visibly bob while walking and lunge forward when attacking (I5)
 - [ ] Main menu → Credits: a real panel listing Team, Tools and Asset Licenses (not the old one-line blurb); Back returns to the main menu (J13)
+- [ ] Load the game normally (any map): no console errors on boot and the car/zombies/map still render as the existing placeholder art - KTX2 texture-format detection (I2) now runs for real at boot, but has nothing to decode yet (no real assets exist), so there's nothing to see differently
 
 ## M7 – Car Customization & Combat Expansion (L1-L8, O1, M1-M5, N1-N2)
 
