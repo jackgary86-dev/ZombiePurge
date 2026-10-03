@@ -641,6 +641,27 @@ async function boot(): Promise<void> {
       loop.setState(GameState.MainMenu);
     },
   };
+  // T6: the GarageMenu overlay is always open while walking the Garage, and MenuStack's own
+  // arrow-key handling (nudging a focused range input, cycling focus) listens on the very same
+  // window keydown events the avatar reads for movement - so every WASD/arrow press while
+  // walking could also silently drag whatever menu control currently has DOM focus (most
+  // harmfully, the N1 Engine Tuning slider). A capture-phase listener runs before any bubble-
+  // phase one (MenuStack's included) regardless of attachment order, so blurring here, for a
+  // movement-bound key, always lands before MenuStack's own handler can act on that same
+  // keydown - unlike blurring from the per-frame game loop, which is already too late for the
+  // very first keypress of a press (the menu's synchronous keydown handler runs first).
+  window.addEventListener(
+    'keydown',
+    (e) => {
+      if (loop.getState() !== GameState.Garage) return;
+      const kb = input.getBindings().keyboard;
+      const movementCodes = [...kb.steerLeft, ...kb.steerRight, ...kb.throttle, ...kb.brake];
+      if (!movementCodes.includes(e.code)) return;
+      const active = document.activeElement as HTMLElement | null;
+      if (active && active !== document.body && garageMenu.el.contains(active)) active.blur();
+    },
+    true
+  );
   const mainMenu = createMainMenu({
     canContinue: () => ['sandbox', 'slaughter'].includes(localStorage.getItem(LAST_MODE_KEY) ?? ''),
     onContinue: () => {
