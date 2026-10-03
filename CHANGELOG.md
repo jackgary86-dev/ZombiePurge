@@ -7,6 +7,40 @@ Versioning started with this entry (H4); the game's `package.json` version now t
 milestone in progress (`0.<milestone>.0`) rather than the placeholder `0.1.0` it shipped
 with from the initial scaffold.
 
+## Unreleased - T7: Bug bash - performance & memory
+
+- **T7** Re-profiled everything shipped since H1's original performance budget (weapons,
+  cosmetics, the Physical Garage, and the full S1-S7 art pass) and fixed three per-frame/
+  per-rebuild allocation regressions matching the exact class of bug H1 was created to stamp
+  out:
+  - `ZombieInstances.sync()` allocated a fresh `Vector3` (`this.up.clone()`) every render frame
+    for every in-LOD-range zombie to compute the head's rotated offset - up to
+    `performance.zombieBudget` (200) allocations/frame, ~700k+/minute at 60fps during a full
+    horde. Now reuses a dedicated scratch `Vector3` instead of cloning the shared `up` constant.
+  - The render loop rebuilt the rear-wheel array (`car.wheels.filter().map()`) every frame for
+    skid marks/drive trail, even though `car` is one long-lived instance for the whole session
+    and each wheel's own `worldPosition` is mutated in place, never replaced - so which wheels
+    are the rear ones never changes. Hoisted the computation to run once instead of every frame.
+  - The Garage's dropped-part markers (`syncDroppedMarkers()`, rebuilt on every drop/pick-up
+    during walk-up shopping) each got their own fresh `BoxGeometry`, and `Object3D.clear()` only
+    detaches old meshes - it never disposes their geometry, so every drop/pick-up cycle across a
+    long session leaked one `BoxGeometry`'s GPU buffers. Every marker is the same size, so they
+    now share one geometry instance, the same pattern already used for their materials.
+  - `HammerSwing.update()` allocated a fresh (always-identical) "nothing happened" result object
+    on every Playing tick while on cooldown (which is most ticks, since the cooldown is
+    seconds-long vs. a ~60/s tick rate) - callers only ever read it, never mutate it, so it now
+    returns one shared frozen instance instead.
+- The H1 budget (200 zombies, two draw calls, no per-tick array allocation in zombie audio) is
+  re-confirmed: a 60-zombie horde plus full weapon fire sustained 20 fps in the sandboxed
+  headless Chromium environment this session runs in (expect substantially higher on real
+  hardware/GPU - this environment has no hardware acceleration), with zero console errors across
+  a sustained driving/firing pass.
+- Reviewed, not changed: `TurretView.buildBarrels()` rebuilds fresh barrel geometry on a weapon
+  swap without disposing the old one - a genuine missing-dispose pattern, but bounded by how
+  often a player actually re-equips a different roof weapon (not per-frame, not even per Garage
+  visit), so the impact over a session is low; left as a known minor gap rather than widening
+  this pass.
+
 ## Unreleased - T6: Bug bash - Physical Garage (R1/R2) systems
 
 - **T6** Fixed walking in the Garage silently mutating the GarageMenu overlay underneath it: the

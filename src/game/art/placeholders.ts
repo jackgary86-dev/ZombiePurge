@@ -265,6 +265,9 @@ export class ZombieInstances {
   private readonly facingQ = new Quaternion();
   private readonly lieDownQ = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2);
   private readonly up = new Vector3(0, 1, 0);
+  /** T7: scratch for the per-instance rotated-up offset below, so computing it doesn't need to
+   *  `.clone()` `up` (a shared constant every other instance this frame also reads from). */
+  private readonly headOffset = new Vector3();
   private readonly color = new Color();
   private readonly hidden = new Matrix4().makeScale(0, 0, 0);
   private readonly lastRank: (ZombieRank | null)[];
@@ -361,8 +364,9 @@ export class ZombieInstances {
         this.heads.setMatrixAt(i, this.hidden);
       } else {
         // Head sits on top of the capsule in local space; rotate with the body.
+        this.headOffset.copy(this.up).applyQuaternion(this.quaternion);
         this.position.addScaledVector(
-          this.up.clone().applyQuaternion(this.quaternion),
+          this.headOffset,
           (ZOMBIE_CAPSULE.halfHeight + ZOMBIE_CAPSULE.radius + 0.05) * style.y
         );
         this.matrix.compose(this.position, this.quaternion, this.scale);

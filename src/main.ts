@@ -273,6 +273,11 @@ async function boot(): Promise<void> {
   await LoadingScreen.frame();
 
   const car = new Vehicle(physics, cfg.vehicle, spawn);
+  // T7: car.wheels' array/order is fixed for the car's whole lifetime (one Vehicle instance for
+  // the whole session; each WheelState's own worldPosition Vector3 is mutated in place every
+  // step, never replaced), so which wheels are the rear ones - and their position references -
+  // can be computed once here instead of every render frame.
+  const rearWheels = car.wheels.filter((w) => !w.isFront).map((w) => w.worldPosition);
   const carView = buildPlaceholderCar(cfg.vehicle);
   const turret = new TurretView(ROOF_MOUNT.localOffset);
   carView.group.add(turret.group);
@@ -1416,7 +1421,6 @@ async function boot(): Promise<void> {
     flameView?.sync(flamethrower?.firing ?? false, frontMount.origin, frontMount.direction);
     pickupViews.sync(pickupSpots, elapsedTime);
     muzzleFlash.update(deltaTime);
-    const rearWheels = car.wheels.filter((w) => !w.isFront).map((w) => w.worldPosition);
     skidMarks.update(
       deltaTime,
       skidActive(senses.carSpeed, input.isDown('handbrake'), cfg.audio.skidMinSpeed),

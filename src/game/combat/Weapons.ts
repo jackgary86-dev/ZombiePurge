@@ -472,6 +472,11 @@ export interface SwingResult {
 }
 
 const hammerKnockbackDir = new Vector3();
+// T7: update() is called every Playing tick regardless of cooldown, and the cooldown is
+// typically seconds long vs. a ~60/s tick rate - so without this, most calls would allocate a
+// fresh (always-identical) "nothing happened" result object. Callers only ever read `kills`
+// (never push to it), so one shared, frozen instance is safe to hand back every time.
+const NO_SWING: Readonly<SwingResult> = Object.freeze({ swung: false, hits: 0, kills: [] });
 
 /**
  * M4: a periodic AOE burst on its own cooldown - unlike the spike cluster (every physical
@@ -489,7 +494,7 @@ export class HammerSwing {
   /** Call once per Playing tick with the car's current world position. */
   update(dt: number, carPosition: Vector3): SwingResult {
     this.cooldownLeft = Math.max(0, this.cooldownLeft - dt);
-    if (this.cooldownLeft > 0) return { swung: false, hits: 0, kills: [] };
+    if (this.cooldownLeft > 0) return NO_SWING;
     this.cooldownLeft = this.stats.cooldownSeconds;
 
     const kills: KillReport[] = [];

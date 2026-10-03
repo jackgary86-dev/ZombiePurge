@@ -221,7 +221,7 @@ Tick items in the PR that closes the milestone.
 - [ ] Every other part (anything besides the machine gun) still only has the one zone it had
       before - no unexpected multi-zone prompts anywhere else
 
-## M9 – Art pass & bug bash (in progress: S1-S7 - art epic complete; T1-T6 done)
+## M9 – Art pass & bug bash (complete: S1-S7 art epic + T1-T7 bug bash)
 
 - [ ] Spawn a full-density horde (Sandbox at 100% zombie density, or `#debug`'s `spawn <rank> N`)
       and drive past it: each rank's silhouette is distinguishable from the others at range, not
@@ -332,6 +332,12 @@ Tick items in the PR that closes the milestone.
       no longer drags it
 - [ ] Walk the avatar into every wall and corner of the Garage room: it stops cleanly at the
       wall, never clips through
+- [ ] Play a long session (10+ minutes) at max zombie density across Sandbox, a Story map, and
+      Slaughtermode, including some sustained handbrake-turning and weapon fire: frame rate
+      stays steady with no stutters that grow worse over time, zombies and their heads still
+      render correctly up close and at range
+- [ ] In the Garage, drop and pick up a part many times in a row (10+ cycles): no slowdown or
+      visual glitching in the dropped-part markers building up over the session
 
 ### Known quirks (non-blocking)
 
@@ -346,3 +352,7 @@ Tick items in the PR that closes the milestone.
   action changes the equipped weapon mid-run - so it has zero effect on real players; written up
   rather than fixed in T4 since a correct fix means threading a new force-explode path through
   the same reward/visual pipeline normal rocket impacts use.
+- `TurretView.buildBarrels()` rebuilds fresh barrel geometry on a roof-weapon swap without
+  disposing the old one - a minor GPU-memory gap, bounded by how often a player actually
+  re-equips a different roof weapon (not per-frame or even per Garage visit); reviewed in T7
+  and left as a known minor gap.

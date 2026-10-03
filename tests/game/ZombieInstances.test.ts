@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { Color, Matrix4, Vector3 } from 'three';
 import { getConfig, resetConfig } from '../../src/data/config';
 import { ZombieInstances } from '../../src/game/art';
@@ -66,6 +66,26 @@ describe('ZombieInstances (B7)', () => {
     expect(new Vector3().setFromMatrixScale(m).length()).toBe(0);
     view.bodies.getMatrixAt(far.poolIndex, m);
     expect(new Vector3().setFromMatrixScale(m).x).toBeCloseTo(1, 5); // body still drawn
+    pool.dispose();
+    physics.dispose();
+  });
+
+  it("T7: sync() doesn't allocate a new Vector3 per zombie for the in-LOD head offset", () => {
+    const physics = new PhysicsWorld(-9.81, 1 / 60);
+    physics.addGround(200);
+    const count = 30;
+    const pool = new ZombiePool(physics, count, getConfig().zombies);
+    for (let i = 0; i < count; i++) pool.spawn('walker', { x: i, y: 0, z: 0 }); // all in LOD range
+    physics.step();
+    const view = new ZombieInstances(count, getConfig().zombieMotion);
+
+    const cloneSpy = vi.spyOn(Vector3.prototype, 'clone');
+    view.sync(pool.zombies, new Vector3(0, 3, 0));
+    // A handful of clones from unrelated one-off code elsewhere is fine; one per live zombie
+    // (the regression this guards) would show up as `count` or more.
+    expect(cloneSpy.mock.calls.length).toBeLessThan(count);
+    cloneSpy.mockRestore();
+
     pool.dispose();
     physics.dispose();
   });

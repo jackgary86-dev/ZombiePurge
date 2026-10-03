@@ -80,4 +80,10 @@ describe('R2 station marker + carried marker', () => {
     const marker = buildCarriedMarker();
     expect(marker.position.y).toBeGreaterThan(1);
   });
+
+  it("T7: every marker shares one geometry instance, so rebuilding the dropped-parts group (Object3D.clear() doesn't dispose) can't leak GPU geometry buffers", () => {
+    const a = new GarageStationMarker();
+    const b = new GarageStationMarker();
+    expect(b.mesh.geometry).toBe(a.mesh.geometry);
+  });
 });
