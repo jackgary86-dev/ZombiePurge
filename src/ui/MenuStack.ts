@@ -159,14 +159,29 @@ export class MenuStack {
   }
 
   private nudgeRange(direction: number): void {
-    const active = document.activeElement as HTMLInputElement | null;
-    if (!active || active.tagName !== 'INPUT' || active.type !== 'range') {
-      this.moveFocus(direction);
+    const active = document.activeElement as HTMLElement | null;
+    if (active instanceof HTMLInputElement && active.type === 'range') {
+      const step = Number(active.step) || 1;
+      active.value = String(Number(active.value) + direction * step);
+      active.dispatchEvent(new Event('input', { bubbles: true }));
       return;
     }
-    const step = Number(active.step) || 1;
-    active.value = String(Number(active.value) + direction * step);
-    active.dispatchEvent(new Event('input', { bubbles: true }));
+    // T5: a focused <select> (e.g. Settings' graphics quality, Sandbox's map picker) was
+    // previously unreachable by keyboard/gamepad - Left/Right fell through to moveFocus() and a
+    // synthetic .click() from Enter/A doesn't open a native dropdown in real browsers. Left/Right
+    // now steps the selection directly, the same shape sliders already use.
+    if (active instanceof HTMLSelectElement) {
+      const next = Math.min(
+        active.options.length - 1,
+        Math.max(0, active.selectedIndex + direction)
+      );
+      if (next !== active.selectedIndex) {
+        active.selectedIndex = next;
+        active.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+    this.moveFocus(direction);
   }
 
   private show(screen: MenuScreen): void {

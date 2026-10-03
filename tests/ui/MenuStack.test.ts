@@ -161,6 +161,35 @@ describe('J1 MenuStack', () => {
     expect(document.activeElement).toBe(text); // typing suppresses the nudge/focus-move entirely
   });
 
+  it("T5: arrow keys/gamepad left-right step a focused <select> - it wasn't reachable before", () => {
+    stack = new MenuStack({ getGamepads: () => [] });
+    stack.attach();
+    const s = screen('settings', []);
+    const sel = document.createElement('select');
+    for (const v of ['low', 'medium', 'high']) {
+      const opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v;
+      sel.appendChild(opt);
+    }
+    sel.value = 'medium';
+    let changedTo: string | null = null;
+    sel.addEventListener('change', () => (changedTo = sel.value));
+    s.el.querySelector('.menu-body')!.appendChild(sel);
+    stack.push(s);
+
+    sel.focus();
+    sel.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowRight', bubbles: true }));
+    expect(sel.value).toBe('high');
+    expect(changedTo).toBe('high');
+    sel.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowLeft', bubbles: true }));
+    sel.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowLeft', bubbles: true }));
+    expect(sel.value).toBe('low'); // clamps rather than wrapping
+    sel.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowLeft', bubbles: true }));
+    expect(sel.value).toBe('low');
+    expect(document.activeElement).toBe(sel); // never lost focus to moveFocus()
+  });
+
   it('Enter/Space on an already-focused button does not double-activate it', () => {
     // Listen on `window` (MenuStack's real default) so a real DOM-bubbled event's `e.target`
     // is the actual focused button, matching how a browser really dispatches a keydown.

@@ -631,6 +631,15 @@ async function boot(): Promise<void> {
       garageAvatarView.group.visible = false;
       garagePrompt.hide();
     },
+    // T5: Garage is only ever reachable two ways - pushed on top of the Main Menu (depth > 1),
+    // or reset to the root from Pause/Results/a fresh run (depth === 1, with "DRIVE ▶" as the
+    // only committed way out, matching every other root screen's own no-back behaviour). Only
+    // the pushed case can actually pop, so only that case needs GameState restored - setting it
+    // unconditionally would desync GameState.MainMenu from a Garage screen that refused to pop.
+    onBack: () => {
+      if (menus.depth <= 1) return false;
+      loop.setState(GameState.MainMenu);
+    },
   };
   const mainMenu = createMainMenu({
     canContinue: () => ['sandbox', 'slaughter'].includes(localStorage.getItem(LAST_MODE_KEY) ?? ''),
